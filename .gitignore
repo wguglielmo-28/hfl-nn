@@ -1,0 +1,10 @@
+node_modules/
+# Runtime state (league data, episodes, audio, model cache) — lives in DATA_DIR,
+# which defaults to ./data for local runs and /data on Railway.
+data/
+*.log
+.env
+.DS_Store
+Thumbs.db
+# Screenshots written by tools/snap.js
+snaps/
