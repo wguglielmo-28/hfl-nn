@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFL-NN — HFL News Network</title>
+  <meta name="description" content="Pixel-art AI anchors report on the Hypnotical Football League: weekly shows, breaking news and specials built from the league's Madden exports.">
+  <!--OG-->
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body class="channel">
+  <header class="masthead">
+    <a class="logo" href="/" aria-label="HFL-NN home"><span class="spiral" aria-hidden="true"></span>HFL-NN</a>
+    <p class="tagline">The Hypnotical Football League News Network</p>
+  </header>
+
+  <main>
+    <section class="tv-wrap" aria-label="HFL-NN broadcast">
+      <div class="tv">
+        <canvas id="screen" width="480" height="270" aria-label="The HFL-NN studio"></canvas>
+        <button id="power" class="power" type="button">
+          <span class="power-icon" aria-hidden="true">▶</span>
+          <span class="power-label">Turn on the TV</span>
+          <span class="power-sub" id="power-sub">Sound on</span>
+        </button>
+        <div id="captions" class="captions" hidden aria-live="polite"></div>
+      </div>
+
+      <div class="controls" id="controls">
+        <button type="button" id="prev" title="Previous segment" aria-label="Previous segment">⏮</button>
+        <button type="button" id="play" title="Play/pause" aria-label="Play">▶</button>
+        <button type="button" id="next" title="Next segment" aria-label="Next segment">⏭</button>
+        <div class="progress" id="progress" role="slider" aria-label="Seek" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="bar" id="bar"></div>
+          <div class="marks" id="marks"></div>
+        </div>
+        <span class="time" id="time">0:00 / 0:00</span>
+        <button type="button" id="cc" title="Captions" aria-pressed="false">CC</button>
+        <input type="range" id="volume" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+        <button type="button" id="fullscreen" title="Full screen" aria-label="Full screen">⛶</button>
+      </div>
+
+      <div class="now">
+        <div><span class="label">NOW</span> <span id="now">Off air</span></div>
+        <div><span class="label dim">UP NEXT</span> <span id="upnext">—</span></div>
+      </div>
+      <p class="error" id="error" hidden></p>
+    </section>
+
+    <section class="panel sources" aria-labelledby="sources-h">
+      <h2 id="sources-h">Sources</h2>
+      <p class="muted">What the segment on air is built on. The jokes are made up; the facts come from the league.</p>
+      <ul id="sources"><li class="muted">Nothing on air yet.</li></ul>
+    </section>
+
+    <section class="panel guide" aria-labelledby="guide-h">
+      <h2 id="guide-h">Episode Guide</h2>
+      <ul id="episodes" class="episodes"><li class="muted">Loading…</li></ul>
+    </section>
+
+    <section class="panel desk" aria-labelledby="desk-h">
+      <h2 id="desk-h">The Desk</h2>
+      <ul id="lineup" class="lineup"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>HFL-NN is a parody news desk for the Hypnotical Football League. The anchors are fictional, their scripts are written by AI from the league's Madden exports, and their voices are synthetic. They get things wrong sometimes — check the standings before you trash-talk.</p>
+  </footer>
+
+  <script type="module" src="/js/channel.js"></script>
+</body>
+</html>
