@@ -220,8 +220,67 @@ test('an export for a different league starts fresh instead of reading as a pile
     const mine = s.ctx.producer.wireStories().filter(x => x.batchId === batch.id);
     assert.ok(!mine.some(x => ['trade', 'signing', 'release', 'departure', 'owner_change', 'injury'].includes(x.type)), `no phantom roster moves: ${mine.map(x => x.type)}`);
     assert.ok(s.ctx.producer.wireStories().filter(x => x.batchId !== batch.id).every(x => x.usedIn.length || x.excluded), 'the sample league\'s leftovers are retired');
-    assert.equal(s.ctx.store.list('league/archive').length, 1, 'the old league is archived, not just dropped');
+    assert.equal(s.ctx.store.list('league/archive').length, 0, 'the sample league is not worth archiving');
+
+    // A real league giving way to another (next Madden year) is kept.
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest({ ...p, leagueId: '3000001' });
+    await s.ctx.ingest.flush();
+    assert.equal(s.ctx.getLeague().leagueId, '3000001');
+    assert.deepEqual(s.ctx.store.list('league/archive').map(f => f.split('-')[0]), ['2890093'], 'the old real league is archived, not just dropped');
   } finally { await s.close(); }
+});
+
+test('start over: the sample league and everything made from it can be removed', async () => {
+  const s = await boot();
+  const dir = s.ctx.store.dir;
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    await s.ctx.loadSampleLeague();
+    await s.ctx.producer.idle();
+    await s.ctx.producer.idle();
+    const [ep] = s.ctx.producer.list();
+    await s.adminReq('POST', `/api/admin/episodes/${ep.id}/publish`, { body: { discord: false } });
+    assert.ok(s.ctx.store.exists('memory.json'), 'publishing wrote the show memory');
+    assert.ok(s.ctx.chronicle.list().length && s.ctx.hub.data() && s.ctx.producer.wireStories().length);
+
+    let r = await s.adminReq('POST', '/api/admin/reset', { body: {} });
+    assert.equal(r.status, 400, 'needs the typed confirmation');
+    s.ctx.ingest.ingest({ ...fixturePayloads()[0], leagueId: 'demo' });
+    r = await s.adminReq('POST', '/api/admin/reset', { body: { confirm: 'RESET' } });
+    assert.equal(r.status, 409, 'not while an export is arriving');
+    await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    await s.ctx.producer.idle();
+
+    r = await s.adminReq('POST', '/api/admin/reset', { body: { confirm: 'RESET' } });
+    assert.equal(r.status, 200, r.text);
+    assert.equal(r.json.removed.leagueId, 'demo');
+    assert.equal(Object.keys(s.ctx.getLeague().teams).length, 0);
+    assert.equal(s.ctx.producer.list().length, 0);
+    assert.equal(s.ctx.producer.wireStories().length, 0);
+    assert.equal(s.ctx.chronicle.list().length, 0);
+    assert.equal(s.ctx.hub.data(), null);
+    for (const f of ['memory.json', 'memory.json.bak', 'league/batches.json', 'league/batches.json.bak', 'league/current.json.bak', 'wire.json.bak', 'raw', `episodes/${ep.id}`]) {
+      assert.ok(!s.ctx.store.exists(f), `${f} is gone`);
+    }
+    assert.equal(s.ctx.store.list('league/archive').length, 0, 'the sample league is not worth archiving');
+    r = await s.req('GET', '/api/episodes');
+    assert.deepEqual(r.json, [], 'nothing left on the public channel');
+  } finally { await s.close(); }
+
+  // Nothing comes back after a restart (each file's .bak went too), and the
+  // next export starts the real league clean.
+  const again = await boot({ dataDir: dir });
+  try {
+    assert.equal(Object.keys(again.ctx.getLeague().teams).length, 0);
+    assert.equal(again.ctx.producer.list().length, 0);
+    assert.equal(again.ctx.producer.wireStories().length, 0);
+    assert.equal(again.ctx.chronicle.list().length, 0);
+    for (const p of fixturePayloads()) again.ctx.ingest.ingest(p);
+    const batch = await again.ctx.ingest.flush();
+    assert.equal(again.ctx.getLeague().leagueId, '2890093');
+    assert.ok(!again.ctx.producer.wireStories().some(x => x.batchId === batch.id && ['trade', 'signing', 'release'].includes(x.type)));
+  } finally { await again.close(); }
 });
 
 test('settings: webhook validation and masking, persona overrides', async () => {

@@ -14,7 +14,7 @@ const { createMaddenIngest } = require('../lib/ingest/madden');
 const { normalizeHubFeed } = require('../lib/ingest/hub');
 const personas = require('../config/personas.json');
 const show = require('../config/show.json');
-const { fixturePayloads, secondBatch, tmpDir, clone } = require('./helpers');
+const { fixture, fixturePayloads, secondBatch, tmpDir, clone } = require('./helpers');
 
 const personaIds = personas.anchors.map(a => a.id);
 const quiet = { log() {}, warn() {}, error() {} };
@@ -64,6 +64,72 @@ test('roster diffs become trade, signing, injury and dev stories', async () => {
   assert.equal(trade.card.type, 'trade');
   assert.ok(S.isBreaking(stories.find(s => s.type === 'dev_change')), 'X-Factor upgrades are breaking news');
   assert.equal(stories.filter(s => s.type === 'game').length, 0, 'a roster-only batch has no game stories');
+});
+
+test('a fantasy draft is one story, not hundreds of trades', async () => {
+  // Every team's roster moves to the next team over.
+  const { league, batches } = await leagueWithBatches(() => {
+    const rosters = fixture('rosters');
+    const ids = Object.keys(rosters);
+    return ids.map((id, i) => {
+      const to = Number(ids[(i + 1) % ids.length]);
+      const body = clone(rosters[id]);
+      body.rosterInfoList = body.rosterInfoList.map(p => ({ ...p, teamId: to }));
+      return { kind: 'roster', teamId: to, body };
+    });
+  });
+  const stories = batches[1].stories;
+  const rebuild = stories.filter(s => s.type === 'roster_rebuild');
+  assert.equal(rebuild.length, 1);
+  assert.ok(rebuild[0].facts.playersMoved > 1000, `moved ${rebuild[0].facts.playersMoved}`);
+  assert.equal(rebuild[0].facts.headliners.length, 12);
+  assert.deepEqual(stories.filter(s => ['trade', 'signing', 'release', 'departure', 'bulk'].includes(s.type)), [], 'no per-player moves');
+  assert.ok(!stories.some(S.isBreaking), 'and no bulletin');
+
+  const context = S.buildContext(league, {});
+  const draft = buildRundown({ type: 'special', phase: 'draft', show, personas, league, context, stories });
+  const desk = draft.segments.find(s => s.kind === 'draft_desk');
+  assert.ok(desk.storyIds.includes(rebuild[0].id));
+  assert.match(desk.brief, /fantasy draft/);
+  const script = writeTemplateScript({ rundown: draft, storiesById: Object.fromEntries(stories.map(s => [s.id, s])), personas, league, context });
+  assert.ok(validateScript(script, { rundown: draft, personaIds }).ok);
+});
+
+test('a free-agency wave is not mistaken for a fantasy draft', async () => {
+  // A third of every roster hits the open market in one advance.
+  const { batches } = await leagueWithBatches(() => {
+    const fa = clone(fixture('freeagents'));
+    const rosters = Object.entries(fixture('rosters')).map(([id, r]) => {
+      const body = clone(r);
+      const gone = body.rosterInfoList.splice(0, Math.floor(body.rosterInfoList.length * 0.35));
+      fa.rosterInfoList.push(...gone.map(p => ({ ...p, teamId: 0, isFreeAgent: true })));
+      return { kind: 'roster', teamId: Number(id), body };
+    });
+    return [{ kind: 'freeagents', body: fa }, ...rosters];
+  });
+  const stories = batches[1].stories;
+  assert.ok(!stories.some(s => s.type === 'roster_rebuild'));
+  assert.ok(stories.some(s => s.type === 'release'), 'the releases are reported as releases');
+});
+
+test('a preseason special straight after the draft reads the rankings once, without 0-0 records', async () => {
+  const store = createStore(tmpDir());
+  const league = L.emptyLeague();
+  const ingest = createMaddenIngest({ store, getLeague: () => league, saveLeague: () => {}, debounceMs: 1e9, logger: quiet });
+  for (const p of fixturePayloads().filter(x => x.kind !== 'week')) {
+    if (p.kind === 'standings') p.body.teamStandingInfoList.forEach(r => Object.assign(r, { totalWins: 0, totalLosses: 0, totalTies: 0 }));
+    ingest.ingest(p);
+  }
+  await ingest.flush();
+  const context = S.buildContext(league, {});
+  assert.ok(context.powerRankings, 'rankings come from the rosters alone');
+  const rundown = buildRundown({ type: 'special', phase: 'preseason', show, personas, league, context, stories: [] });
+  const checked = validateScript(writeTemplateScript({ rundown, storiesById: {}, personas, league, context }), { rundown, personaIds });
+  assert.ok(checked.ok, checked.errors.join('; '));
+  const lines = kind => (checked.script.segments.find(s => s.kind === kind)?.lines || []).map(l => l.text);
+  assert.ok(lines('power_rankings').some(t => /^Number 1: /.test(t)));
+  assert.ok(!lines('power_rankings').some(t => /0-0/.test(t)), 'no 0-0 records read aloud');
+  assert.ok(lines('predictions').length && !lines('predictions').some(t => /^Number \d+: /.test(t)), 'predictions do not repeat the countdown');
 });
 
 test('rundowns: weekly, breaking and offseason shapes', async () => {
@@ -139,6 +205,8 @@ test('template writer produces valid scripts for every rundown type', async () =
     assert.ok(r.ok, `${v.type}/${v.phase}: ${r.errors.join('; ')}`);
     assert.equal(r.script.segments.length, rundown.segments.length);
     if (v.chronicle) assert.ok(r.script.segments.find(s => s.kind === 'press_review').lines.some(l => /Crimson Chronicle/.test(l.text)));
+    const countdown = r.script.segments.filter(s => s.lines.some(l => /^Number \d+: /.test(l.text))).map(s => s.kind);
+    assert.ok(countdown.every(k => k === 'power_rankings'), `${v.type}/${v.phase}: the rankings countdown is read once, not in ${countdown}`);
   }
 });
 

@@ -87,6 +87,11 @@ async function render() {
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
+function removeSample() {
+  if (!confirm('Remove the sample league?\n\nThis deletes the sample league, its news stories and episodes, the sample Chronicle article and Hub data, and resets the show\'s memory. Your settings, Discord webhook and export URL stay.')) return;
+  act(() => api('/api/admin/reset', { method: 'POST', body: { confirm: 'RESET' } }), 'Sample league removed').then(render);
+}
+
 async function viewDashboard() {
   const s = await api('/api/admin/status');
   state.status = s;
@@ -105,7 +110,10 @@ async function viewDashboard() {
           row('Teams / players', `${lg.teams} / ${lg.players}`),
           row('Standings', lg.standingsFresh ? 'current' : 'out of date — re-export League Info'),
           row('Updated', when(lg.updatedAt)))),
-      empty && h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/sample-data', { method: 'POST', body: {} }), 'Sample league loaded').then(render) } }, 'Load sample league')),
+      empty && h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/sample-data', { method: 'POST', body: {} }), 'Sample league loaded').then(render) } }, 'Load sample league'),
+      lg.leagueId === 'demo' && h('div', {},
+        h('p', { class: 'muted' }, 'This is the sample league. Remove it before your real league\'s first export arrives.'),
+        h('button', { class: 'btn danger', type: 'button', on: { click: removeSample } }, 'Remove sample league'))),
     h('section', { class: 'panel' }, h('h2', {}, 'Newsroom'),
       h('table', {}, h('tbody', {},
         row('Script writer', s.writer.claude && s.writer.mode !== 'template' ? `Claude (${s.writer.model})` : 'Template writer'),
@@ -120,9 +128,9 @@ async function viewDashboard() {
         h('button', { class: 'btn', type: 'button', on: { click: () => { state.tab = 'episodes'; render(); } } }, 'Breaking bulletin / special'))));
 
   const setup = h('section', { class: 'panel' }, h('h2', {}, 'Madden export URL'),
-    h('p', {}, 'Paste this into Snallabot (dashboard → export → custom URL) or the Madden Companion App export screen. Exports land here automatically; the show is drafted after each one.'),
+    h('p', {}, 'Give this to the HFL\'s ea-exporter (see docs/hfl-setup.md), or paste it into Snallabot (dashboard → export → custom URL) or the Madden Companion App export screen. Exports land here automatically; the weekly show is drafted once a week\'s games are all final.'),
     h('div', { class: 'row' }, h('code', { class: 'mono' }, s.ingestUrl), copyBtn(s.ingestUrl)),
-    h('p', { class: 'muted' }, 'Keep this URL private — anyone with it can send data. Snallabot also exports free agents, which the Companion App does not.'),
+    h('p', { class: 'muted' }, 'Keep this URL private — anyone with it can send data. The ea-exporter and Snallabot also export free agents, which the Companion App does not.'),
     s.ingest.open && h('p', { class: 'notice' }, `Export in progress (${Object.values(s.ingest.open.parts).reduce((a, b) => a + b, 0)} payloads so far)…`));
 
   const jobs = h('section', { class: 'panel' }, h('h2', {}, 'Recent jobs'), jobsTable(s.jobs));
@@ -420,7 +428,18 @@ async function viewSettings() {
       h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'Voice', 'Speed', ''].map(t => h('th', {}, t)))), h('tbody', {}, personaRows.map(r => r.el)))),
     h('section', { class: 'panel' }, h('h2', {}, 'Pronunciations'),
       h('p', { class: 'muted' }, 'One per line: how a name is written = how the voices should say it.'), pron),
-    h('div', { class: 'row' }, h('button', { class: 'btn primary', type: 'button', on: { click: save } }, 'Save settings')));
+    h('div', { class: 'row' }, h('button', { class: 'btn primary', type: 'button', on: { click: save } }, 'Save settings')),
+    startOverPanel());
+}
+
+function startOverPanel() {
+  const typed = h('input', { type: 'text', placeholder: 'Type RESET', autocomplete: 'off' });
+  const go = h('button', { class: 'btn danger', type: 'button', disabled: true, on: { click: () => act(() => api('/api/admin/reset', { method: 'POST', body: { confirm: typed.value.trim() } }), 'Started over').then(r => { if (r) { state.tab = 'dashboard'; render(); } }) } }, 'Start over');
+  typed.addEventListener('input', () => { go.disabled = typed.value.trim() !== 'RESET'; });
+  return h('section', { class: 'panel' }, h('h2', {}, 'Start over'),
+    h('p', {}, 'Removes the league and everything made from it: news stories, every episode (published ones too), Chronicle articles, Hub data and the show\'s memory. Use it to clear the sample league, or exports from before a fantasy draft. The next export starts the league fresh.'),
+    h('p', { class: 'muted' }, 'Kept: these settings, the Discord webhook, the export URL and the voices. A real league is saved to league/archive first. Discord posts already sent stay in Discord.'),
+    h('div', { class: 'row' }, typed, go));
 }
 
 // ── Memory ────────────────────────────────────────────────────────────────

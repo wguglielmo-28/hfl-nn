@@ -33,6 +33,10 @@ the Kokoro voice model (~90 MB) once. Options:
 - `-- --tts silent` skips voices, which makes it quick.
 - `-- --data ./somewhere` writes somewhere other than `./data`.
 
+Done with the sample? Press **Remove sample league** on the control room Dashboard before your
+real league's first export. It clears the sample's league data, stories, episodes and show memory,
+and keeps your settings and export URL. **Settings → Start over** does the same for any league.
+
 The control room password comes from `ADMIN_PASSWORD`. If that's not set, the server prints a
 temporary password when it starts.
 

@@ -9,7 +9,8 @@ The HFL already runs three tools that HFL-NN can read from. They live in
 | The HFL Hub's Chronicle pages | Each new Crimson Chronicle issue | Paste one URL into HFL-NN ([step 2](#2-the-crimson-chronicle-the-hubs-chronicle-page)) |
 | HFL Hub data | The official Game of the Week, coach names, announcements, power rankings, history | Optional: add one feed route to the Hub ([step 3](#3-optional-the-hub-feed)) |
 
-Steps 1 and 2 are enough for a full weekly show.
+Steps 1 and 2 are enough for a full weekly show. When you're ready to switch from the sample
+league to the real one, see [Going live](#going-live-after-the-fantasy-draft).
 
 ---
 
@@ -143,3 +144,30 @@ Then in HFL-NN go to **Settings → HFL Hub feed URL** and enter:
 ```
 https://hfl-hub-5kc.pages.dev/api/hfl-nn-feed
 ```
+
+---
+
+## Going live after the fantasy draft
+
+1. **Remove the sample league.** In the control room, press **Remove sample league** on the
+   Dashboard. This clears:
+   - the sample league
+   - its news stories and episodes (published ones too, so the public channel is empty)
+   - the sample Chronicle article and Hub data
+   - the show's memory
+
+   Your settings, Discord webhook, export URL and voices stay. Discord posts already sent stay
+   in Discord, so delete any sample posts there by hand.
+2. **Wait until the fantasy draft is finished**, then connect the exporter ([step 1](#1-madden-data-the-ea-exporter)) and run it
+   once, or let the daily run do it. That first export is the starting point: nothing in it is
+   reported as a move.
+3. **Optional first show:** go to **Episodes → New episode**, pick type *special* and phase
+   *preseason*, then press **Write script**. You get a season preview built from the new rosters
+   (power rankings, bold predictions).
+4. From then on, each week gets its show once its games are all final, and big moves get Breaking
+   News bulletins.
+
+If an export reaches HFL-NN before the draft is finished, nothing breaks. HFL-NN recognizes a
+league-wide reshuffle and reports it as one fantasy-draft story (it leads the *Draft Desk*
+segment of a *draft* special) instead of hundreds of trades. To wipe it instead, use
+**Settings → Start over**, which works for any league. Type RESET to confirm.

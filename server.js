@@ -264,6 +264,10 @@ function createApp(opts = {}) {
     need(!Object.keys(league.teams).length || req.body?.force, 'League data already exists. Sample data is only for an empty install.', 409);
     return loadSampleLeague();
   }));
+  admin.post('/reset', wrap(req => {
+    need(req.body?.confirm === 'RESET', 'Type RESET to confirm.', 400);
+    return startOver();
+  }));
 
   admin.get('/wire', wrap(() => producer.wireStories().slice(0, 200).map(s => ({
     id: s.id, type: s.type, category: s.category, score: s.score, headline: s.headline, createdAt: s.createdAt,
@@ -375,6 +379,23 @@ function createApp(opts = {}) {
     pollTimer.unref?.();
   }
 
+  // Remove the league and everything made from it — the sample league, or
+  // exports from before a fantasy draft. Settings, the Discord webhook, the
+  // export URL and the voice cache stay. The Chronicle and Hub refill from
+  // their URLs (the Chronicle from its newest issue only).
+  function startOver() {
+    need(!ingest.status().open, 'An export is arriving right now. Try again in a couple of minutes.', 409);
+    need(!producer.busy(), 'An episode is still being written or voiced. Try again when it finishes.', 409);
+    const removed = { leagueId: league.leagueId, episodes: producer.list().length, stories: producer.wireStories().length };
+    ingest.reset();
+    producer.reset();
+    chronicle.reset();
+    hub.reset();
+    logger.log(`[control] started over: removed league ${removed.leagueId}, ${removed.episodes} episodes, ${removed.stories} stories`);
+    for (const src of [chronicle, hub]) src.refresh().catch(e => logger.warn(`[control] refresh after start-over failed: ${e.message}`));
+    return { ok: true, removed };
+  }
+
   // The demo league: two consistent export batches, a Chronicle article and
   // a Hub feed (see lib/demo.js). Only offered on an empty install.
   async function loadSampleLeague() {
@@ -394,7 +415,7 @@ function createApp(opts = {}) {
 
   return {
     app, store, producer, ingest, settings, tts, auth, chronicle, hub,
-    ingestKey, startPolling, loadSampleLeague,
+    ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
     close: async () => { clearTimeout(pollTimer); clearTimeout(saveTimer); await tts.close?.(); },
   };
