@@ -11,9 +11,10 @@ const P = require('../lib/writer/prompt');
 const M = require('../lib/memory');
 const { createStore } = require('../lib/store');
 const { createMaddenIngest } = require('../lib/ingest/madden');
+const { normalizeHubFeed } = require('../lib/ingest/hub');
 const personas = require('../config/personas.json');
 const show = require('../config/show.json');
-const { fixture, fixturePayloads, tmpDir, clone } = require('./helpers');
+const { fixturePayloads, secondBatch, tmpDir, clone } = require('./helpers');
 
 const personaIds = personas.anchors.map(a => a.id);
 const quiet = { log() {}, warn() {}, error() {} };
@@ -36,27 +37,6 @@ async function leagueWithBatches(mutate) {
   return { league, batches };
 }
 
-function secondBatch() {
-  const rosters = fixture('rosters');
-  const ids = Object.keys(rosters);
-  const a = clone(rosters[ids[0]]), b = clone(rosters[ids[1]]), c = clone(rosters[ids[2]]);
-  const fa = clone(fixture('freeagents'));
-  const star = a.rosterInfoList.sort((x, y) => y.playerBestOvr - x.playerBestOvr)[0];
-  a.rosterInfoList = a.rosterInfoList.filter(p => p !== star);
-  b.rosterInfoList.push({ ...star, teamId: Number(ids[1]) });
-  const signee = fa.rosterInfoList.shift();
-  c.rosterInfoList.push({ ...signee, teamId: Number(ids[2]), isFreeAgent: false });
-  const hurt = c.rosterInfoList.find(p => p.playerBestOvr >= 80 && !p.injuryLength);
-  hurt.injuryLength = 6;
-  const riser = b.rosterInfoList.find(p => p.devTrait === 1);
-  riser.devTrait = 3;
-  return [
-    { kind: 'freeagents', body: fa },
-    { kind: 'roster', teamId: Number(ids[0]), body: a },
-    { kind: 'roster', teamId: Number(ids[1]), body: b },
-    { kind: 'roster', teamId: Number(ids[2]), body: c },
-  ];
-}
 
 test('game stories come from the week in the batch; stale standings are not quoted', async () => {
   const { league, batches } = await leagueWithBatches();
@@ -109,6 +89,32 @@ test('rundowns: weekly, breaking and offseason shapes', async () => {
   const off = buildRundown({ type: 'special', phase: 'offseason', show, personas, league, context, stories });
   assert.equal(off.name, 'offseason');
   assert.ok(off.segments.some(s => s.kind === 'transactions'));
+});
+
+test('Game of the Week: the Hub names it; otherwise the segment is the Spotlight Game', async () => {
+  const { league, batches } = await leagueWithBatches();
+  const stories = batches[0].stories;
+  const storiesById = Object.fromEntries(stories.map(s => [s.id, s]));
+  const context = S.buildContext(league, {});
+  const wk = context.focusWeek;
+  const gotwSeg = r => r.segments.find(s => s.kind === 'game_of_week');
+
+  const plain = buildRundown({ type: 'weekly', phase: 'regular', show, personas, league, context, stories });
+  assert.equal(gotwSeg(plain).title, 'Spotlight Game', 'the league never self-selects a Game of the Week');
+  assert.match(gotwSeg(plain).brief, /never call it that/);
+  const script = writeTemplateScript({ rundown: plain, storiesById, personas, league, context });
+  assert.doesNotMatch(JSON.stringify(script), /Game of the Week/i);
+
+  // The Hub names the week's third game (teams in either order, any case).
+  const g = L.gamesForWeek(league, wk.seasonIndex, wk.stage, wk.week)[2];
+  const hub = normalizeHubFeed({ gamesOfTheWeek: [{ week: wk.week, away: league.teams[g.homeId].abbr.toLowerCase(), home: league.teams[g.awayId].abbr }] });
+  const key = S.officialGotwKey(league, wk, hub);
+  assert.equal(key, g.key);
+  assert.equal(S.officialGotwKey(league, { ...wk, week: wk.week + 1 }, hub), null, 'another week has no pick');
+  const named = buildRundown({ type: 'weekly', phase: 'regular', show, personas, league, context, stories: S.withOfficialGotw(stories, key) });
+  assert.equal(gotwSeg(named).title, 'Game of the Week');
+  assert.deepEqual(gotwSeg(named).storyIds, [`game:${g.key}`]);
+  assert.ok(!storiesById[`game:${g.key}`].facts.flags.includes('game-of-the-week'), 'wire stories are not edited');
 });
 
 test('template writer produces valid scripts for every rundown type', async () => {

@@ -40,6 +40,10 @@ temporary password when it starts.
 
 ## 🔌 Connecting the HFL
 
+**HFL setup:** [`docs/hfl-setup.md`](docs/hfl-setup.md) connects HFL-NN to the league's own tools:
+the daily `ea-exporter`, the Hub's Chronicle pages and the Hub feed. It includes copy-paste
+instructions for the changes on the exporter and Hub side.
+
 ### Madden 27 exports
 Open the control room. The **Dashboard** shows your private export URL:
 
@@ -47,31 +51,41 @@ Open the control room. The **Dashboard** shows your private export URL:
 https://<your-hfl-nn>/ingest/<secret>
 ```
 
-Paste it into either of these:
-- **Snallabot** (recommended): dashboard → export → add a custom export URL. It pulls straight
-  from EA, and unlike the Companion App it also exports **free agents**.
-- **The Madden Companion App's** export screen.
+Anything that speaks the Madden Companion App export protocol can send to it:
+- **The HFL's `ea-exporter`** (recommended). It pulls straight from EA every day and includes
+  free agents. It needs one small change to send HFL-NN a copy (see the setup guide).
+- **Snallabot**: dashboard → export → add a custom export URL.
+- **The Madden Companion App's** export screen. It leaves out free agents.
 
 Each export arrives as a burst of requests. HFL-NN applies them as they land, waits 90 seconds
-after the last one, and then treats the burst as one **batch**: it compares the batch with the
-previous one and writes up what changed. With automation on, the weekly show is drafted at that
-point.
+after the last one, and treats the burst as one **batch**. It compares each batch with the previous
+one and writes up what changed:
+- **A week whose games are all final** (after the advance) gets the weekly show. With automation
+  on, it is drafted then, once per week.
+- **A mid-week export** (the daily exporter sends plenty) can produce a Breaking News bulletin when
+  something big changed since the day before.
+- **An export for a different league** (a new Madden year, or real data replacing the sample)
+  starts a fresh league. The old one is archived.
 
 You can also upload export JSON files by hand (**Sources → Madden exports**).
 
 ### The Crimson Chronicle
-In **Settings**, enter the Chronicle's RSS or Atom feed. A plain site URL also works if the site
-advertises its feed. New articles are picked up every 20 minutes, and the full article is
-fetched when the feed only carries a teaser.
+In **Settings**, enter the Hub's Chronicle page, `https://hfl-hub-5kc.pages.dev/chronicle`. HFL-NN
+reads each new issue as it is posted. It takes the headline from the Feature Story, the author
+from the byline, and a short summary of every section for the writers. An RSS or Atom feed (or
+a site that advertises one) works too. New issues are picked up every 20 minutes.
 
 On air, the anchors credit the Chronicle and the author by name, and the **Sources** panel under
-the player links to the article. Posts tagged "Breaking" can trigger a bulletin. You can also
-add a single article by URL or paste one in (**Sources**).
+the player links to the issue. Posts tagged "Breaking" can trigger a bulletin. You can also add a
+single article by URL or paste one in (**Sources**).
 
 ### The HFL Hub
-The Hub provides owners, announcements, power rankings, awards and league history through one
-small JSON document. HFL-NN either polls it at a URL or receives it as a push. The format is in
-[`docs/hub-feed.md`](docs/hub-feed.md).
+The Hub provides the official Game of the Week, coach names, announcements, power rankings, awards
+and league history through one small JSON document. HFL-NN either polls it at a URL or receives it
+as a push. The format is in [`docs/hub-feed.md`](docs/hub-feed.md).
+
+The HFL never self-selects a Game of the Week. Until the Hub names one for the week, the show's
+top game is called the **Spotlight Game**.
 
 ### Discord
 **Settings → Discord**: paste a channel webhook and send a test message. Every published episode
@@ -136,10 +150,11 @@ in `config/personas.json`.
 | **Offseason / Draft / Free Agency / Preseason specials** | Set the phase in Settings, then produce a special | 4–8 min |
 | **Custom** | Pick any segments and add notes | any |
 
-Segments: Cold Open, Around the League, Game of the Week, Players of the Week, Standings and
-Playoff Race, The Wire (transactions), Injury Report, From the Chronicle, League Office, Hot Take
-Hotline, Conspiracy Corner, Up Next, Power Rankings, Bold Predictions, Draft Desk, Free Agency
-Frenzy, The Bracket, Season in Review, and the sign-off. They're defined in `config/show.json`.
+Segments: Cold Open, Around the League, Game of the Week (the Spotlight Game until the Hub names
+one), Players of the Week, Standings and Playoff Race, The Wire (transactions), Injury Report,
+From the Chronicle, League Office, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
+Bold Predictions, Draft Desk, Free Agency Frenzy, The Bracket, Season in Review, and the sign-off.
+They're defined in `config/show.json`.
 
 **Show memory** (`memory.json`) carries persona moods, feuds, on-air predictions, running
 storylines and recent episodes from show to show. When a prediction comes true or falls flat,

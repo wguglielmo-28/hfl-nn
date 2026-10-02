@@ -17,11 +17,13 @@ league snapshots, episodes, audio, the voice model cache and settings. It has th
    - `NODE_ENV=production`: turns on the HTTPS redirect and HSTS.
    - `PUBLIC_URL=https://<your-service>.up.railway.app`, or your custom domain. Discord links
      use it.
+   - `CHRONICLE_FEED_URL=https://hfl-hub-5kc.pages.dev/chronicle`: optional. You can also set
+     it later in the control room.
    - `HUB_PUSH_KEY`: optional, if the Hub pushes its feed.
 4. **Resources**: give the service **at least 1 GB of RAM**. Kokoro uses about 300–400 MB while
    voicing. CPU spikes for a few minutes per episode and is idle otherwise.
-5. Open `https://<service>/control`, log in, and copy the **Madden export URL** into Snallabot
-   or the Companion App.
+5. Open `https://<service>/control`, log in, and copy the **Madden export URL** into the HFL's
+   `ea-exporter` (see [`docs/hfl-setup.md`](docs/hfl-setup.md)), Snallabot or the Companion App.
 
 The first voiced episode downloads the Kokoro model (~90 MB) into `/data/models`. Later episodes
 load it from disk.

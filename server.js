@@ -92,6 +92,7 @@ function createApp(opts = {}) {
     store, getLeague: () => league, saveLeague, logger,
     debounceMs: opts.debounceMs ?? (Number(env.EXPORT_DEBOUNCE_SECONDS) || 90) * 1000,
     onBatchComplete: x => producer.onBatch(x, { automate: !quietBatches }),
+    onLeagueChange: ({ from, to }) => logger.log(`[producer] league ${from} → ${to}: retired ${producer.retireWire()} unused stories`),
   });
 
   const httpsOnly = env.FORCE_HTTPS === '1' || (env.NODE_ENV === 'production' && env.FORCE_HTTPS !== '0');
@@ -221,6 +222,7 @@ function createApp(opts = {}) {
   admin.get('/me', wrap(() => ({ ok: true })));
   admin.get('/status', wrap(req => {
     const wk = L.lastPlayedWeek(league);
+    const done = L.lastCompleteWeek(league);
     return {
       version: VERSION,
       dataDir: store.dir,
@@ -231,6 +233,8 @@ function createApp(opts = {}) {
         teams: Object.keys(league.teams).length, players: Object.keys(league.players).length,
         games: Object.keys(league.games).length, standingsFresh: league.standingsFresh !== false,
         latestWeek: wk ? L.weekLabel(wk.stage, wk.week) : null,
+        latestWeekFinal: !!wk && L.weekComplete(league, wk),
+        lastFinalWeek: done ? L.weekLabel(done.stage, done.week) : null,
         detectedPhase: L.detectPhase(league), phase: settings.get().phaseOverride || L.detectPhase(league),
       },
       ingest: ingest.status(),
