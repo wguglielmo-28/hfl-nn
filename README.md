@@ -16,7 +16,7 @@ instead of a 24/7 stream.
 
 ## ⚡ Quick start
 
-You need **Node.js 20 or newer** ([nodejs.org](https://nodejs.org), LTS).
+You need **Node.js 22 or newer** ([nodejs.org](https://nodejs.org), LTS).
 
 ```bash
 npm install
@@ -205,13 +205,14 @@ lib/writer/             schema, validator, template writer, Claude writer, promp
 lib/tts/, lib/audio/    Kokoro worker, text prep, jingles, mixer, MP3 encoding
 lib/producer.js         news wire, episodes, jobs and automation
 public/                 channel page, control room, js/studio/ (pixel-art renderer)
-tools/                  demo.js, snap.js (player screenshots), make-fixtures.js
+tools/                  demo.js, snap.js (screenshots), record.js (MP4 clips), make-fixtures.js
 test/                   node --test suites + trimmed sample exports
 ```
 
 ```bash
 npm test                 # all suites (no network, no API key needed)
 node tools/snap.js       # screenshots of the latest episode (needs Playwright and a running server)
+node tools/record.js --id <episode> --from 0 --to 60 --out clip.mp4   # MP4 clip for Discord/YouTube (Playwright + ffmpeg)
 ```
 
 ## 📜 Credits

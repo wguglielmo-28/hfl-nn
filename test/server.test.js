@@ -234,3 +234,67 @@ test('discord helpers', () => {
   assert.equal(msg.embeds[0].url, 'https://x.test/watch/1');
   assert.match(msg.embeds[0].fields[0].value, /• A/);
 });
+
+test('segment rewrite, unpublish and delete', async () => {
+  const s = await boot();
+  try {
+    s.ctx.settings.update({ autoProduce: false });
+    await s.ctx.loadSampleLeague();
+    const ep = s.ctx.producer.createEpisode({ type: 'weekly', writer: 'template' });
+    await s.ctx.producer.idle();
+    const before = s.ctx.producer.get(ep.id);
+    const segId = before.rundown.segments[2].id;
+    const untouched = JSON.stringify(before.script.segments[0]);
+    s.ctx.producer.rewrite(ep.id, { segmentId: segId, writer: 'template' });
+    await s.ctx.producer.idle();
+    const after = s.ctx.producer.get(ep.id);
+    assert.equal(after.status, 'draft', JSON.stringify(after.validation));
+    assert.equal(after.script.segments.length, before.script.segments.length);
+    assert.equal(JSON.stringify(after.script.segments[0]), untouched, 'other segments are left alone');
+    assert.equal(after.writer.history.length, 1);
+
+    s.ctx.producer.voice(ep.id);
+    await s.ctx.producer.idle();
+    await s.ctx.producer.publish(ep.id, { discord: false });
+    assert.equal(s.ctx.producer.published().length, 1);
+    s.ctx.producer.unpublish(ep.id);
+    assert.equal(s.ctx.producer.published().length, 0);
+    assert.equal((await s.req('GET', `/api/episodes/${ep.id}`)).status, 404);
+    s.ctx.producer.remove(ep.id);
+    assert.equal(s.ctx.producer.get(ep.id), null);
+    assert.ok(!s.ctx.store.exists(`episodes/${ep.id}`));
+  } finally { await s.close(); }
+});
+
+test('chronicle and hub polling with a fake web', async () => {
+  const pages = {
+    'https://chronicle.test/': '<html><head><link rel="alternate" type="application/rss+xml" href="/feed.xml"></head><body>Home</body></html>',
+    'https://chronicle.test/feed.xml': `<rss version="2.0"><channel><item><title>Week 2 Winners and Losers</title><link>https://chronicle.test/w2</link><guid>w2</guid><description>Teaser only.</description></item>
+      <item><title>BREAKING: Commissioner Sacks the Sim</title><link>https://chronicle.test/b</link><guid>b</guid><description>${'Long enough body. '.repeat(40)}</description><category>Breaking</category></item></channel></rss>`,
+    'https://chronicle.test/w2': `<html><head><meta name="author" content="Ink Slinger"></head><body><article><p>${'The full winners and losers column. '.repeat(30)}</p></article></body></html>`,
+    'https://hub.test/feed': JSON.stringify({ announcements: [{ id: 'a1', title: 'Draft order set', body: 'Lottery done.' }], owners: [{ teamAbbr: 'BUF', displayName: 'HypnoKing' }] }),
+  };
+  const fetchImpl = async url => ({
+    ok: !!pages[url], status: pages[url] ? 200 : 404,
+    text: async () => pages[url] || 'not found',
+  });
+  const s = await boot({ fetchImpl });
+  try {
+    s.ctx.settings.update({ chronicleFeedUrl: 'https://chronicle.test/', hubFeedUrl: 'https://hub.test/feed', autoBreaking: true });
+    const r = await s.ctx.chronicle.refresh();
+    assert.equal(r.ok, true, r.error);
+    assert.equal(r.fresh, 2);
+    const w2 = s.ctx.chronicle.list().find(a => a.title.startsWith('Week 2'));
+    assert.match(w2.text, /full winners and losers column/, 'teaser feeds get the full article');
+    assert.equal(w2.author, 'Ink Slinger');
+    await s.ctx.producer.idle();
+    await s.ctx.producer.idle();
+    const bulletin = s.ctx.producer.list().find(e => e.type === 'breaking');
+    assert.ok(bulletin, 'a Chronicle post tagged Breaking drafts a bulletin');
+    assert.equal((await s.ctx.chronicle.refresh()).fresh, 0, 'no duplicates on the next poll');
+
+    const h = await s.ctx.hub.refresh();
+    assert.equal(h.ok, true, h.error);
+    assert.equal(s.ctx.hub.data().announcements[0].title, 'Draft order set');
+  } finally { await s.close(); }
+});

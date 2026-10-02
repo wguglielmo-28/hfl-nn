@@ -81,7 +81,7 @@ function createApp(opts = {}) {
     store, getUrl: () => settings.get().chronicleFeedUrl, outlet: basePersonas.network.chronicleName || 'The Crimson Chronicle',
     onNew: fresh => producer?.onChronicle(fresh), fetchImpl: opts.fetchImpl, logger,
   });
-  const hub = createHubSource({ store, getUrl: () => settings.get().hubFeedUrl, fetchImpl: opts.fetchImpl, logger });
+  const hub = createHubSource({ store, getUrl: () => settings.get().hubFeedUrl, onUpdate: u => producer?.onHub(u), fetchImpl: opts.fetchImpl, logger });
   const publicUrl = () => settings.get().publicUrl || (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : '');
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
@@ -375,6 +375,9 @@ function createApp(opts = {}) {
   // a Hub feed (see lib/demo.js). Only offered on an empty install.
   async function loadSampleLeague() {
     const { demoBatches, SAMPLE_ARTICLE, SAMPLE_HUB } = require('./lib/demo');
+    // Article and Hub feed first, so the show drafted after the last batch can use them.
+    chronicle.addText(SAMPLE_ARTICLE);
+    hub.push(SAMPLE_HUB);
     const batches = [];
     const all = demoBatches();
     for (const [i, payloads] of all.entries()) {
@@ -382,8 +385,6 @@ function createApp(opts = {}) {
       quietBatches = i < all.length - 1;   // only the latest week triggers the newsroom
       try { batches.push(await ingest.flush()); } finally { quietBatches = false; }
     }
-    chronicle.addText(SAMPLE_ARTICLE);
-    hub.push(SAMPLE_HUB);
     return { batches: batches.map(b => b?.id) };
   }
 
