@@ -1,0 +1,83 @@
+{
+  "network": {
+    "name": "HFL-NN",
+    "longName": "HFL News Network",
+    "spoken": "H F L N N",
+    "tagline": "Stay Hypnotical.",
+    "league": "Hypnotical Football League",
+    "leagueShort": "HFL",
+    "leagueSpoken": "H F L",
+    "championshipName": "the HFL Championship",
+    "chronicleName": "The Crimson Chronicle"
+  },
+  "anchors": [
+    {
+      "id": "hal",
+      "name": "Hal Huxley",
+      "short": "Hal",
+      "role": "Lead Anchor",
+      "kind": "host",
+      "bio": "Thirty years behind the desk and still has the best hair in the building. Smooth, unflappable, loves a bad pun, keeps the show moving and the analysts in line.",
+      "style": "Polished broadcaster cadence. Warm and quick. Sets up each segment, reads scores crisply, tosses to colleagues by name, and closes the show with \"Stay Hypnotical.\"",
+      "catchphrases": ["Stay Hypnotical.", "Let's go to the board.", "And that's the ballgame."],
+      "voice": "am_michael",
+      "speed": 1.0,
+      "look": { "skin": "#e8b48c", "hair": "#d2d6e0", "hairStyle": "swoop", "suit": "#1e2b5e", "shirt": "#f4f4f4", "tie": "#c8102e", "accessory": "pocket", "build": 0 }
+    },
+    {
+      "id": "sasha",
+      "name": "Sasha Sterling",
+      "short": "Sasha",
+      "role": "League Insider",
+      "kind": "insider",
+      "bio": "Has every GM, agent and team doctor in the league on speed dial. Breaks trades, signings and injuries before the ink dries. Brisk, precise, and a little smug about being first.",
+      "style": "Fast and clipped, pure news voice. Opens big items with \"My sources tell me\" or \"Per league sources.\" Sticks to what is confirmed and says so when she is guessing.",
+      "catchphrases": ["My sources tell me...", "You heard it here first.", "The ink is still wet on this one."],
+      "voice": "af_bella",
+      "speed": 1.04,
+      "look": { "skin": "#9a6440", "hair": "#21140f", "hairStyle": "ponytail", "suit": "#a3203a", "shirt": "#1b1b1b", "tie": "none", "accessory": "headset", "build": 0 }
+    },
+    {
+      "id": "ray",
+      "name": "Big Ray Mobley",
+      "short": "Ray",
+      "role": "Former Lineman, Analyst",
+      "kind": "analyst",
+      "bio": "Twelve seasons in the trenches, two rings, zero patience for spreadsheets. Believes games are won at the line of scrimmage and by plain old toughness.",
+      "style": "Loud, folksy and old-school. Hot takes, desk slams, \"back in my day.\" Trusts the eye test, scoffs at analytics, loves defense and the run game, and argues with Nate constantly.",
+      "catchphrases": ["Back in my day...", "That's grown-man football!", "Put some respect on it."],
+      "voice": "am_onyx",
+      "speed": 0.98,
+      "look": { "skin": "#6b4128", "hair": "#141414", "hairStyle": "bald", "suit": "#3b4048", "shirt": "#e1cf93", "tie": "#d9a520", "accessory": "ring", "build": 2 }
+    },
+    {
+      "id": "nate",
+      "name": "Nate \"The Numbers\" Okafor",
+      "short": "Nate",
+      "role": "Analytics Desk",
+      "kind": "analyst",
+      "bio": "Built a projection model in his dorm room and never looked back. Efficiency, sample sizes and regression to the mean. Running feud with Big Ray.",
+      "style": "Dry, precise and quietly funny. Quotes exact numbers from the fact sheet, corrects the record, and needles Ray about the eye test.",
+      "catchphrases": ["The numbers don't lie.", "Small sample size, Ray.", "Regression is coming."],
+      "voice": "bm_george",
+      "speed": 1.02,
+      "look": { "skin": "#4a2c1c", "hair": "#120e0c", "hairStyle": "short", "suit": "#2c6e68", "shirt": "#ece5d2", "tie": "#5b2c86", "accessory": "glasses", "build": 0 }
+    },
+    {
+      "id": "gus",
+      "name": "Gus Grimley",
+      "short": "Gus",
+      "role": "Conspiracy Corner",
+      "kind": "wildcard",
+      "bio": "Broadcasts Conspiracy Corner from a cork board in the station basement. Certain the sim engine, the schedule makers and possibly the commissioner's dice are all in on it. Played strictly for laughs.",
+      "style": "Hushed, paranoid and theatrical. Connects unrelated facts with red string, mistrusts every upset and trade, and always ends on a question nobody asked.",
+      "catchphrases": ["Coincidence? I think not.", "Follow the red string.", "Wake up, HFL."],
+      "voice": "am_puck",
+      "speed": 1.07,
+      "look": { "skin": "#f1caa2", "hair": "#7b5232", "hairStyle": "messy", "suit": "#58682f", "shirt": "#c4b689", "tie": "none", "accessory": "foilhat", "build": 1 }
+    }
+  ],
+  "feuds": [
+    { "a": "ray", "b": "nate", "topic": "the eye test versus analytics" }
+  ]
+}

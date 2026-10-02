@@ -1,0 +1,47 @@
+{
+  "wordsPerSecond": 2.5,
+  "segments": {
+    "cold_open": { "title": "Tonight on HFL-NN", "lowerThird": "TONIGHT ON HFL-NN", "seconds": 28, "cast": ["host", "insider"], "set": "desk" },
+    "scoreboard": { "title": "Around the League", "lowerThird": "AROUND THE LEAGUE", "seconds": 70, "cast": ["host", "analyst"], "set": "desk" },
+    "game_of_week": { "title": "Game of the Week", "lowerThird": "GAME OF THE WEEK", "seconds": 60, "cast": ["host", "analyst", "analyst2"], "set": "desk" },
+    "top_performers": { "title": "Players of the Week", "lowerThird": "PLAYERS OF THE WEEK", "seconds": 45, "cast": ["analyst2", "host"], "set": "desk" },
+    "standings": { "title": "The Standings", "lowerThird": "THE STANDINGS", "seconds": 45, "cast": ["host", "analyst2"], "set": "desk" },
+    "playoff_race": { "title": "The Playoff Race", "lowerThird": "THE PLAYOFF RACE", "seconds": 50, "cast": ["host", "analyst2", "analyst"], "set": "desk" },
+    "transactions": { "title": "The Wire", "lowerThird": "THE WIRE: TRANSACTIONS", "seconds": 50, "cast": ["insider", "analyst"], "set": "desk" },
+    "injuries": { "title": "Injury Report", "lowerThird": "INJURY REPORT", "seconds": 30, "cast": ["insider", "host"], "set": "desk" },
+    "press_review": { "title": "From the Chronicle", "lowerThird": "FROM THE CRIMSON CHRONICLE", "seconds": 45, "cast": ["host", "analyst"], "set": "desk" },
+    "league_office": { "title": "League Office", "lowerThird": "FROM THE LEAGUE OFFICE", "seconds": 30, "cast": ["host", "insider"], "set": "desk" },
+    "debate": { "title": "Hot Take Hotline", "lowerThird": "HOT TAKE HOTLINE", "seconds": 60, "cast": ["analyst", "analyst2", "host"], "set": "desk" },
+    "conspiracy_corner": { "title": "Conspiracy Corner", "lowerThird": "CONSPIRACY CORNER", "seconds": 35, "cast": ["wildcard", "host"], "set": "corkboard" },
+    "preview": { "title": "Up Next", "lowerThird": "MATCHUPS TO WATCH", "seconds": 50, "cast": ["host", "analyst", "analyst2"], "set": "desk" },
+    "power_rankings": { "title": "Power Rankings", "lowerThird": "POWER RANKINGS", "seconds": 55, "cast": ["analyst2", "analyst", "host"], "set": "desk" },
+    "predictions": { "title": "Bold Predictions", "lowerThird": "BOLD PREDICTIONS", "seconds": 60, "cast": ["analyst", "analyst2", "insider", "wildcard", "host"], "set": "desk" },
+    "draft_desk": { "title": "The Draft Desk", "lowerThird": "THE DRAFT DESK", "seconds": 60, "cast": ["insider", "analyst2", "analyst"], "set": "desk" },
+    "free_agency": { "title": "Free Agency Frenzy", "lowerThird": "FREE AGENCY FRENZY", "seconds": 55, "cast": ["insider", "analyst"], "set": "desk" },
+    "bracket": { "title": "The Bracket", "lowerThird": "THE ROAD TO THE CHAMPIONSHIP", "seconds": 45, "cast": ["host", "analyst2"], "set": "desk" },
+    "season_review": { "title": "Season in Review", "lowerThird": "SEASON IN REVIEW", "seconds": 70, "cast": ["host", "analyst", "analyst2", "insider"], "set": "desk" },
+    "breaking": { "title": "Breaking News", "lowerThird": "BREAKING NEWS", "seconds": 50, "cast": ["host", "insider", "analyst"], "set": "breaking" },
+    "custom": { "title": "Special Report", "lowerThird": "SPECIAL REPORT", "seconds": 45, "cast": ["host", "insider"], "set": "desk" },
+    "signoff": { "title": "Good Night", "lowerThird": "HFL-NN", "seconds": 15, "cast": ["host"], "set": "desk" }
+  },
+  "optional": ["transactions", "injuries", "press_review", "league_office", "preview", "conspiracy_corner", "playoff_race", "top_performers", "draft_desk", "free_agency", "bracket", "power_rankings"],
+  "rundowns": {
+    "weekly": ["cold_open", "scoreboard", "game_of_week", "top_performers", "standings", "transactions", "injuries", "press_review", "league_office", "debate", "conspiracy_corner", "preview", "signoff"],
+    "weekly_late": ["cold_open", "scoreboard", "game_of_week", "top_performers", "playoff_race", "transactions", "injuries", "press_review", "league_office", "debate", "conspiracy_corner", "preview", "signoff"],
+    "playoffs": ["cold_open", "scoreboard", "game_of_week", "bracket", "top_performers", "press_review", "league_office", "debate", "conspiracy_corner", "preview", "signoff"],
+    "championship": ["cold_open", "game_of_week", "season_review", "press_review", "conspiracy_corner", "signoff"],
+    "preseason": ["cold_open", "scoreboard", "power_rankings", "predictions", "transactions", "injuries", "press_review", "league_office", "conspiracy_corner", "signoff"],
+    "offseason": ["cold_open", "transactions", "free_agency", "draft_desk", "injuries", "press_review", "league_office", "debate", "conspiracy_corner", "signoff"],
+    "draft": ["cold_open", "draft_desk", "transactions", "press_review", "debate", "conspiracy_corner", "signoff"],
+    "free_agency": ["cold_open", "free_agency", "transactions", "press_review", "debate", "conspiracy_corner", "signoff"],
+    "breaking": ["breaking"]
+  },
+  "phases": {
+    "regular": "weekly",
+    "playoffs": "playoffs",
+    "preseason": "preseason",
+    "offseason": "offseason",
+    "draft": "draft",
+    "free_agency": "free_agency"
+  }
+}
