@@ -87,6 +87,11 @@ async function render() {
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
+function removeSample() {
+  if (!confirm('Remove the sample league?\n\nThis deletes the sample league, its news stories and episodes, the sample Chronicle article and Hub data, and resets the show\'s memory. Your settings, Discord webhook and export URL stay.')) return;
+  act(() => api('/api/admin/reset', { method: 'POST', body: { confirm: 'RESET' } }), 'Sample league removed').then(render);
+}
+
 async function viewDashboard() {
   const s = await api('/api/admin/status');
   state.status = s;
@@ -98,12 +103,17 @@ async function viewDashboard() {
     h('section', { class: 'panel' }, h('h2', {}, 'League'),
       empty ? h('p', {}, 'No league data yet. Point your Madden export at the URL below, or load the sample league to try things out.')
         : h('table', {}, h('tbody', {},
-          row('Season', lg.calendarYear || '—'), row('Latest results', lg.latestWeek || 'none'),
+          row('Season', lg.calendarYear || '—'),
+          row('Latest results', lg.latestWeek ? `${lg.latestWeek}${lg.latestWeekFinal ? ' (final)' : ' (still being played)'}` : 'none'),
+          !lg.latestWeekFinal && lg.lastFinalWeek && row('Last finished week', lg.lastFinalWeek),
           row('Phase', `${lg.phase}${lg.phase !== lg.detectedPhase ? ` (override; detected ${lg.detectedPhase})` : ''}`),
           row('Teams / players', `${lg.teams} / ${lg.players}`),
           row('Standings', lg.standingsFresh ? 'current' : 'out of date — re-export League Info'),
           row('Updated', when(lg.updatedAt)))),
-      empty && h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/sample-data', { method: 'POST', body: {} }), 'Sample league loaded').then(render) } }, 'Load sample league')),
+      empty && h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/sample-data', { method: 'POST', body: {} }), 'Sample league loaded').then(render) } }, 'Load sample league'),
+      lg.leagueId === 'demo' && h('div', {},
+        h('p', { class: 'muted' }, 'This is the sample league. Remove it before your real league\'s first export arrives.'),
+        h('button', { class: 'btn danger', type: 'button', on: { click: removeSample } }, 'Remove sample league'))),
     h('section', { class: 'panel' }, h('h2', {}, 'Newsroom'),
       h('table', {}, h('tbody', {},
         row('Script writer', s.writer.claude && s.writer.mode !== 'template' ? `Claude (${s.writer.model})` : 'Template writer'),
@@ -118,9 +128,9 @@ async function viewDashboard() {
         h('button', { class: 'btn', type: 'button', on: { click: () => { state.tab = 'episodes'; render(); } } }, 'Breaking bulletin / special'))));
 
   const setup = h('section', { class: 'panel' }, h('h2', {}, 'Madden export URL'),
-    h('p', {}, 'Paste this into Snallabot (dashboard → export → custom URL) or the Madden Companion App export screen. Exports land here automatically; the show is drafted after each one.'),
+    h('p', {}, 'Give this to the HFL\'s ea-exporter (see docs/hfl-setup.md), or paste it into Snallabot (dashboard → export → custom URL) or the Madden Companion App export screen. Exports land here automatically; the weekly show is drafted once a week\'s games are all final.'),
     h('div', { class: 'row' }, h('code', { class: 'mono' }, s.ingestUrl), copyBtn(s.ingestUrl)),
-    h('p', { class: 'muted' }, 'Keep this URL private — anyone with it can send data. Snallabot also exports free agents, which the Companion App does not.'),
+    h('p', { class: 'muted' }, 'Keep this URL private — anyone with it can send data. The ea-exporter and Snallabot also export free agents, which the Companion App does not.'),
     s.ingest.open && h('p', { class: 'notice' }, `Export in progress (${Object.values(s.ingest.open.parts).reduce((a, b) => a + b, 0)} payloads so far)…`));
 
   const jobs = h('section', { class: 'panel' }, h('h2', {}, 'Recent jobs'), jobsTable(s.jobs));
@@ -336,7 +346,7 @@ async function viewSources() {
   const author = h('input', { type: 'text', placeholder: 'Author' });
   const text = h('textarea', { placeholder: 'Article text' });
   const chron = h('section', { class: 'panel' }, h('h2', {}, 'The Crimson Chronicle'),
-    h('p', {}, settings.chronicleFeedUrl ? `Feed: ${settings.chronicleFeedUrl} — checked every ${settings.pollMinutes} minutes. ` : 'Set the Chronicle feed URL in Settings (an RSS/Atom feed, or the site URL if it advertises one). ',
+    h('p', {}, settings.chronicleFeedUrl ? `${s.chronicle.mode === 'page' ? 'Issue list' : 'Feed'}: ${settings.chronicleFeedUrl} — checked every ${settings.pollMinutes} minutes. ` : 'Set the Chronicle URL in Settings: the HFL Hub\'s Chronicle page (…/chronicle), an RSS/Atom feed, or a site that advertises one. ',
       s.chronicle.error ? h('span', { class: 'error' }, s.chronicle.error) : `Last check: ${when(s.chronicle.fetchedAt)}`),
     h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/chronicle/refresh', { method: 'POST', body: {} })).then(r => { if (r) toast(r.ok ? `${r.fresh} new article(s)` : r.error, !r.ok); render(); }) } }, 'Check now')),
     h('label', {}, 'Add one article by URL'), h('div', { class: 'row' }, url, h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/chronicle/add', { method: 'POST', body: { url: url.value } }), 'Article added').then(render) } }, 'Add')),
@@ -347,7 +357,7 @@ async function viewSources() {
       h('td', {}, a.author || ''), h('td', {}, `${a.words} words`), h('td', {}, a.usedIn.length ? pill('aired', 'ok') : pill('new')))))) : h('p', { class: 'muted' }, 'No articles yet.'));
 
   const hub = h('section', { class: 'panel' }, h('h2', {}, 'HFL Hub'),
-    h('p', {}, 'HFL-NN reads a JSON feed from the Hub (owners, announcements, power rankings, awards, history). See docs/hub-feed.md for the format. Either set the feed URL in Settings, or have the Hub POST to /api/hub/push with the HUB_PUSH_KEY bearer token.'),
+    h('p', {}, 'HFL-NN reads a JSON feed from the Hub: the official Game of the Week, coach names, announcements, power rankings, awards and history. See docs/hfl-setup.md for adding it to the Hub, and docs/hub-feed.md for the format. Either set the feed URL in Settings, or have the Hub POST to /api/hub/push with the HUB_PUSH_KEY bearer token.'),
     h('p', {}, s.hub.error ? h('span', { class: 'error' }, s.hub.error) : s.hub.fetchedAt ? `Last update ${when(s.hub.fetchedAt)} (${s.hub.source})` : 'No Hub data yet.'),
     h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/hub/refresh', { method: 'POST', body: {} })).then(r => { if (r) toast(r.ok ? 'Hub updated' : r.error, !r.ok); render(); }) } }, 'Fetch now'));
   return h('div', {}, upload, chron, hub);
@@ -399,13 +409,13 @@ async function viewSettings() {
           h('p', { class: 'muted' }, 'Offseason sub-phases (re-signing, free agency, draft) can only be set here.')),
         h('div', {}, h('label', {}, 'Script writer'), sel('writer', ['auto', 'claude', 'template'], { auto: 'Claude if configured, else template', claude: 'Claude only', template: 'Template only (free)' })),
         h('div', {}, h('label', {}, 'Spice level'), sel('spice', ['mild', 'medium', 'spicy']))),
-      check('autoProduce', 'Draft the weekly show automatically after each game-week export'),
+      check('autoProduce', 'Draft the weekly show automatically once a week\'s games are all final'),
       check('autoPublish', '…and publish it without review'),
       check('autoBreaking', 'Draft breaking bulletins for big moves and Chronicle "breaking" posts'),
       check('autoPublishBreaking', '…and publish bulletins without review')),
     h('section', { class: 'panel' }, h('h2', {}, 'Sources & links'),
       h('label', {}, 'Public URL of this site (for Discord links)'), text('publicUrl', 'url', 'https://hfl-nn.up.railway.app'),
-      h('label', {}, 'Crimson Chronicle feed (RSS/Atom or site URL)'), text('chronicleFeedUrl', 'url', 'https://…/feed'),
+      h('label', {}, 'Crimson Chronicle (the Hub\'s Chronicle page, or an RSS/Atom feed)'), text('chronicleFeedUrl', 'url', 'https://hfl-hub-5kc.pages.dev/chronicle'),
       h('label', {}, 'HFL Hub feed URL'), text('hubFeedUrl', 'url', 'https://…/api/hfl-nn-feed'),
       h('label', {}, 'Check feeds every (minutes)'), text('pollMinutes', 'number')),
     h('section', { class: 'panel' }, h('h2', {}, 'Discord'),
@@ -418,7 +428,18 @@ async function viewSettings() {
       h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'Voice', 'Speed', ''].map(t => h('th', {}, t)))), h('tbody', {}, personaRows.map(r => r.el)))),
     h('section', { class: 'panel' }, h('h2', {}, 'Pronunciations'),
       h('p', { class: 'muted' }, 'One per line: how a name is written = how the voices should say it.'), pron),
-    h('div', { class: 'row' }, h('button', { class: 'btn primary', type: 'button', on: { click: save } }, 'Save settings')));
+    h('div', { class: 'row' }, h('button', { class: 'btn primary', type: 'button', on: { click: save } }, 'Save settings')),
+    startOverPanel());
+}
+
+function startOverPanel() {
+  const typed = h('input', { type: 'text', placeholder: 'Type RESET', autocomplete: 'off' });
+  const go = h('button', { class: 'btn danger', type: 'button', disabled: true, on: { click: () => act(() => api('/api/admin/reset', { method: 'POST', body: { confirm: typed.value.trim() } }), 'Started over').then(r => { if (r) { state.tab = 'dashboard'; render(); } }) } }, 'Start over');
+  typed.addEventListener('input', () => { go.disabled = typed.value.trim() !== 'RESET'; });
+  return h('section', { class: 'panel' }, h('h2', {}, 'Start over'),
+    h('p', {}, 'Removes the league and everything made from it: news stories, every episode (published ones too), Chronicle articles, Hub data and the show\'s memory. Use it to clear the sample league, or exports from before a fantasy draft. The next export starts the league fresh.'),
+    h('p', { class: 'muted' }, 'Kept: these settings, the Discord webhook, the export URL and the voices. A real league is saved to league/archive first. Discord posts already sent stay in Discord.'),
+    h('div', { class: 'row' }, typed, go));
 }
 
 // ── Memory ────────────────────────────────────────────────────────────────

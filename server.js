@@ -92,6 +92,7 @@ function createApp(opts = {}) {
     store, getLeague: () => league, saveLeague, logger,
     debounceMs: opts.debounceMs ?? (Number(env.EXPORT_DEBOUNCE_SECONDS) || 90) * 1000,
     onBatchComplete: x => producer.onBatch(x, { automate: !quietBatches }),
+    onLeagueChange: ({ from, to }) => logger.log(`[producer] league ${from} → ${to}: retired ${producer.retireWire()} unused stories`),
   });
 
   const httpsOnly = env.FORCE_HTTPS === '1' || (env.NODE_ENV === 'production' && env.FORCE_HTTPS !== '0');
@@ -221,6 +222,7 @@ function createApp(opts = {}) {
   admin.get('/me', wrap(() => ({ ok: true })));
   admin.get('/status', wrap(req => {
     const wk = L.lastPlayedWeek(league);
+    const done = L.lastCompleteWeek(league);
     return {
       version: VERSION,
       dataDir: store.dir,
@@ -231,6 +233,8 @@ function createApp(opts = {}) {
         teams: Object.keys(league.teams).length, players: Object.keys(league.players).length,
         games: Object.keys(league.games).length, standingsFresh: league.standingsFresh !== false,
         latestWeek: wk ? L.weekLabel(wk.stage, wk.week) : null,
+        latestWeekFinal: !!wk && L.weekComplete(league, wk),
+        lastFinalWeek: done ? L.weekLabel(done.stage, done.week) : null,
         detectedPhase: L.detectPhase(league), phase: settings.get().phaseOverride || L.detectPhase(league),
       },
       ingest: ingest.status(),
@@ -259,6 +263,10 @@ function createApp(opts = {}) {
   admin.post('/sample-data', wrap(async req => {
     need(!Object.keys(league.teams).length || req.body?.force, 'League data already exists. Sample data is only for an empty install.', 409);
     return loadSampleLeague();
+  }));
+  admin.post('/reset', wrap(req => {
+    need(req.body?.confirm === 'RESET', 'Type RESET to confirm.', 400);
+    return startOver();
   }));
 
   admin.get('/wire', wrap(() => producer.wireStories().slice(0, 200).map(s => ({
@@ -371,6 +379,23 @@ function createApp(opts = {}) {
     pollTimer.unref?.();
   }
 
+  // Remove the league and everything made from it — the sample league, or
+  // exports from before a fantasy draft. Settings, the Discord webhook, the
+  // export URL and the voice cache stay. The Chronicle and Hub refill from
+  // their URLs (the Chronicle from its newest issue only).
+  function startOver() {
+    need(!ingest.status().open, 'An export is arriving right now. Try again in a couple of minutes.', 409);
+    need(!producer.busy(), 'An episode is still being written or voiced. Try again when it finishes.', 409);
+    const removed = { leagueId: league.leagueId, episodes: producer.list().length, stories: producer.wireStories().length };
+    ingest.reset();
+    producer.reset();
+    chronicle.reset();
+    hub.reset();
+    logger.log(`[control] started over: removed league ${removed.leagueId}, ${removed.episodes} episodes, ${removed.stories} stories`);
+    for (const src of [chronicle, hub]) src.refresh().catch(e => logger.warn(`[control] refresh after start-over failed: ${e.message}`));
+    return { ok: true, removed };
+  }
+
   // The demo league: two consistent export batches, a Chronicle article and
   // a Hub feed (see lib/demo.js). Only offered on an empty install.
   async function loadSampleLeague() {
@@ -390,7 +415,7 @@ function createApp(opts = {}) {
 
   return {
     app, store, producer, ingest, settings, tts, auth, chronicle, hub,
-    ingestKey, startPolling, loadSampleLeague,
+    ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
     close: async () => { clearTimeout(pollTimer); clearTimeout(saveTimer); await tts.close?.(); },
   };

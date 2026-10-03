@@ -8,7 +8,7 @@ const { createTTS } = require('../lib/tts');
 const { normalizeHubFeed } = require('../lib/ingest/hub');
 const { parseFeed, extractArticle } = require('../lib/ingest/chronicle');
 const { isDiscordWebhook, episodeMessage } = require('../lib/discord');
-const { fixture, tmpDir } = require('./helpers');
+const { fixture, fixturePayloads, secondBatch, tmpDir, clone } = require('./helpers');
 
 const quiet = { log() {}, warn() {}, error() {} };
 
@@ -165,6 +165,124 @@ test('automation: a game-week export drafts and voices the weekly show by itself
   } finally { await s.close(); }
 });
 
+test('daily exports: a half-played week waits for the advance; big mid-week moves get a bulletin', async () => {
+  const s = await boot();
+  try {
+    s.ctx.settings.update({ autoProduce: true, autoBreaking: true });
+    const run = async payloads => {
+      for (const p of payloads) s.ctx.ingest.ingest(p);
+      await s.ctx.ingest.flush();
+      await s.ctx.producer.idle();
+      await s.ctx.producer.idle();
+    };
+    const of = type => s.ctx.producer.list().filter(e => e.type === type);
+    const week2 = played => {
+      const body = clone(fixture('week-reg-1-schedules'));
+      body.gameScheduleInfoList.forEach((g, i) => {
+        Object.assign(g, { weekIndex: 1, scheduleId: 900000 + i });
+        if (i >= played) Object.assign(g, { status: 1, homeScore: 0, awayScore: 0 });
+      });
+      return { kind: 'week', stage: 'reg', week: 2, statKind: 'schedules', body, platform: 'pc', leagueId: '2890093' };
+    };
+
+    await run(fixturePayloads());
+    assert.equal(of('weekly').length, 1, 'Week 1 is final, so it gets its show');
+
+    await run([...fixturePayloads(), week2(2)]);
+    assert.equal(of('weekly').length, 1, 'two Week 2 games in: no show yet, and no repeat of Week 1');
+    assert.equal(of('breaking').length, 0, 'an unchanged export is not news');
+
+    await run([...fixturePayloads(), week2(5), ...secondBatch()]);
+    assert.equal(of('breaking').length, 1, 'a mid-week X-Factor upgrade and trade make a bulletin');
+    assert.equal(of('weekly').length, 1);
+
+    await run([...fixturePayloads(), ...secondBatch(), week2(16)]);
+    const weeklies = of('weekly');
+    assert.equal(weeklies.length, 2, 'the advance finishes Week 2');
+    assert.equal(s.ctx.producer.get(weeklies[0].id).rundown.focusWeek.week, 2);
+    assert.equal(of('breaking').length, 1, 'the weekly covers that batch instead of a second bulletin');
+  } finally { await s.close(); }
+});
+
+test('an export for a different league starts fresh instead of reading as a pile of trades', async () => {
+  const s = await boot();
+  try {
+    await s.ctx.loadSampleLeague();
+    await s.ctx.producer.idle();
+    assert.ok(s.ctx.producer.wireStories().some(x => !x.usedIn.length && !x.excluded), 'the sample leaves unused stories');
+
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest(p);
+    const batch = await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    const league = s.ctx.getLeague();
+    assert.equal(league.leagueId, '2890093');
+    assert.equal(Object.keys(league.teams).length, 32);
+    const mine = s.ctx.producer.wireStories().filter(x => x.batchId === batch.id);
+    assert.ok(!mine.some(x => ['trade', 'signing', 'release', 'departure', 'owner_change', 'injury'].includes(x.type)), `no phantom roster moves: ${mine.map(x => x.type)}`);
+    assert.ok(s.ctx.producer.wireStories().filter(x => x.batchId !== batch.id).every(x => x.usedIn.length || x.excluded), 'the sample league\'s leftovers are retired');
+    assert.equal(s.ctx.store.list('league/archive').length, 0, 'the sample league is not worth archiving');
+
+    // A real league giving way to another (next Madden year) is kept.
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest({ ...p, leagueId: '3000001' });
+    await s.ctx.ingest.flush();
+    assert.equal(s.ctx.getLeague().leagueId, '3000001');
+    assert.deepEqual(s.ctx.store.list('league/archive').map(f => f.split('-')[0]), ['2890093'], 'the old real league is archived, not just dropped');
+  } finally { await s.close(); }
+});
+
+test('start over: the sample league and everything made from it can be removed', async () => {
+  const s = await boot();
+  const dir = s.ctx.store.dir;
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    await s.ctx.loadSampleLeague();
+    await s.ctx.producer.idle();
+    await s.ctx.producer.idle();
+    const [ep] = s.ctx.producer.list();
+    await s.adminReq('POST', `/api/admin/episodes/${ep.id}/publish`, { body: { discord: false } });
+    assert.ok(s.ctx.store.exists('memory.json'), 'publishing wrote the show memory');
+    assert.ok(s.ctx.chronicle.list().length && s.ctx.hub.data() && s.ctx.producer.wireStories().length);
+
+    let r = await s.adminReq('POST', '/api/admin/reset', { body: {} });
+    assert.equal(r.status, 400, 'needs the typed confirmation');
+    s.ctx.ingest.ingest({ ...fixturePayloads()[0], leagueId: 'demo' });
+    r = await s.adminReq('POST', '/api/admin/reset', { body: { confirm: 'RESET' } });
+    assert.equal(r.status, 409, 'not while an export is arriving');
+    await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    await s.ctx.producer.idle();
+
+    r = await s.adminReq('POST', '/api/admin/reset', { body: { confirm: 'RESET' } });
+    assert.equal(r.status, 200, r.text);
+    assert.equal(r.json.removed.leagueId, 'demo');
+    assert.equal(Object.keys(s.ctx.getLeague().teams).length, 0);
+    assert.equal(s.ctx.producer.list().length, 0);
+    assert.equal(s.ctx.producer.wireStories().length, 0);
+    assert.equal(s.ctx.chronicle.list().length, 0);
+    assert.equal(s.ctx.hub.data(), null);
+    for (const f of ['memory.json', 'memory.json.bak', 'league/batches.json', 'league/batches.json.bak', 'league/current.json.bak', 'wire.json.bak', 'raw', `episodes/${ep.id}`]) {
+      assert.ok(!s.ctx.store.exists(f), `${f} is gone`);
+    }
+    assert.equal(s.ctx.store.list('league/archive').length, 0, 'the sample league is not worth archiving');
+    r = await s.req('GET', '/api/episodes');
+    assert.deepEqual(r.json, [], 'nothing left on the public channel');
+  } finally { await s.close(); }
+
+  // Nothing comes back after a restart (each file's .bak went too), and the
+  // next export starts the real league clean.
+  const again = await boot({ dataDir: dir });
+  try {
+    assert.equal(Object.keys(again.ctx.getLeague().teams).length, 0);
+    assert.equal(again.ctx.producer.list().length, 0);
+    assert.equal(again.ctx.producer.wireStories().length, 0);
+    assert.equal(again.ctx.chronicle.list().length, 0);
+    for (const p of fixturePayloads()) again.ctx.ingest.ingest(p);
+    const batch = await again.ctx.ingest.flush();
+    assert.equal(again.ctx.getLeague().leagueId, '2890093');
+    assert.ok(!again.ctx.producer.wireStories().some(x => x.batchId === batch.id && ['trade', 'signing', 'release'].includes(x.type)));
+  } finally { await again.close(); }
+});
+
 test('settings: webhook validation and masking, persona overrides', async () => {
   const s = await boot();
   try {
@@ -192,8 +310,17 @@ test('hub push needs the key; feeds are normalized', async () => {
     assert.equal(r.status, 200);
     assert.equal(s.ctx.hub.data().owners[0].teamAbbr, 'BUF');
   } finally { await s.close(); }
-  const n = normalizeHubFeed({ powerRankings: [{ rank: 2, teamAbbr: 'kc' }, { rank: 1, teamAbbr: 'buf' }], junk: true });
+  const n = normalizeHubFeed({
+    powerRankings: [{ rank: 2, teamAbbr: 'kc' }, { rank: 1, teamAbbr: 'buf' }], junk: true,
+    owners: [{ teamAbbr: 'gb', displayName: 'hypnotic01', coach: 'Hank Nottick', note: 'Humble to a fault' }],
+    gamesOfTheWeek: [{ week: '20', stage: 'reg', away: 'phi', home: 'GB' }, { week: 0, away: 'X', home: 'Y' }, { week: 3, stage: 'preseason', away: 'NE', home: 'NYG' }],
+  });
   assert.deepEqual(n.powerRankings.map(p => p.teamAbbr), ['BUF', 'KC']);
+  assert.equal(n.owners[0].coach, 'Hank Nottick');
+  assert.deepEqual(n.gamesOfTheWeek, [
+    { season: null, stage: 'reg', week: 20, away: 'PHI', home: 'GB' },
+    { season: null, stage: 'pre', week: 3, away: 'NE', home: 'NYG' },
+  ]);
   assert.throws(() => normalizeHubFeed('nope'));
 });
 
@@ -263,6 +390,68 @@ test('segment rewrite, unpublish and delete', async () => {
     s.ctx.producer.remove(ep.id);
     assert.equal(s.ctx.producer.get(ep.id), null);
     assert.ok(!s.ctx.store.exists(`episodes/${ep.id}`));
+  } finally { await s.close(); }
+});
+
+test('chronicle: a page with no feed is read as a list of issues (the HFL Hub)', async () => {
+  // Shaped like the Hub's /chronicle/week-N pages.
+  const issue = (n, feature) => `<html><head><title>The HFL Crimson Chronicle — Week ${n}</title></head><body>
+    <header><nav><a href="/chronicle">Chronicle</a><a href="/games">Games</a></nav></header>
+    <main><div class="chron-masthead svelte-a"><h1>THE HFL CRIMSON CHRONICLE</h1><div class="byline svelte-a">Jenna Tulls, Senior HFL Correspondent</div>
+      <div class="cover-label svelte-a">On the Cover: Joey Bosa, REDGE, Tennessee Titans</div></div>
+      <p class="cover-deck svelte-a">Week ${n} ends a perfect season. More of the deck follows here.</p><p class="lede">The lede.</p>
+      <h2 class="section">Week ${n} Scoreboard</h2><table><tr><td>DEN</td><td>13</td></tr></table><p>${'Scoreboard notes. '.repeat(60)}</p>
+      <h2 class="section">Feature Story: ${feature}</h2><p class="body-text">${'The feature runs long. '.repeat(200)}</p>
+      <h2 class="section">Press Row &amp; Transaction Wire</h2><h4>Transaction Wire</h4><p>Nothing crossed the wire.</p>
+      <h2 class="section">Divisional Round Preview</h2><p>${'Preview text. '.repeat(200)}</p>
+      <h2 class="section">League Poll</h2><p class="poll-question">Which game?</p>
+      <section class="comments svelte-c"><h2>Discussion</h2><p>No comments yet.</p></section></main></body></html>`;
+  const pages = {
+    'https://hub.test/chronicle': `<html><body><nav><a href="/chronicle">Chronicle</a><a href="/news">News</a></nav><main>
+      <a href="/chronicle/week-3">Issue 3</a><a href="/chronicle/week-2">Issue 2</a><a href="/chronicle/week-1">Issue 1</a><a href="/teams">Teams</a></main></body></html>`,
+    'https://hub.test/chronicle/week-3': issue(3, 'Tennessee Ends the Perfect Season'),
+    'https://hub.test/chronicle/week-2': issue(2, 'Old News'),
+    'https://hub.test/chronicle/week-1': issue(1, 'Older News'),
+  };
+  const fetched = [];
+  const fetchImpl = async url => { fetched.push(url); return { ok: !!pages[url], status: pages[url] ? 200 : 404, text: async () => pages[url] || 'not found' }; };
+  const s = await boot({ fetchImpl });
+  try {
+    s.ctx.settings.update({ chronicleFeedUrl: 'https://hub.test/chronicle' });
+    let r = await s.ctx.chronicle.refresh();
+    assert.equal(r.ok, true, r.error);
+    assert.equal(r.mode, 'page');
+    assert.equal(r.fresh, 1, 'the first read starts from the newest issue');
+    const [a] = s.ctx.chronicle.list();
+    assert.equal(a.title, 'Tennessee Ends the Perfect Season');
+    assert.equal(a.author, 'Jenna Tulls');
+    assert.equal(a.issue, 'The HFL Crimson Chronicle - Week 3');
+    assert.match(a.excerpt, /^Week 3 ends a perfect season/);
+    assert.match(a.text, /^On the Cover: Joey Bosa/);
+    assert.match(a.text, /Feature Story: Tennessee Ends the Perfect Season\nThe feature runs long/);
+    assert.match(a.text, /Transaction Wire: Nothing crossed the wire/);
+    assert.match(a.text, /Divisional Round Preview\nPreview text/, 'long issues keep every section, not just the top');
+    assert.doesNotMatch(a.text, /No comments yet|Which game|DEN 13/);
+    assert.ok(a.text.length <= 6000);
+    assert.ok(!fetched.includes('https://hub.test/chronicle/week-1'), 'back issues are not fetched');
+
+    assert.equal((await s.ctx.chronicle.refresh()).fresh, 0, 'back issues never turn up as new');
+    pages['https://hub.test/chronicle'] = pages['https://hub.test/chronicle'].replace('<main>', '<main><a href="/chronicle/week-4">Issue 4</a>');
+    pages['https://hub.test/chronicle/week-4'] = issue(4, 'The Bracket Nobody Drew');
+    r = await s.ctx.chronicle.refresh();
+    assert.equal(r.fresh, 1);
+    assert.equal(s.ctx.chronicle.list()[0].title, 'The Bracket Nobody Drew');
+
+    // An issue with no feature story takes its headline from the cover summary.
+    pages['https://hub.test/x'] = issue(5, 'X').replace(/Feature Story: X/, 'The Championship')
+      .replace(/Week 5 ends a perfect season\. More of the deck follows here\./, 'Green Bay beats Houston 34-10 to win the HFL Championship, closing a 16-1 season and the entire cycle in the same afternoon -- only the final score survives.');
+    assert.equal((await s.ctx.chronicle.addUrl('https://hub.test/x')).title, 'Green Bay beats Houston 34-10 to win the HFL Championship');
+
+    pages['https://hub.test/'] = '<html><body><main><a href="/a">A</a></main></body></html>';
+    s.ctx.settings.update({ chronicleFeedUrl: 'https://hub.test/' });
+    r = await s.ctx.chronicle.refresh();
+    assert.equal(r.ok, false, 'a site root is too broad to read as an index');
+    assert.match(r.error, /No RSS\/Atom feed or list of articles/);
   } finally { await s.close(); }
 });
 

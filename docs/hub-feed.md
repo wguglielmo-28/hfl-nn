@@ -24,8 +24,12 @@ must be under 2 MB. Send the full current state each time (not just changes).
   "league": { "name": "Hypnotical Football League", "season": 2027, "phase": "regular", "week": 7 },
 
   "owners": [
-    { "teamAbbr": "BUF", "displayName": "HypnoKing", "discord": "hypnoking", "since": 2024, "titles": 2,
-      "note": "Two-time champion; mentions it constantly" }
+    { "teamAbbr": "BUF", "displayName": "HypnoKing", "discord": "hypnoking", "coach": "Bob Skeeter",
+      "since": 2024, "titles": 2, "note": "Biggest risk-taker in the league; trusts his offense completely" }
+  ],
+
+  "gamesOfTheWeek": [
+    { "season": 9, "stage": "reg", "week": 7, "away": "PHI", "home": "GB" }
   ],
 
   "announcements": [
@@ -46,7 +50,8 @@ must be under 2 MB. Send the full current state each time (not just changes).
 
 | Section | Used for |
 |---|---|
-| `owners` | The writers know who runs each team (gamer tags are used sparingly and only playfully). `teamAbbr` must match the Madden abbreviation. |
+| `owners` | The writers know who runs each team (gamer tags are used sparingly and only playfully). `coach` is the owner's in-league persona, the name the Chronicle uses, and the anchors call them by it. `teamAbbr` must match the Madden abbreviation. |
+| `gamesOfTheWeek` | The league's own Game of the Week. `week` is the week number as Madden shows it, starting at 1 (Wildcard 19, Divisional 20, Conference 21, Championship 23); a database `week_index` is one less. `stage` is `reg` or `pre`; `season` is informational. Teams can be in either order. Without a pick for the week, the show's top game is called the **Spotlight Game**, never the Game of the Week. |
 | `announcements` | Each new `id` becomes a story for the **League Office** segment. `breaking: true` can trigger an automatic bulletin. Announcements air once. |
 | `powerRankings` | Replaces the Madden power index on the **Power Rankings** card when present. |
 | `awards`, `rivalries`, `records`, `history` | Background the writers can call back to. |
