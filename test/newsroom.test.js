@@ -6,7 +6,7 @@ const S = require('../lib/stories');
 const { buildRundown, chronicleItem } = require('../lib/rundown');
 const { writeTemplateScript } = require('../lib/writer/template');
 const { validateScript, factNumberSet } = require('../lib/writer/validate');
-const { createClaudeWriter, costOf } = require('../lib/writer/claude');
+const { createClaudeWriter, costOf, effortFor } = require('../lib/writer/claude');
 const P = require('../lib/writer/prompt');
 const M = require('../lib/memory');
 const { createStore } = require('../lib/store');
@@ -257,7 +257,7 @@ test('Claude writer: request shape, parsing, and one repair pass', async () => {
       return {
         on() { return this; },
         finalMessage: async () => ({
-          model: 'claude-opus-5-5', stop_reason: 'end_turn',
+          model: req.model, stop_reason: 'end_turn',
           content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: JSON.stringify(body) }],
           usage: { input_tokens: 1000, output_tokens: 2000, cache_creation_input_tokens: 500, cache_read_input_tokens: 0 },
         }),
@@ -269,31 +269,68 @@ test('Claude writer: request shape, parsing, and one repair pass', async () => {
   const brief = P.episodeBrief({ rundown, storiesById, personas, memory: M.emptyMemory(personas) });
   const leagueText = P.leagueContext(league, context, { phase: 'regular' });
   const out = await writer.write({
-    personas, leagueText, brief, effort: 'high',
+    personas, leagueText, brief,
     validate: s => validateScript(s, { rundown, personaIds, factNumbers: factNumberSet(brief, leagueText) }),
   });
   assert.equal(requests.length, 2, 'invalid first draft triggers exactly one repair');
   assert.equal(out.repaired, true);
   assert.ok(out.result.ok);
   const req = requests[0];
-  assert.equal(req.model, 'claude-opus-5-5');
+  assert.equal(req.model, 'claude-sonnet-5-5', 'Sonnet 5.5 is the default');
   assert.deepEqual(req.betas, ['server-side-fallback-2026-07-01']);
   assert.equal(req.fallbacks, 'default');
   assert.deepEqual(req.thinking, { type: 'adaptive' });
-  assert.equal(req.output_config.effort, 'high');
+  assert.equal(req.output_config.effort, 'medium', 'Sonnet 5.5 writes a full show at medium');
+  assert.equal(requests[1].model, 'claude-sonnet-5-5', 'the repair stays on the same model');
+  const opts = { personas, leagueText, brief };
+  assert.equal(writer.buildRequest({ ...opts, model: 'claude-sonnet-5-5', effort: effortFor('claude-sonnet-5-5', 'bulletin') }).output_config.effort, 'low');
+  assert.equal(writer.buildRequest({ ...opts, model: 'claude-opus-5-5' }).output_config.effort, 'high');
+  assert.equal(effortFor('claude-opus-5-5', 'bulletin'), 'medium');
+  assert.equal(effortFor('claude-some-other-model', 'show'), 'high', 'unknown models get the Opus levels');
   assert.equal(req.output_config.format.type, 'json_schema');
   assert.deepEqual(req.output_config.format.schema.properties.segments.items.properties.lines.items.properties.speaker.enum, personaIds);
   assert.equal(req.system.length, 2);
   assert.ok(req.system.every(b => b.cache_control?.type === 'ephemeral' && b.cache_control.ttl === '1h'));
   assert.match(requests[1].messages[0].content, /YOUR PREVIOUS DRAFT HAD THESE PROBLEMS/);
   assert.equal(out.usage.length, 2);
-  assert.ok(Math.abs(costOf(out.usage[0]) - (1000 * 4 + 2000 * 20 + 500 * 8) / 1e6) < 1e-9);
+  // Sonnet 5.5: $2 in, $10 out, 1h cache writes at 2x input.
+  assert.ok(Math.abs(costOf(out.usage[0]) - (1000 * 2 + 2000 * 10 + 500 * 4) / 1e6) < 1e-9);
+  assert.ok(Math.abs(costOf({ ...out.usage[0], model: 'claude-opus-5-5' }) - (1000 * 4 + 2000 * 20 + 500 * 8) / 1e6) < 1e-9);
 });
 
 test('Claude writer surfaces refusals instead of voicing nothing', async () => {
-  const fakeClient = { beta: { messages: { stream: () => ({ on() { return this; }, finalMessage: async () => ({ model: 'claude-opus-5-5', stop_reason: 'refusal', stop_details: { category: 'general_harms' }, content: [], usage: {} }) }) } } };
+  const models = [];
+  const fakeClient = { beta: { messages: { stream: req => { models.push(req.model); return { on() { return this; }, finalMessage: async () => ({ model: req.model, stop_reason: 'refusal', stop_details: { category: 'general_harms' }, content: [], usage: {} }) }; } } } };
   const writer = createClaudeWriter({ client: fakeClient, logger: quiet });
   await assert.rejects(writer.write({ personas, leagueText: '', brief: '', validate: () => ({ ok: true }) }), /declined/);
+  assert.deepEqual(models, ['claude-sonnet-5-5', 'claude-opus-5-5'], 'a Sonnet decline gets one try on Opus first');
+});
+
+test('a Sonnet 5.5 decline is rewritten on Opus 5.5, and the repair stays there', async () => {
+  const { league, batches } = await leagueWithBatches();
+  const stories = batches[0].stories;
+  const storiesById = Object.fromEntries(stories.map(s => [s.id, s]));
+  const context = S.buildContext(league, {});
+  const rundown = buildRundown({ type: 'weekly', phase: 'regular', show, personas, league, context, stories });
+  const good = writeTemplateScript({ rundown, storiesById, personas, league, context });
+  const broken = { ...clone(good), segments: good.segments.slice(1) };
+  const replies = [null, broken, good];
+  const requests = [];
+  const fakeClient = { beta: { messages: { stream(req) {
+    requests.push(req);
+    const body = replies.shift();
+    return { on() { return this; }, finalMessage: async () => (body
+      ? { model: req.model, stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(body) }], usage: { input_tokens: 10, output_tokens: 10 } }
+      : { model: req.model, stop_reason: 'refusal', stop_details: { category: 'general_harms' }, content: [], usage: { input_tokens: 10, output_tokens: 0 } }) };
+  } } } };
+  const writer = createClaudeWriter({ client: fakeClient, logger: quiet });
+  const brief = P.episodeBrief({ rundown, storiesById, personas, memory: M.emptyMemory(personas) });
+  const leagueText = P.leagueContext(league, context, { phase: 'regular' });
+  const out = await writer.write({ personas, leagueText, brief, kind: 'bulletin', validate: s => validateScript(s, { rundown, personaIds }) });
+  assert.ok(out.result.ok);
+  assert.deepEqual(requests.map(r => [r.model, r.output_config.effort]), [['claude-sonnet-5-5', 'low'], ['claude-opus-5-5', 'medium'], ['claude-opus-5-5', 'medium']]);
+  assert.equal(out.usage.length, 3, 'every request is costed, the declined one too');
+  assert.equal(out.model, 'claude-opus-5-5');
 });
 
 test('show memory remembers predictions and storylines', () => {

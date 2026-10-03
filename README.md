@@ -114,8 +114,8 @@ export batch ──▶ story engine ──▶ rundown ──▶ script ──▶
 2. **Rundown** (`lib/rundown.js`) picks the segments for the episode type and season phase and
    decides who's in each one. Segments with nothing to say are dropped.
 3. **Script**: either **Claude** or the free **template writer** writes the lines. Claude
-   (`claude-opus-5-5`) is constrained to a JSON script format, told to use only the supplied
-   facts, and kept in character by the show bible. A validator then:
+   (Sonnet 5.5 by default, or Opus 5.5) is constrained to a JSON script format, told to use only
+   the supplied facts, and kept in character by the show bible. A validator then:
    - checks speakers, cards and length
    - flags any number that isn't in the facts
    - blocks profanity
@@ -172,12 +172,18 @@ grade it in **Show Memory** and the anchors will bring it up.
 |---|---|---|
 | Setup | `ANTHROPIC_API_KEY` from [console.anthropic.com](https://console.anthropic.com), billed per use, separate from a Claude subscription | Nothing |
 | Quality | Real banter, callbacks, arguments and jokes | Plain but accurate |
-| Cost | About $0.15–0.40 per weekly show and a few cents per bulletin (prompt cached) | Free |
+| Cost | Sonnet 5.5: roughly $0.10–0.20 per weekly show and a cent or two per bulletin. Opus 5.5: about twice that (prompt cached either way) | Free |
 
-With `writer: auto` (the default), Claude is used when a key is set. If Claude fails or declines,
-the template writer takes over so the show still goes out. Requests use server-side refusal
-fallback (`fallbacks: "default"`), and the control room shows the token count and estimated
-cost of each script. To use a different model, set `HFLNN_MODEL`.
+**Settings → Claude model** picks the model:
+- **Claude Sonnet 5.5** (the default): $2 / $10 per million input/output tokens. Full shows run at
+  effort `medium`, bulletins at `low`.
+- **Claude Opus 5.5**: $4 / $20, for the strongest writing. Full shows run at `high`, bulletins at
+  `medium`.
+
+With `writer: auto` (the default), Claude is used when a key is set. If Sonnet 5.5 declines a
+script, Opus 5.5 gets one try; if Claude still fails or declines, the template writer takes over
+so the show still goes out. Requests also use server-side refusal fallback
+(`fallbacks: "default"`). The control room shows the token count and cost of each script.
 
 ## 🔊 Voices
 
@@ -198,7 +204,7 @@ is a `synth(text, voice, speed)` function.
 |---|---|---|
 | `ADMIN_PASSWORD` | random per run | Control room password. **Set it.** |
 | `ANTHROPIC_API_KEY` | — | Enables the Claude writer |
-| `HFLNN_MODEL` | `claude-opus-5-5` | Claude model for scripts |
+| `HFLNN_MODEL` | `claude-sonnet-5-5` | Starting value for **Settings → Claude model** |
 | `INGEST_KEY` | generated, saved in `DATA_DIR` | The secret in the export URL |
 | `HUB_PUSH_KEY` | — | Bearer token the Hub uses for `POST /api/hub/push` |
 | `HUB_FEED_URL`, `CHRONICLE_FEED_URL`, `PUBLIC_URL` | — | Starting values for the same Settings fields |

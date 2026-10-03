@@ -241,7 +241,7 @@ function createApp(opts = {}) {
       batches: store.readJSON('league/batches.json', []).slice(-10).reverse(),
       chronicle: chronicle.status(),
       hub: hub.status(),
-      writer: { claude: claude.available(), model: claude.model, mode: settings.get().writer },
+      writer: { claude: claude.available(), model: settings.get().claudeModel || claude.model, mode: settings.get().writer },
       tts: { ...tts.status(), ffmpeg: !!findFfmpeg() },
       wire: { total: producer.wireStories().length, unused: producer.wireStories().filter(s => !s.usedIn.length && !s.excluded).length },
       jobs: producer.jobs().slice(0, 5),

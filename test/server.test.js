@@ -283,6 +283,35 @@ test('start over: the sample league and everything made from it can be removed',
   } finally { await again.close(); }
 });
 
+test('Claude model setting: Sonnet 5.5 by default, switchable, and passed to the writer', async () => {
+  const calls = [];
+  const claude = { available: () => true, model: 'claude-sonnet-5-5', write: async a => { calls.push([a.model, a.kind]); throw new Error('stub writer'); } };
+  const s = await boot({ claude });
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    let r = await s.adminReq('GET', '/api/admin/settings');
+    assert.equal(r.json.claudeModel, 'claude-sonnet-5-5');
+    assert.deepEqual(r.json.claudeModels.map(m => m.id), ['claude-sonnet-5-5', 'claude-opus-5-5']);
+
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest(p);
+    await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    assert.deepEqual(calls[0], ['claude-sonnet-5-5', 'show'], 'the weekly goes to Sonnet 5.5');
+    assert.equal(s.ctx.producer.list()[0].writer, 'template', 'a failed Claude call still leaves a script');
+
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { claudeModel: 'claude-opus-5-5' } });
+    assert.equal(r.status, 200);
+    s.ctx.producer.createEpisode({ type: 'breaking', bulletin: { headline: 'League office approves the trade' } });
+    await s.ctx.producer.idle();
+    assert.deepEqual(calls[1], ['claude-opus-5-5', 'bulletin']);
+    r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.writer.model, 'claude-opus-5-5');
+
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { claudeModel: 'gpt-5' } });
+    assert.equal(r.status, 400);
+  } finally { await s.close(); }
+});
+
 test('settings: webhook validation and masking, persona overrides', async () => {
   const s = await boot();
   try {
