@@ -15,6 +15,9 @@ function h(tag, attrs = {}, ...kids) {
     else if (k === 'class') el.className = v;
     else if (k === 'value') el.value = v;
     else if (k === 'checked') el.checked = !!v;
+    // A boolean property, not an attribute: setAttribute('disabled', 0)
+    // would disable the button, since any value of the attribute does.
+    else if (k === 'disabled') el.disabled = !!v;
     else if (k === 'text') el.textContent = v;
     else el.setAttribute(k, v === true ? '' : v);
   }
@@ -265,7 +268,7 @@ function actions(ep, busy) {
   const run = (path, body, ok) => act(() => api(`/api/admin/episodes/${ep.id}/${path}`, { method: 'POST', body }), ok).then(render);
   return h('div', {},
     h('div', { class: 'row' },
-      h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.script || ep.validation?.errors.length, on: { click: () => run('voice', {}, 'Voicing started') } }, ep.audio ? 'Re-voice' : 'Voice it'),
+      h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.script || !!ep.validation?.errors.length, on: { click: () => run('voice', {}, 'Voicing started') } }, ep.audio ? 'Re-voice' : 'Voice it'),
       h('a', { class: 'btn', href: `/?preview=${ep.id}`, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ep.audio) }, 'Preview'),
       ep.status === 'published'
         ? h('button', { class: 'btn', type: 'button', on: { click: () => run('unpublish', {}, 'Unpublished') } }, 'Unpublish')
