@@ -64,7 +64,7 @@ function createApp(opts = {}) {
   const settings = createSettings({ store, basePersonas, env });
 
   // ── League state ─────────────────────────────────────────────────────────
-  let league = store.readJSON('league/current.json', null) || L.emptyLeague();
+  let league = L.officialTeamNames(store.readJSON('league/current.json', null) || L.emptyLeague());
   let saveTimer = null;
   const saveLeague = (now = false) => {
     clearTimeout(saveTimer);
@@ -349,7 +349,7 @@ function createApp(opts = {}) {
   function channelPage(req, ep) {
     const base = baseUrlOf(req);
     const title = ep ? `${ep.title} — HFL-NN` : 'HFL-NN — HFL News Network';
-    const desc = ep?.summary || 'Pixel-art AI anchors report on the Hypnotical Football League.';
+    const desc = ep?.summary || 'Pixel-art AI anchors report on the Hypnotic Football League.';
     const tags = [
       ['og:site_name', 'HFL-NN'], ['og:title', title], ['og:description', desc],
       ['og:type', ep ? 'video.episode' : 'website'], ['og:url', `${base}${req.originalUrl.split('?')[0]}`],

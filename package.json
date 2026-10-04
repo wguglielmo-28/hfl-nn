@@ -1,7 +1,7 @@
 {
   "name": "hfl-nn",
   "version": "0.1.0",
-  "description": "HFL-NN — the Hypnotical Football League News Network: pixel-art AI anchors reporting on the league",
+  "description": "HFL-NN — the Hypnotic Football League News Network: pixel-art AI anchors reporting on the league",
   "main": "server.js",
   "private": true,
   "engines": {

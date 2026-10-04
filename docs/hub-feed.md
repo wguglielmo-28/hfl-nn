@@ -21,7 +21,7 @@ must be under 2 MB. Send the full current state each time (not just changes).
 
 ```json
 {
-  "league": { "name": "Hypnotical Football League", "season": 2027, "phase": "regular", "week": 7 },
+  "league": { "name": "Hypnotic Football League", "season": 2027, "phase": "regular", "week": 7 },
 
   "owners": [
     { "teamAbbr": "BUF", "displayName": "HypnoKing", "discord": "hypnoking", "coach": "Bob Skeeter",

@@ -1,6 +1,6 @@
 # 📺 HFL-NN — the HFL News Network
 
-**Pixel-art AI anchors who report on the Hypnotical Football League.**
+**Pixel-art AI anchors who report on the Hypnotic Football League.**
 
 HFL-NN turns the league's Madden 27 exports, the HFL Hub and the Crimson Chronicle into short,
 animated, fully voiced news broadcasts. A weekly show goes up after each advance; breaking-news
@@ -137,7 +137,7 @@ The browser player uses the audio as its clock, so lips never drift from the voi
 
 | Anchor | Role | Schtick | Voice |
 |---|---|---|---|
-| **Hal Huxley** | Lead anchor | Smooth veteran host; signs off with "Stay Hypnotical." | `am_michael` |
+| **Hal Huxley** | Lead anchor | Smooth veteran host; signs off with "Stay Hypnotic." | `am_michael` |
 | **Sasha Sterling** | League insider | "My sources tell me…": trades, signings, injuries | `af_bella` |
 | **Big Ray Mobley** | Ex-lineman analyst | Old-school hot takes and desk slams | `am_onyx` |
 | **Nate "The Numbers" Okafor** | Analytics desk | Precise, dry, feuds with Ray | `bm_george` |

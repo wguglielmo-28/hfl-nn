@@ -46,7 +46,7 @@ test('game stories come from the week in the batch; stale standings are not quot
   const games = stories.filter(s => s.type === 'game');
   assert.equal(games.length, 16);
   const buf = games.find(s => s.facts.away.abbr === 'BUF');
-  assert.match(buf.headline, /Bills .* Phins 49-24/);
+  assert.match(buf.headline, /Bills .* Dolphins 49-24/);
   assert.equal(buf.facts.margin, 25);
   assert.equal(buf.facts.away.recordAfter, null);
   assert.ok(stories.some(s => s.type === 'performance' && /Josh Allen/.test(s.headline)));
@@ -268,7 +268,7 @@ test('validator: errors block, warnings flag', () => {
   const good = { title: 'Ep', summary: 'x', tickerItems: [], memoryUpdates: { storylines: [], predictions: [], moods: [] },
     segments: [
       { id: 's1', lines: [{ speaker: 'hal', text: 'The Bills scored 49 points! *wow* 🎉', emotion: 'excited', gesture: 'none', shot: 'auto', card: 'c9' }] },
-      { id: 's2', lines: [{ speaker: 'hal', text: 'Stay Hypnotical.', emotion: 'party', gesture: 'none', shot: 'auto', card: '' }] },
+      { id: 's2', lines: [{ speaker: 'hal', text: 'Stay Hypnotic.', emotion: 'party', gesture: 'none', shot: 'auto', card: '' }] },
     ] };
   const r = validateScript(good, { rundown, personaIds, factNumbers: factNumberSet('Bills 24') });
   assert.ok(r.ok, r.errors.join('; '));
@@ -287,6 +287,35 @@ test('validator: errors block, warnings flag', () => {
   assert.ok(r2.errors.some(e => /unknown speaker/.test(e)));
   assert.ok(r2.errors.some(e => /s2 .*no lines/.test(e)));
   assert.ok(r2.errors.some(e => /profanity/.test(e)));
+});
+
+test('validator: official league and team names, never slang', () => {
+  const rundown = { title: 'T', segments: [{ id: 's1', kind: 'cold_open', cast: ['hal'], cards: [] }] };
+  const script = { title: 'Bolts stun the Niners', summary: 'The Pats roll.', tickerItems: ['BOLTS 24, NINERS 21'],
+    memoryUpdates: { storylines: [{ key: 'k', text: 'Bucs on a heater' }], predictions: [], moods: [] },
+    segments: [{ id: 's1', lines: [
+      { speaker: 'hal', text: 'The Bolts beat the Niners, and the Fins pat the boys on the back. Stay Hypnotical.', emotion: 'happy' },
+    ] }] };
+  const r = validateScript(script, { rundown, personaIds });
+  assert.equal(r.script.segments[0].lines[0].text, 'The Chargers beat the 49ers, and the Dolphins pat the boys on the back. Stay Hypnotic.');
+  assert.equal(r.script.title, 'Chargers stun the 49ers');
+  assert.equal(r.script.summary, 'The Patriots roll.');
+  assert.deepEqual(r.script.tickerItems, ['CHARGERS 24, 49ERS 21']);
+  assert.equal(r.script.memoryUpdates.storylines[0].text, 'Buccaneers on a heater');
+  assert.ok(r.warnings.some(w => /Bolts → Chargers \(3x\)/.test(w) && /Hypnotical → Hypnotic/.test(w)), r.warnings.join('; '));
+
+  // A team that isn't in the league never gets an NFL name pinned on it.
+  const kept = validateScript(script, { rundown, personaIds, nicknames: new Set(['49ers']) });
+  assert.match(kept.script.segments[0].lines[0].text, /^The Bolts beat the 49ers, and the Fins/);
+  assert.equal(personas.network.league, 'Hypnotic Football League');
+  assert.match(P.showBible(personas), /Never "Hypnotical"/);
+
+  // Teams use EA's displayName, and leagues saved with the old slang heal on load.
+  const saved = { teams: { 1: { abbr: 'LAC', city: 'Los Angeles', nickname: 'Bolts', name: 'Chargers' } } };
+  assert.equal(L.officialTeamNames(saved).teams[1].nickname, 'Chargers');
+  const fresh = L.emptyLeague();
+  L.applyTeams(fresh, [{ teamId: 1, abbrName: 'SF', cityName: 'San Francisco', nickName: 'Niners', displayName: '49ers' }]);
+  assert.equal(L.teamLabel(fresh, 1), 'San Francisco 49ers');
 });
 
 test('Claude writer: request shape, parsing, and one repair pass', async () => {

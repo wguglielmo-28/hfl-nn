@@ -37,7 +37,7 @@ export function drawTicker(g, t, items, { label = 'HFL-NN', color = PAL.red } = 
   const y = H - 16;
   rect(g, 0, y, W, 16, PAL.night);
   rect(g, 0, y, W, 1, PAL.lilac);
-  const text = (items && items.length ? items : ['STAY HYPNOTICAL']).map(fold).join('   •   ') + '   •   ';
+  const text = (items && items.length ? items : ['STAY HYPNOTIC']).map(fold).join('   •   ') + '   •   ';
   const tw = textWidth(text);
   const lw = textWidth(label) + 12;
   const off = Math.floor((t * 38) % (tw + 6));
@@ -98,7 +98,7 @@ export function drawOpen(g, t, title, breaking = false) {
   }
 }
 
-export function drawEndSlate(g, t, { title, tagline = 'STAY HYPNOTICAL.' } = {}) {
+export function drawEndSlate(g, t, { title, tagline = 'STAY HYPNOTIC.' } = {}) {
   rect(g, 0, 0, W, H, PAL.night);
   spiral(g, W / 2 - 18, 50, 4);
   drawText(g, 'THANKS FOR WATCHING', W / 2, 110, { color: PAL.white, scale: 2, align: 'center' });
