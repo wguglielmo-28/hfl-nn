@@ -132,6 +132,55 @@ test('a preseason special straight after the draft reads the rankings once, with
   assert.ok(lines('predictions').length && !lines('predictions').some(t => /^Number \d+: /.test(t)), 'predictions do not repeat the countdown');
 });
 
+test('a season premiere from a brand-new league: intros, stars, divisions, and a full-length show', async () => {
+  // The first export of a new league is a starting point: no games, 0-0
+  // standings, and no stories from the story engine.
+  const store = createStore(tmpDir());
+  const league = L.emptyLeague();
+  const ingest = createMaddenIngest({ store, getLeague: () => league, saveLeague: () => {}, debounceMs: 1e9, logger: quiet });
+  for (const p of fixturePayloads().filter(x => x.kind !== 'week')) {
+    if (p.kind === 'standings') p.body.teamStandingInfoList.forEach(r => Object.assign(r, { totalWins: 0, totalLosses: 0, totalTies: 0 }));
+    ingest.ingest(p);
+  }
+  await ingest.flush();
+  const { previewStories } = require('../lib/preview');
+  const stories = previewStories(league);
+  const types = stories.map(s => s.type);
+  for (const t of ['talent', 'division_preview', 'team_preview']) assert.ok(types.includes(t), `preview has a ${t} story`);
+  assert.equal(stories.filter(s => s.type === 'division_preview').length, 2, 'one preview per conference');
+  const talent = stories.find(s => s.type === 'talent');
+  const best = Object.values(league.players).filter(p => !p.departed && p.teamId > 0).sort((a, b) => b.ovr - a.ovr)[0];
+  assert.equal(talent.facts.topPlayers[0].overall, best.ovr, 'the top player is the real top player');
+
+  const context = S.buildContext(league, {});
+  const rundown = buildRundown({ type: 'premiere', phase: 'preseason', show, personas, league, context, stories });
+  assert.equal(rundown.name, 'premiere');
+  assert.match(rundown.title, /Season Premiere/);
+  const kinds = rundown.segments.map(s => s.kind);
+  for (const k of ['cold_open', 'meet_the_desk', 'talent_report', 'division_preview', 'power_rankings', 'debate', 'predictions', 'conspiracy_corner', 'signoff']) assert.ok(kinds.includes(k), `premiere has ${k}`);
+  assert.ok(!kinds.includes('scoreboard'), 'no scoreboard before a game is played');
+  const desk = rundown.segments.find(s => s.kind === 'meet_the_desk');
+  assert.equal(desk.cast.length, personas.anchors.length, 'every anchor is introduced');
+  assert.equal(desk.cards.length, personas.anchors.length);
+  const gus = rundown.segments.find(s => s.kind === 'conspiracy_corner');
+  assert.ok(!gus.storyIds.some(id => ['preview:talent', 'preview:afc', 'preview:nfc'].includes(id)), 'Gus gets his own topic, not a repeat');
+  const minutes = rundown.targetWords / show.wordsPerSecond / 60;
+  assert.ok(minutes >= 7, `a premiere runs at least 7 minutes (${minutes.toFixed(1)})`);
+
+  const storiesById = Object.fromEntries(stories.map(s => [s.id, s]));
+  const leagueText = P.leagueContext(league, context, { phase: 'preseason' });
+  const brief = P.episodeBrief({ rundown, storiesById, personas, memory: M.loadMemory(store, personas) });
+  const factNumbers = factNumberSet(brief, leagueText, JSON.stringify(stories));
+  const checked = validateScript(writeTemplateScript({ rundown, storiesById, personas, league, context }), { rundown, personaIds, factNumbers });
+  assert.ok(checked.ok, checked.errors.join('; '));
+  assert.ok(!checked.warnings.some(w => /aren't in the facts/.test(w)), checked.warnings.join('; '));
+  const text = kind => checked.script.segments.find(s => s.kind === kind).lines.map(l => l.text).join(' ');
+  assert.match(text('cold_open'), /very first broadcast/);
+  for (const a of personas.anchors) assert.match(text('meet_the_desk'), new RegExp(a.name.replace(/"/g, '.')));
+  assert.match(text('talent_report'), new RegExp(best.name));
+  assert.doesNotMatch(JSON.stringify(checked.script), /0-0/, 'no 0-0 records read aloud');
+});
+
 test('rundowns: weekly, breaking and offseason shapes', async () => {
   const { league, batches } = await leagueWithBatches(secondBatch);
   const stories = [...batches[1].stories, ...batches[0].stories].sort((a, b) => b.score - a.score);
@@ -196,6 +245,7 @@ test('template writer produces valid scripts for every rundown type', async () =
     { type: 'special', phase: 'offseason' },
     { type: 'special', phase: 'preseason' },
     { type: 'special', phase: 'draft' },
+    { type: 'premiere', phase: 'preseason' },
     { type: 'custom', phase: 'regular', customKinds: ['cold_open', 'debate', 'signoff'], notes: 'Testing.' },
   ];
   for (const v of variants) {

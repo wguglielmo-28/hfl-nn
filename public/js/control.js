@@ -184,7 +184,7 @@ function openEpisode(id) { state.tab = 'episodes'; state.episode = id; render();
 
 async function viewEpisodes() {
   const [list, settings, wire] = await Promise.all([api('/api/admin/episodes'), api('/api/admin/settings'), api('/api/admin/wire')]);
-  const type = h('select', {}, ['weekly', 'special', 'custom'].map(t => h('option', { value: t }, t)));
+  const type = h('select', {}, [['weekly', 'weekly'], ['special', 'special'], ['premiere', 'season premiere'], ['custom', 'custom']].map(([v, label]) => h('option', { value: v }, label)));
   const phase = h('select', {}, h('option', { value: '' }, 'current phase'), settings.phases.map(p => h('option', { value: p }, p)));
   const writer = h('select', {}, ['auto', 'claude', 'template'].map(t => h('option', { value: t }, t)));
   const notes = h('textarea', { placeholder: 'Anything the anchors should mention, a running joke, a correction…' });

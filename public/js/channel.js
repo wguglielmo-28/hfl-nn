@@ -35,7 +35,7 @@ function renderGuide() {
   }
   ul.innerHTML = state.episodes.map(ep => `
     <li><button type="button" data-id="${esc(ep.id)}" aria-current="${ep.id === state.current}">
-      <span class="type ${esc(ep.type)}">${esc(ep.type === 'weekly' ? 'WEEKLY' : ep.type === 'breaking' ? 'BREAKING' : 'SPECIAL')}</span>
+      <span class="type ${esc(ep.type)}">${esc(ep.type === 'weekly' ? 'WEEKLY' : ep.type === 'breaking' ? 'BREAKING' : ep.type === 'premiere' ? 'PREMIERE' : 'SPECIAL')}</span>
       <span class="ep-title">${esc(ep.title)}</span>
       <span class="ep-meta">${esc([ep.weekLabel, ep.publishedAt ? new Date(ep.publishedAt).toLocaleDateString() : '', ep.duration ? fmt(ep.duration) : ''].filter(Boolean).join(' • '))}</span>
     </button></li>`).join('');

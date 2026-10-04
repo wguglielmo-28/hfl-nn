@@ -85,7 +85,7 @@ main { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; display: grid;
 .episodes .ep-meta { color: var(--muted); font-size: 0.8rem; }
 .type { font-family: var(--pixel); font-size: 0.65rem; padding: 1px 5px; border-radius: 3px; background: var(--violet); justify-self: start; }
 .type.breaking { background: var(--red); }
-.type.special { background: var(--gold); color: var(--ink); }
+.type.special, .type.premiere { background: var(--gold); color: var(--ink); }
 .lineup li { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(106, 79, 196, 0.3); }
 .lineup li:first-child { border-top: 0; }
 .lineup canvas { width: 48px; height: 70px; image-rendering: pixelated; }
