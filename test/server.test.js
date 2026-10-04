@@ -87,6 +87,14 @@ test('control room: login, CSRF header, and the full produce → voice → publi
     assert.equal(r.json.league.standingsFresh, true);
     assert.match(r.json.ingestUrl, /\/ingest\/secret-key-123$/);
 
+    r = await s.adminReq('POST', '/api/admin/episodes', { body: { type: 'premiere', writer: 'template' } });
+    assert.equal(r.status, 200, r.text);
+    await s.ctx.producer.idle();
+    const premiere = (await s.adminReq('GET', `/api/admin/episodes/${r.json.id}`)).json;
+    assert.equal(premiere.status, 'draft', JSON.stringify(premiere.validation));
+    assert.ok(premiere.rundown.segments.some(x => x.kind === 'meet_the_desk'), 'the premiere introduces the desk');
+    assert.ok(premiere.stories['preview:talent'], 'the premiere keeps its preview facts');
+
     r = await s.adminReq('POST', '/api/admin/episodes', { body: { type: 'weekly', writer: 'template' } });
     assert.equal(r.status, 200, r.text);
     const id = r.json.id;

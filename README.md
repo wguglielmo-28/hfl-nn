@@ -150,6 +150,7 @@ in `config/personas.json`.
 |---|---|---|
 | **HFL-NN Tonight** (weekly) | After each preseason or regular-season advance | 5–9 min |
 | **Breaking News** | Big trades or signings, an X-Factor upgrade, owner changes, a Chronicle "breaking" post, or a commissioner announcement | under 1.5 min |
+| **Season Premiere** | The first show of a new season or Madden year: the anchors introduce themselves, then where the stars landed, every division by team overall, power rankings, a debate and bold predictions. Built from the rosters, so it works straight after a fantasy draft | 8–10 min |
 | **Playoff / Championship** | Wild Card through the title game (weeks 19–23) | 5–9 min |
 | **Offseason / Draft / Free Agency / Preseason specials** | Set the phase in Settings, then produce a special | 4–8 min |
 | **Custom** | Pick any segments and add notes | any |

@@ -161,9 +161,12 @@ https://hfl-hub-5kc.pages.dev/api/hfl-nn-feed
 2. **Wait until the fantasy draft is finished**, then connect the exporter ([step 1](#1-madden-data-the-ea-exporter)) and run it
    once, or let the daily run do it. That first export is the starting point: nothing in it is
    reported as a move.
-3. **Optional first show:** go to **Episodes → New episode**, pick type *special* and phase
-   *preseason*, then press **Write script**. You get a season preview built from the new rosters
-   (power rankings, bold predictions).
+3. **First show: the Season Premiere.** Go to **Episodes → New episode**, pick type
+   *season premiere*, then press **Write script**. The anchors introduce themselves and the
+   network, then cover where the stars landed, every division by team overall, power rankings, a
+   debate, bold predictions and the latest Chronicle issue. It is built from the rosters, so it
+   works straight after the draft, when there are no games or news stories yet. Publish the
+   Chronicle's season-opening issue first if you want the show to quote it.
 4. From then on, each week gets its show once its games are all final, and big moves get Breaking
    News bulletins.
 
