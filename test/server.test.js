@@ -173,6 +173,31 @@ test('automation: a game-week export drafts and voices the weekly show by itself
   } finally { await s.close(); }
 });
 
+test('preseason: a finished week and a big move are left for the commissioner, not written automatically', async () => {
+  const s = await boot();
+  try {
+    s.ctx.settings.update({ autoProduce: true, autoBreaking: true });
+    const run = async payloads => {
+      for (const p of payloads) s.ctx.ingest.ingest(p);
+      await s.ctx.ingest.flush();
+      await s.ctx.producer.idle();
+      await s.ctx.producer.idle();
+    };
+    // The fixture league with its one week moved into the preseason, every game final.
+    const pre = fixturePayloads().map(p => {
+      if (p.kind !== 'week') return p;
+      const body = clone(p.body);
+      for (const list of Object.values(body)) if (Array.isArray(list)) for (const row of list) if (row && 'stageIndex' in row) row.stageIndex = 0;
+      return { ...p, body, stage: 'pre' };
+    });
+    await run(pre);
+    assert.equal(s.ctx.producer.list().length, 0, 'no weekly show drafted for a preseason week');
+    await run([...pre, ...secondBatch()]);
+    assert.equal(s.ctx.producer.list().length, 0, 'no bulletin drafted for a preseason move');
+    assert.ok(s.ctx.producer.wireStories().length > 0, 'the news wire still fills');
+  } finally { await s.close(); }
+});
+
 test('daily exports: a half-played week waits for the advance; big mid-week moves get a bulletin', async () => {
   const s = await boot();
   try {

@@ -153,3 +153,23 @@ test('HTTP routes accept the Companion App protocol, including gzip', async () =
     server.close();
   }
 });
+
+test('an EA error reply is never read as an empty roster', async () => {
+  const { createStore } = require('../lib/store');
+  const L2 = require('../lib/league');
+  const { createMaddenIngest } = require('../lib/ingest/madden');
+  const { fixturePayloads, tmpDir } = require('./helpers');
+  const store = createStore(tmpDir());
+  const league = L2.emptyLeague();
+  const ingest = createMaddenIngest({ store, getLeague: () => league, saveLeague: () => {}, debounceMs: 1e9, logger: { log() {}, warn() {}, error() {} } });
+  for (const p of fixturePayloads().filter(x => x.kind !== 'week')) ingest.ingest(p);
+  await ingest.flush();
+  const teamId = Number(Object.keys(league.teams)[0]);
+  const onTeam = () => Object.values(league.players).filter(p => p.teamId === teamId && !p.departed).length;
+  const before = onTeam();
+  assert.ok(before > 0);
+  // The body EA sent for eight rosters on 2026-10-08, reaching the model directly.
+  assert.equal(L2.applyRoster(league, teamId, undefined, 'b-test'), 0);
+  assert.equal(L2.applyFreeAgents(league, undefined, 'b-test'), 0);
+  assert.equal(onTeam(), before, 'nobody is marked departed');
+});
