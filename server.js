@@ -86,6 +86,7 @@ function createApp(opts = {}) {
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
     tts, claude, chronicle, hub, publicUrl, logger,
+    baselineBefore: wk => ingest.baselineBefore(wk),
   });
   let quietBatches = false;   // set while loading the sample league's first batch
   const ingest = createMaddenIngest({

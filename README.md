@@ -151,14 +151,22 @@ in `config/personas.json`.
 | **HFL-NN Tonight** (weekly) | After each preseason or regular-season advance | 5–9 min |
 | **Breaking News** | Big trades or signings, an X-Factor upgrade, owner changes, a Chronicle "breaking" post, or a commissioner announcement | under 1.5 min |
 | **Season Premiere** | The first show of a new season or Madden year: the anchors introduce themselves, then where the stars landed, every division by team overall, power rankings, a debate and bold predictions. Built from the rosters, so it works straight after a fantasy draft | 8–10 min |
+| **Season Kickoff** | When the preseason is over and rosters are cut to 53: the preseason in review, cut day (the best players released and still unsigned, the best free agents left, the rookies who made it), the injury report, expectations division by division, power rankings, the whole Week 1 slate with the Spotlight Game (or the Hub's Game of the Week) and picks, a debate and bold predictions. Titled with the season number from **Settings → Season number** ("Season IX Kickoff") | 8–10 min |
 | **Playoff / Championship** | Wild Card through the title game (weeks 19–23) | 5–9 min |
 | **Offseason / Draft / Free Agency / Preseason specials** | Set the phase in Settings, then produce a special | 4–8 min |
 | **Custom** | Pick any segments and add notes | any |
 
+**No episode knows how the current week is going.** The daily export catches games while a week
+is being played. Like the Crimson Chronicle, every episode airs as if none of the current week's
+games had been played: their scores, box scores and standings changes are left out, and so are
+injuries from those games (taken from the last export before the first of them was final). A
+Season Kickoff always airs as of the start of Week 1.
+
 Segments: Cold Open, Around the League, Game of the Week (the Spotlight Game until the Hub names
 one), Players of the Week, Standings and Playoff Race, The Wire (transactions), Injury Report,
 From the Chronicle, League Office, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
-Bold Predictions, Draft Desk, Free Agency Frenzy, The Bracket, Season in Review, and the sign-off.
+Bold Predictions, Preseason in Review, Setting the 53, The Week 1 Slate, Draft Desk, Free Agency
+Frenzy, The Bracket, Season in Review, and the sign-off.
 They're defined in `config/show.json`.
 
 **Show memory** (`memory.json`) carries persona moods, feuds, on-air predictions, running
@@ -226,6 +234,7 @@ config/                 personas.json (the anchors), show.json (segments and run
 lib/league.js           normalized league model built from Madden exports
 lib/ingest/             madden.js (export receiver), hub.js, chronicle.js
 lib/stories.js          story engine (diffs → ranked stories with facts and cards)
+lib/preview.js, lib/kickoff.js   roster-built material for the Season Premiere and Season Kickoff
 lib/rundown.js          segment selection per episode type and season phase
 lib/writer/             schema, validator, template writer, Claude writer, prompts
 lib/tts/, lib/audio/    Kokoro worker, text prep, jingles, mixer, MP3 encoding
