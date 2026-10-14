@@ -167,8 +167,13 @@ https://hfl-hub-5kc.pages.dev/api/hfl-nn-feed
    debate, bold predictions and the latest Chronicle issue. It is built from the rosters, so it
    works straight after the draft, when there are no games or news stories yet. Publish the
    Chronicle's season-opening issue first if you want the show to quote it.
-4. From then on, each week gets its show once its games are all final, and big moves get Breaking
-   News bulletins.
+4. **When the preseason is over: the Season Kickoff.** Once rosters are cut to 53, set
+   **Settings → Season number** (9 for Season IX), then go to **Episodes → New episode**, pick
+   *season kickoff* and press **Write script**. It covers the preseason, cut day, injuries,
+   expectations, power rankings and the whole Week 1 slate. It's fine to make it after Week 1
+   games have started: it airs as if none of them had been played.
+5. From then on, each week gets its show once its games are all final, and big moves get Breaking
+   News bulletins. Every episode ignores games from the week being played when it is made.
 
 If an export reaches HFL-NN before the draft is finished, nothing breaks. HFL-NN recognizes a
 league-wide reshuffle and reports it as one fantasy-draft story (it leads the *Draft Desk*

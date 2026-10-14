@@ -43,7 +43,7 @@ const RENDER = {
   },
 
   scoreboard(g, d, w, h) {
-    header(g, 1, 1, w - 2, d.label || 'SCORES', { right: 'FINAL' });
+    header(g, 1, 1, w - 2, d.label || 'SCORES', { right: d.right || 'FINAL' });
     const games = (d.games || []).slice(0, 16);
     const cols = games.length > 8 ? 2 : 1;
     const rows = Math.ceil(games.length / cols) || 1;

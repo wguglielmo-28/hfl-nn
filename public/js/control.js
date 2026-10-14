@@ -187,7 +187,7 @@ function openEpisode(id) { state.tab = 'episodes'; state.episode = id; render();
 
 async function viewEpisodes() {
   const [list, settings, wire] = await Promise.all([api('/api/admin/episodes'), api('/api/admin/settings'), api('/api/admin/wire')]);
-  const type = h('select', {}, [['weekly', 'weekly'], ['special', 'special'], ['premiere', 'season premiere'], ['custom', 'custom']].map(([v, label]) => h('option', { value: v }, label)));
+  const type = h('select', {}, [['weekly', 'weekly'], ['special', 'special'], ['premiere', 'season premiere'], ['kickoff', 'season kickoff'], ['custom', 'custom']].map(([v, label]) => h('option', { value: v }, label)));
   const phase = h('select', {}, h('option', { value: '' }, 'current phase'), settings.phases.map(p => h('option', { value: p }, p)));
   const writer = h('select', {}, ['auto', 'claude', 'template'].map(t => h('option', { value: t }, t)));
   const notes = h('textarea', { placeholder: 'Anything the anchors should mention, a running joke, a correction…' });
@@ -397,6 +397,7 @@ async function viewSettings() {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, spice: f.spice.value,
       autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
+      seasonNumber: f.seasonNumber.value.trim() || null,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
       personaOverrides: Object.fromEntries(personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value) }])),
     };
@@ -413,7 +414,9 @@ async function viewSettings() {
         h('div', {}, h('label', {}, 'Script writer'), sel('writer', ['auto', 'claude', 'template'], { auto: 'Claude if configured, else template', claude: 'Claude only', template: 'Template only (free)' })),
         h('div', {}, h('label', {}, 'Claude model'), sel('claudeModel', st.claudeModels.map(m => m.id), Object.fromEntries(st.claudeModels.map(m => [m.id, m.label]))),
           h('p', { class: 'muted' }, 'Sonnet 5.5 costs about half as much per script. If it declines a script, Opus 5.5 gets one try.')),
-        h('div', {}, h('label', {}, 'Spice level'), sel('spice', ['mild', 'medium', 'spicy']))),
+        h('div', {}, h('label', {}, 'Spice level'), sel('spice', ['mild', 'medium', 'spicy'])),
+        h('div', {}, h('label', {}, 'Season number'), text('seasonNumber', 'number', 'e.g. 9'),
+          h('p', { class: 'muted' }, 'Used in show titles ("Season IX Kickoff"). Blank uses the HFL Hub feed\'s season, if it sends one.'))),
       check('autoProduce', 'Draft the weekly show automatically once a week\'s games are all final'),
       check('autoPublish', '…and publish it without review'),
       check('autoBreaking', 'Draft breaking bulletins for big moves and Chronicle "breaking" posts'),
