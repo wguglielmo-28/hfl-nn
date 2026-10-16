@@ -397,6 +397,36 @@ test('a writer picked without its key falls back to the one that has a key', asy
   } finally { await s.close(); }
 });
 
+test('fan polls: written only when a Discord webhook is set, kept through script edits, switchable', async () => {
+  const s = await boot();
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest(p);
+    await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    let r = await s.adminReq('GET', '/api/admin/settings');
+    assert.equal(r.json.fanPolls, true, 'on by default');
+    const noHook = s.ctx.producer.get(s.ctx.producer.list()[0].id);
+    assert.equal(noHook.script.fanPoll, null, 'no webhook, no poll');
+
+    await s.adminReq('PUT', '/api/admin/settings', { body: { discordWebhook: 'https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123456789' } });
+    let ep = s.ctx.producer.createEpisode({ type: 'weekly' });
+    await s.ctx.producer.idle();
+    ep = s.ctx.producer.get(ep.id);
+    assert.equal(ep.script.fanPoll.answers.length, 2);
+
+    const { fanPoll, ...edited } = ep.script;
+    s.ctx.producer.saveScript(ep.id, edited);
+    assert.deepEqual(s.ctx.producer.get(ep.id).script.fanPoll, fanPoll, 'the editor doesn\'t drop the poll');
+
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { fanPolls: false } });
+    assert.equal(r.json.fanPolls, false);
+    ep = s.ctx.producer.createEpisode({ type: 'weekly' });
+    await s.ctx.producer.idle();
+    assert.equal(s.ctx.producer.get(ep.id).script.fanPoll, null);
+  } finally { await s.close(); }
+});
+
 test('settings: webhook validation and masking, persona overrides', async () => {
   const s = await boot();
   try {

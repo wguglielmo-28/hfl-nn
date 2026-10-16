@@ -95,6 +95,11 @@ top game is called the **Spotlight Game**.
 **Settings → Discord**: paste a channel webhook and send a test message. Every published episode
 then posts with a link to watch. The webhook is stored encrypted and is never shown again.
 
+With a webhook set, each show also carries a native **Discord poll** on its best argument
+("Ray: the Bills win the conference" vs. "Nate: regression is coming"), open for 48 hours, and
+the host tells viewers to vote. Breaking-news bulletins never carry one. Switch it off with
+**Settings → Attach a fan poll**. The episode page shows the poll before you publish.
+
 ---
 
 ## 🎬 How an episode gets made
@@ -164,10 +169,17 @@ Season Kickoff always airs as of the start of Week 1.
 
 Segments: Cold Open, Around the League, Game of the Week (the Spotlight Game until the Hub names
 one), Players of the Week, Standings and Playoff Race, The Wire (transactions), Injury Report,
-From the Chronicle, League Office, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
+From the Chronicle, League Office, Hot Takes: Buy or Sell, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
 Bold Predictions, Preseason in Review, Setting the 53, The Week 1 Slate, Draft Desk, Free Agency
 Frenzy, The Bracket, Season in Review, and the sign-off.
 They're defined in `config/show.json`.
+
+**The desk argues.** The show bible requires a real exchange (take, push-back, answer) in every
+segment past the scores, with specific takes backed by a fact and pushed past it, and no
+both-sides endings. **Hot Takes: Buy or Sell** (weekly, playoff, preseason and offseason shows)
+fires one take per topic around the desk, up to three topics of different kinds, each answered
+"Buy" or "Sell". The **Hot Take Hotline** debate is opening takes, rebuttals and a receipt from
+show memory, and the host names a winner or throws it to the Discord poll.
 
 **Show memory** (`memory.json`) carries persona moods, feuds, on-air predictions, running
 storylines and recent episodes from show to show. When a prediction comes true or falls flat,

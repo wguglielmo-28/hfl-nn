@@ -191,7 +191,7 @@ async function viewEpisodes() {
   const phase = h('select', {}, h('option', { value: '' }, 'current phase'), settings.phases.map(p => h('option', { value: p }, p)));
   const writer = h('select', {}, settings.writers.map(t => h('option', { value: t }, t)));
   const notes = h('textarea', { placeholder: 'Anything the anchors should mention, a running joke, a correction…' });
-  const KINDS = ['cold_open', 'scoreboard', 'game_of_week', 'top_performers', 'standings', 'playoff_race', 'transactions', 'injuries', 'press_review', 'league_office', 'debate', 'conspiracy_corner', 'preview', 'power_rankings', 'predictions', 'draft_desk', 'free_agency', 'bracket', 'season_review', 'signoff'];
+  const KINDS = ['cold_open', 'scoreboard', 'game_of_week', 'top_performers', 'standings', 'playoff_race', 'transactions', 'injuries', 'press_review', 'league_office', 'hot_takes', 'debate', 'conspiracy_corner', 'preview', 'power_rankings', 'predictions', 'draft_desk', 'free_agency', 'bracket', 'season_review', 'signoff'];
   const kindBoxes = KINDS.map(k => h('label', { class: 'row' }, h('input', { type: 'checkbox', value: k, checked: ['cold_open', 'debate', 'signoff'].includes(k) }), k.replace(/_/g, ' ')));
   const customBox = h('div', { class: 'grid2', hidden: true }, kindBoxes);
   type.addEventListener('change', () => { customBox.hidden = type.value !== 'custom'; });
@@ -242,6 +242,7 @@ async function viewEpisode() {
     ep.error && h('p', { class: 'error' }, ep.error),
     job && h('p', { class: 'notice' }, job.progress ? (job.progress.stage === 'voicing' ? `Voicing line ${job.progress.done} of ${job.progress.total}…` : `Writing… ${job.progress.chars || 0} characters so far`) : `${job.kind} ${job.status}…`),
     writerInfo(ep.writer),
+    pollInfo(ep.script?.fanPoll, personas),
     ep.audio && h('p', {}, `Audio: ${fmtDur(ep.audio.duration)} ${ep.audio.format.toUpperCase()} (${Math.round(ep.audio.bytes / 1024)} KB, ${ep.audio.provider} voices)${ep.audio.stale ? ' — script changed since, re-voice it' : ''}`),
     ep.discordError && h('p', { class: 'error' }, `Discord: ${ep.discordError}`),
     actions(ep, busy));
@@ -250,6 +251,13 @@ async function viewEpisode() {
     h('ul', { class: 'flags' }, ep.validation.errors.map(e => h('li', { class: 'err' }, e)), ep.validation.warnings.map(w => h('li', {}, w)))) : null;
 
   return h('div', {}, header, val, ep.script ? scriptEditor(ep, personas, busy) : h('p', { class: 'muted' }, 'The script is being written…'));
+}
+
+// The Discord poll the writer attached, as it will be posted.
+function pollInfo(poll, personas) {
+  if (!poll?.question) return null;
+  const name = id => personas.find(a => a.id === id)?.short;
+  return h('p', { class: 'muted' }, `Discord poll: ${poll.question} — ${poll.answers.map(a => (name(a.persona) && !a.text.startsWith(name(a.persona)) ? `${name(a.persona)}: ${a.text}` : a.text)).join(' / ')}`);
 }
 
 function writerInfo(w) {
@@ -395,7 +403,7 @@ async function viewSettings() {
   const save = async () => {
     const patch = {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
-      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked,
+      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
@@ -423,7 +431,8 @@ async function viewSettings() {
       check('autoProduce', 'Draft the weekly show automatically once a week\'s games are all final'),
       check('autoPublish', '…and publish it without review'),
       check('autoBreaking', 'Draft breaking bulletins for big moves and Chronicle "breaking" posts'),
-      check('autoPublishBreaking', '…and publish bulletins without review')),
+      check('autoPublishBreaking', '…and publish bulletins without review'),
+      check('fanPolls', 'Attach a fan poll on the night\'s best argument to each Discord post')),
     h('section', { class: 'panel' }, h('h2', {}, 'Sources & links'),
       h('label', {}, 'Public URL of this site (for Discord links)'), text('publicUrl', 'url', 'https://hfl-nn.up.railway.app'),
       h('label', {}, 'Crimson Chronicle (the Hub\'s Chronicle page, or an RSS/Atom feed)'), text('chronicleFeedUrl', 'url', 'https://hfl-hub-5kc.pages.dev/chronicle'),
