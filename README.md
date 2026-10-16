@@ -113,8 +113,8 @@ export batch ──▶ story engine ──▶ rundown ──▶ script ──▶
    Every number is computed here, and each story gets a score and an on-screen card.
 2. **Rundown** (`lib/rundown.js`) picks the segments for the episode type and season phase and
    decides who's in each one. Segments with nothing to say are dropped.
-3. **Script**: either **Claude** or the free **template writer** writes the lines. Claude
-   (Sonnet 5.5 by default, or Opus 5.5) is constrained to a JSON script format, told to use only
+3. **Script**: **Claude**, **OpenAI** (GPT) or the free **template writer** writes the lines. Claude
+   (Sonnet 5.5 by default, or Opus 5.5) or GPT (GPT-6.1 Sol by default) is constrained to a JSON script format, told to use only
    the supplied facts, and kept in character by the show bible. A validator then:
    - checks speakers, cards and length
    - flags any number that isn't in the facts
@@ -175,13 +175,17 @@ grade it in **Show Memory** and the anchors will bring it up.
 
 ---
 
-## 🧠 Claude or the template writer
+## 🧠 Claude, OpenAI or the template writer
 
-| | Claude | Template writer |
-|---|---|---|
-| Setup | `ANTHROPIC_API_KEY` from [console.anthropic.com](https://console.anthropic.com), billed per use, separate from a Claude subscription | Nothing |
-| Quality | Real banter, callbacks, arguments and jokes | Plain but accurate |
-| Cost | Sonnet 5.5: roughly $0.10–0.20 per weekly show and a cent or two per bulletin. Opus 5.5: about twice that (prompt cached either way) | Free |
+| | Claude | OpenAI | Template writer |
+|---|---|---|---|
+| Setup | `ANTHROPIC_API_KEY` from [console.anthropic.com](https://console.anthropic.com), billed per use, separate from a Claude subscription | `OPENAI_API_KEY` from [platform.openai.com](https://platform.openai.com), billed per use, separate from a ChatGPT subscription | Nothing |
+| Quality | Real banter, callbacks, arguments and jokes | Same prompts, schema and validator | Plain but accurate |
+| Cost | Sonnet 5.5: roughly $0.10–0.20 per weekly show and a cent or two per bulletin. Opus 5.5: about twice that (prompt cached either way) | GPT-6.1 Sol: same per-token price as Sonnet 5.5 | Free |
+
+**Settings → Script writer** picks who writes: `auto` (Claude if its key is set, else OpenAI,
+else the template), `claude`, `openai` or `template`. A writer picked without its key falls
+through the same way. Each episode's page shows which model wrote it and what it cost.
 
 **Settings → Claude model** picks the model:
 - **Claude Sonnet 5.5** (the default): $2 / $10 per million input/output tokens. Full shows run at
@@ -193,6 +197,16 @@ With `writer: auto` (the default), Claude is used when a key is set. If Sonnet 5
 script, Opus 5.5 gets one try; if Claude still fails or declines, the template writer takes over
 so the show still goes out. Requests also use server-side refusal fallback
 (`fallbacks: "default"`). The control room shows the token count and cost of each script.
+
+**Settings → OpenAI model** (used when the writer is OpenAI), through the Responses API with
+strict JSON-schema output:
+- **GPT-6.1 Sol** (the default): $2 / $10 per million input/output tokens, $0.10 cached input.
+  Full shows run at reasoning effort `medium`, bulletins at `low`.
+- **GPT-6 Astra**: $10 / $50, OpenAI's flagship. Full shows at `high`, bulletins at `medium`.
+- **GPT-6 Luna**: $0.10 / $0.50, the cheapest.
+
+OpenAI caches the repeated prompt prefix by itself. A GPT decline or failure goes straight to
+the template writer (there's no rescue model).
 
 ## 🔊 Voices
 
@@ -214,6 +228,8 @@ is a `synth(text, voice, speed)` function.
 | `ADMIN_PASSWORD` | random per run | Control room password. **Set it.** |
 | `ANTHROPIC_API_KEY` | — | Enables the Claude writer |
 | `HFLNN_MODEL` | `claude-sonnet-5-5` | Starting value for **Settings → Claude model** |
+| `OPENAI_API_KEY` | — | Enables the OpenAI writer |
+| `HFLNN_OPENAI_MODEL` | `gpt-6.1-sol` | Starting value for **Settings → OpenAI model** |
 | `INGEST_KEY` | generated, saved in `DATA_DIR` | The secret in the export URL |
 | `HUB_PUSH_KEY` | — | Bearer token the Hub uses for `POST /api/hub/push` |
 | `HUB_FEED_URL`, `CHRONICLE_FEED_URL`, `PUBLIC_URL` | — | Starting values for the same Settings fields |
@@ -236,7 +252,7 @@ lib/ingest/             madden.js (export receiver), hub.js, chronicle.js
 lib/stories.js          story engine (diffs → ranked stories with facts and cards)
 lib/preview.js, lib/kickoff.js   roster-built material for the Season Premiere and Season Kickoff
 lib/rundown.js          segment selection per episode type and season phase
-lib/writer/             schema, validator, template writer, Claude writer, prompts
+lib/writer/             schema, validator, template writer, Claude and OpenAI writers, prompts
 lib/tts/, lib/audio/    Kokoro worker, text prep, jingles, mixer, MP3 encoding
 lib/producer.js         news wire, episodes, jobs and automation
 public/                 channel page, control room, js/studio/ (pixel-art renderer)

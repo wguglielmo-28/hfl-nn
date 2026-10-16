@@ -7,6 +7,7 @@ const { buildRundown, chronicleItem } = require('../lib/rundown');
 const { writeTemplateScript } = require('../lib/writer/template');
 const { validateScript, factNumberSet } = require('../lib/writer/validate');
 const { createClaudeWriter, costOf, effortFor } = require('../lib/writer/claude');
+const { createOpenAIWriter, sseEvents, costOf: openaiCostOf, effortFor: openaiEffortFor } = require('../lib/writer/openai');
 const P = require('../lib/writer/prompt');
 const M = require('../lib/memory');
 const { createStore } = require('../lib/store');
@@ -410,6 +411,96 @@ test('a Sonnet 5.5 decline is rewritten on Opus 5.5, and the repair stays there'
   assert.deepEqual(requests.map(r => [r.model, r.output_config.effort]), [['claude-sonnet-5-5', 'low'], ['claude-opus-5-5', 'medium'], ['claude-opus-5-5', 'medium']]);
   assert.equal(out.usage.length, 3, 'every request is costed, the declined one too');
   assert.equal(out.model, 'claude-opus-5-5');
+});
+
+// A fake OpenAI transport: each request gets the next reply as a stream of
+// server-sent events, split mid-event to exercise the parser.
+function fakeOpenAI(replies) {
+  const requests = [];
+  const transport = async ({ url, headers, body }) => {
+    const req = JSON.parse(body);
+    requests.push({ url, headers, req });
+    const r = replies.shift();
+    if (r.status) return { status: r.status, text: JSON.stringify({ error: { message: r.message } }) };
+    const text = r.refusal == null ? JSON.stringify(r.body) : '';
+    const response = {
+      model: `${req.model}-2026-09-30`, status: r.incomplete ? 'incomplete' : 'completed',
+      incomplete_details: r.incomplete ? { reason: r.incomplete } : null,
+      output: [
+        { type: 'reasoning', summary: [] },
+        { type: 'message', content: [r.refusal == null ? { type: 'output_text', text } : { type: 'refusal', refusal: r.refusal }] },
+      ],
+      usage: { input_tokens: 3000, input_tokens_details: { cached_tokens: 1000 }, output_tokens: 2000 },
+    };
+    const sse = [
+      { type: 'response.created', response: { status: 'in_progress' } },
+      ...(text ? [{ type: 'response.output_text.delta', delta: text.slice(0, 10) }, { type: 'response.output_text.delta', delta: text.slice(10) }] : []),
+      { type: `response.${response.status}`, response },
+    ].map(e => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`).join('');
+    async function* events() { yield sse.slice(0, 37); yield sse.slice(37); }
+    return { status: 200, events: sseEvents(events()) };
+  };
+  return { requests, transport };
+}
+
+test('OpenAI writer: request shape, streamed parsing, cost, and one repair pass', async () => {
+  const { league, batches } = await leagueWithBatches();
+  const stories = batches[0].stories;
+  const storiesById = Object.fromEntries(stories.map(s => [s.id, s]));
+  const context = S.buildContext(league, {});
+  const rundown = buildRundown({ type: 'weekly', phase: 'regular', show, personas, league, context, stories });
+  const good = writeTemplateScript({ rundown, storiesById, personas, league, context });
+  const broken = { ...clone(good), segments: good.segments.slice(1) };
+  const { requests, transport } = fakeOpenAI([{ body: broken }, { body: good }]);
+  const writer = createOpenAIWriter({ apiKey: 'sk-test', transport, logger: quiet });
+  assert.equal(writer.available(), true);
+  assert.equal(createOpenAIWriter({ apiKey: '', transport }).available(), false);
+
+  const brief = P.episodeBrief({ rundown, storiesById, personas, memory: M.emptyMemory(personas) });
+  const leagueText = P.leagueContext(league, context, { phase: 'regular' });
+  const progress = [];
+  const out = await writer.write({
+    personas, leagueText, brief, onProgress: p => progress.push(p.chars),
+    validate: s => validateScript(s, { rundown, personaIds, factNumbers: factNumberSet(brief, leagueText) }),
+  });
+  assert.ok(out.result.ok);
+  assert.equal(out.repaired, true);
+  assert.equal(requests.length, 2, 'invalid first draft triggers exactly one repair');
+  assert.ok(progress.length && progress.at(-1) > 10, 'text deltas report progress');
+
+  const { url, headers, req } = requests[0];
+  assert.equal(url, 'https://api.openai.com/v1/responses');
+  assert.equal(headers.authorization, 'Bearer sk-test');
+  assert.equal(req.model, 'gpt-6.1-sol', 'GPT-6.1 Sol is the default');
+  assert.equal(req.stream, true);
+  assert.equal(req.store, false);
+  assert.deepEqual(req.reasoning, { effort: 'medium' });
+  assert.equal(req.text.format.type, 'json_schema');
+  assert.equal(req.text.format.strict, true);
+  assert.deepEqual(req.text.format.schema.properties.segments.items.properties.lines.items.properties.speaker.enum, personaIds);
+  assert.ok(req.instructions.endsWith(leagueText), 'show bible then league context: the cacheable prefix');
+  assert.equal(req.input[0].content, brief);
+  assert.match(requests[1].req.input[0].content, /YOUR PREVIOUS DRAFT HAD THESE PROBLEMS/);
+
+  assert.equal(out.model, 'gpt-6.1-sol', 'the dated snapshot id is reported as the model');
+  assert.deepEqual(out.usage[0], { model: 'gpt-6.1-sol', input: 2000, output: 2000, cacheWrite: 0, cacheRead: 1000 });
+  // GPT-6.1 Sol: $2 in, $0.10 cached in, $10 out.
+  assert.ok(Math.abs(openaiCostOf(out.usage[0]) - (2000 * 2 + 1000 * 0.1 + 2000 * 10) / 1e6) < 1e-9);
+  assert.ok(Math.abs(out.costUsd - 2 * openaiCostOf(out.usage[0])) < 1e-9);
+  assert.equal(openaiCostOf({ ...out.usage[0], model: 'gpt-unknown' }), null);
+
+  assert.equal(writer.buildRequest({ personas, leagueText, brief, model: 'gpt-6-astra', effort: openaiEffortFor('gpt-6-astra', 'bulletin') }).reasoning.effort, 'medium');
+  assert.equal(openaiEffortFor('gpt-6-astra', 'show'), 'high');
+  assert.equal(openaiEffortFor('gpt-6.1-sol', 'bulletin'), 'low');
+});
+
+test('OpenAI writer surfaces refusals, truncation and HTTP errors', async () => {
+  const run = reply => createOpenAIWriter({ apiKey: 'sk-test', transport: fakeOpenAI([reply]).transport, logger: quiet })
+    .write({ personas, leagueText: '', brief: '', validate: () => ({ ok: true }) });
+  await assert.rejects(run({ refusal: "I can't help with that." }), /declined/);
+  await assert.rejects(run({ incomplete: 'max_output_tokens', body: {} }), /output limit/);
+  await assert.rejects(run({ status: 401, message: 'Incorrect API key provided' }), /HTTP 401: Incorrect API key provided\. Check OPENAI_API_KEY/);
+  await assert.rejects(run({ status: 429, message: 'You exceeded your current quota' }), /no API credit/);
 });
 
 test('show memory remembers predictions and storylines', () => {

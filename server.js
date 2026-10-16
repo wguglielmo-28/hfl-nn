@@ -24,6 +24,7 @@ const { createTTS, voiceLabel, KOKORO_VOICES } = require('./lib/tts');
 const { encodeWav } = require('./lib/audio/wav');
 const { findFfmpeg } = require('./lib/audio/encode');
 const { createClaudeWriter } = require('./lib/writer/claude');
+const { createOpenAIWriter } = require('./lib/writer/openai');
 const { createProducer } = require('./lib/producer');
 const { createAuth } = require('./lib/auth');
 const { createSettings } = require('./lib/settings');
@@ -76,6 +77,7 @@ function createApp(opts = {}) {
   // ── Services ─────────────────────────────────────────────────────────────
   const tts = opts.tts || createTTS({ provider: env.TTS_PROVIDER || 'auto', cacheDir: path.join(dataDir, 'tts-cache'), modelDir: path.join(dataDir, 'models'), logger });
   const claude = opts.claude || createClaudeWriter({ apiKey: env.ANTHROPIC_API_KEY, model: env.HFLNN_MODEL || undefined, logger });
+  const openai = opts.openai || createOpenAIWriter({ apiKey: env.OPENAI_API_KEY, model: env.HFLNN_OPENAI_MODEL || undefined, logger });
   let producer = null;
   const chronicle = createChronicleSource({
     store, getUrl: () => settings.get().chronicleFeedUrl, outlet: basePersonas.network.chronicleName || 'The Crimson Chronicle',
@@ -85,7 +87,7 @@ function createApp(opts = {}) {
   const publicUrl = () => settings.get().publicUrl || (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : '');
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
-    tts, claude, chronicle, hub, publicUrl, logger,
+    tts, claude, openai, chronicle, hub, publicUrl, logger,
     baselineBefore: wk => ingest.baselineBefore(wk),
   });
   let quietBatches = false;   // set while loading the sample league's first batch
@@ -242,7 +244,10 @@ function createApp(opts = {}) {
       batches: store.readJSON('league/batches.json', []).slice(-10).reverse(),
       chronicle: chronicle.status(),
       hub: hub.status(),
-      writer: { claude: claude.available(), model: settings.get().claudeModel || claude.model, mode: settings.get().writer },
+      writer: {
+        claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
+        model: settings.get().claudeModel || claude.model, openaiModel: settings.get().openaiModel || openai.model,
+      },
       tts: { ...tts.status(), ffmpeg: !!findFfmpeg() },
       wire: { total: producer.wireStories().length, unused: producer.wireStories().filter(s => !s.usedIn.length && !s.excluded).length },
       jobs: producer.jobs().slice(0, 5),
@@ -432,7 +437,7 @@ if (require.main === module) {
     console.log(`     Control room:   http://localhost:${port}/control`);
     console.log(`     Data directory: ${ctx.store.dir}${persistent ? ' (persistent volume)' : ''}`);
     console.log(`     Voices:         ${ctx.tts.provider}${ctx.tts.provider === 'silent' ? ' (install optional dependency kokoro-js for real voices)' : ''}`);
-    console.log(`     Writer:         ${process.env.ANTHROPIC_API_KEY ? 'Claude' : 'template (set ANTHROPIC_API_KEY for Claude)'}\n`);
+    console.log(`     Writer:         ${[process.env.ANTHROPIC_API_KEY && 'Claude', process.env.OPENAI_API_KEY && 'OpenAI'].filter(Boolean).join(' + ') || 'template (set ANTHROPIC_API_KEY or OPENAI_API_KEY)'}\n`);
   });
 }
 
