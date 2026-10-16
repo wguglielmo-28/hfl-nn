@@ -119,7 +119,7 @@ async function viewDashboard() {
         h('button', { class: 'btn danger', type: 'button', on: { click: removeSample } }, 'Remove sample league'))),
     h('section', { class: 'panel' }, h('h2', {}, 'Newsroom'),
       h('table', {}, h('tbody', {},
-        row('Script writer', s.writer.claude && s.writer.mode !== 'template' ? `Claude (${s.writer.model})` : 'Template writer'),
+        row('Script writer', { claude: `Claude (${s.writer.model})`, openai: `OpenAI (${s.writer.openaiModel})` }[s.writer.active] || 'Template writer'),
         row('Voices', `${s.tts.provider}${s.tts.status ? ` — ${s.tts.status}` : ''}${s.tts.error ? ` (${s.tts.error})` : ''}`),
         row('Audio', s.tts.ffmpeg ? 'MP3 (ffmpeg)' : 'WAV (no ffmpeg found)'),
         row('News wire', `${s.wire.unused} unused of ${s.wire.total} stories`),
@@ -189,7 +189,7 @@ async function viewEpisodes() {
   const [list, settings, wire] = await Promise.all([api('/api/admin/episodes'), api('/api/admin/settings'), api('/api/admin/wire')]);
   const type = h('select', {}, [['weekly', 'weekly'], ['special', 'special'], ['premiere', 'season premiere'], ['kickoff', 'season kickoff'], ['custom', 'custom']].map(([v, label]) => h('option', { value: v }, label)));
   const phase = h('select', {}, h('option', { value: '' }, 'current phase'), settings.phases.map(p => h('option', { value: p }, p)));
-  const writer = h('select', {}, ['auto', 'claude', 'template'].map(t => h('option', { value: t }, t)));
+  const writer = h('select', {}, settings.writers.map(t => h('option', { value: t }, t)));
   const notes = h('textarea', { placeholder: 'Anything the anchors should mention, a running joke, a correction…' });
   const KINDS = ['cold_open', 'scoreboard', 'game_of_week', 'top_performers', 'standings', 'playoff_race', 'transactions', 'injuries', 'press_review', 'league_office', 'debate', 'conspiracy_corner', 'preview', 'power_rankings', 'predictions', 'draft_desk', 'free_agency', 'bracket', 'season_review', 'signoff'];
   const kindBoxes = KINDS.map(k => h('label', { class: 'row' }, h('input', { type: 'checkbox', value: k, checked: ['cold_open', 'debate', 'signoff'].includes(k) }), k.replace(/_/g, ' ')));
@@ -254,11 +254,11 @@ async function viewEpisode() {
 
 function writerInfo(w) {
   if (!w) return null;
-  const bits = [w.kind === 'claude' ? `Written by ${w.model}` : 'Written by the template writer'];
+  const bits = [w.kind === 'claude' || w.kind === 'openai' ? `Written by ${w.model}` : 'Written by the template writer'];
   if (w.costUsd != null) bits.push(`about $${w.costUsd.toFixed(3)}`);
   if (w.usage) bits.push(`${w.usage.reduce((n, u) => n + u.input + u.cacheRead + u.cacheWrite, 0)} in / ${w.usage.reduce((n, u) => n + u.output, 0)} out tokens${w.usage.some(u => u.cacheRead) ? ' (cache hit)' : ''}`);
   if (w.repaired) bits.push('needed one repair pass');
-  if (w.fallbackFrom) bits.push(`Claude failed: ${w.fallbackReason}`);
+  if (w.fallbackFrom) bits.push(`${w.fallbackFrom === 'openai' ? 'OpenAI' : 'Claude'} failed: ${w.fallbackReason}`);
   return h('p', { class: 'muted' }, bits.join(' • '));
 }
 
@@ -394,7 +394,7 @@ async function viewSettings() {
 
   const save = async () => {
     const patch = {
-      phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, spice: f.spice.value,
+      phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
       autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
@@ -411,9 +411,12 @@ async function viewSettings() {
       h('div', { class: 'grid2' },
         h('div', {}, h('label', {}, 'Season phase'), sel('phaseOverride', ['', ...st.phases], { '': 'Detect from exports' }),
           h('p', { class: 'muted' }, 'Offseason sub-phases (re-signing, free agency, draft) can only be set here.')),
-        h('div', {}, h('label', {}, 'Script writer'), sel('writer', ['auto', 'claude', 'template'], { auto: 'Claude if configured, else template', claude: 'Claude only', template: 'Template only (free)' })),
+        h('div', {}, h('label', {}, 'Script writer'), sel('writer', st.writers, { auto: 'Claude if configured, else OpenAI, else template', claude: 'Claude', openai: 'OpenAI (GPT)', template: 'Template only (free)' }),
+          h('p', { class: 'muted' }, 'Claude needs ANTHROPIC_API_KEY and OpenAI needs OPENAI_API_KEY on the server. A writer without its key falls back to the other one, then the template.')),
         h('div', {}, h('label', {}, 'Claude model'), sel('claudeModel', st.claudeModels.map(m => m.id), Object.fromEntries(st.claudeModels.map(m => [m.id, m.label]))),
           h('p', { class: 'muted' }, 'Sonnet 5.5 costs about half as much per script. If it declines a script, Opus 5.5 gets one try.')),
+        h('div', {}, h('label', {}, 'OpenAI model'), sel('openaiModel', st.openaiModels.map(m => m.id), Object.fromEntries(st.openaiModels.map(m => [m.id, m.label]))),
+          h('p', { class: 'muted' }, 'Used when the writer is OpenAI. GPT-6.1 Sol is $2 / $10 per million tokens, the same as Sonnet 5.5. A GPT decline goes straight to the template writer.')),
         h('div', {}, h('label', {}, 'Spice level'), sel('spice', ['mild', 'medium', 'spicy'])),
         h('div', {}, h('label', {}, 'Season number'), text('seasonNumber', 'number', 'e.g. 9'),
           h('p', { class: 'muted' }, 'Used in show titles ("Season IX Kickoff"). Blank uses the HFL Hub feed\'s season, if it sends one.'))),

@@ -14,6 +14,8 @@ league snapshots, episodes, audio, the voice model cache and settings. It has th
    - `ADMIN_PASSWORD`: the control room password.
    - `SECRET_KEY`: 32+ random characters. It encrypts the Discord webhook.
    - `ANTHROPIC_API_KEY`: optional. Enables the Claude writer.
+   - `OPENAI_API_KEY`: optional. Enables the OpenAI (GPT) writer. Pick it in **Settings → Script
+     writer**.
    - `NODE_ENV=production`: turns on the HTTPS redirect and HSTS.
    - `PUBLIC_URL=https://<your-service>.up.railway.app`, or your custom domain. Discord links
      use it.

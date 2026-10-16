@@ -345,6 +345,58 @@ test('Claude model setting: Sonnet 5.5 by default, switchable, and passed to the
   } finally { await s.close(); }
 });
 
+test('OpenAI writer setting: picked in Settings, model passed through, falls back when it fails', async () => {
+  const calls = [];
+  const claude = { available: () => true, model: 'claude-sonnet-5-5', write: async a => { calls.push(['claude', a.model]); throw new Error('stub claude'); } };
+  const openai = { available: () => true, model: 'gpt-6.1-sol', write: async a => { calls.push(['openai', a.model, a.kind]); throw new Error('stub openai'); } };
+  const s = await boot({ claude, openai });
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    let r = await s.adminReq('GET', '/api/admin/settings');
+    assert.equal(r.json.openaiModel, 'gpt-6.1-sol');
+    assert.deepEqual(r.json.openaiModels.map(m => m.id), ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna']);
+    assert.deepEqual(r.json.writers, ['auto', 'claude', 'openai', 'template']);
+    r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.writer.active, 'claude', 'auto prefers Claude when both keys are set');
+
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { writer: 'openai', openaiModel: 'gpt-6-astra' } });
+    assert.equal(r.status, 200);
+    r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.writer.active, 'openai');
+    assert.equal(r.json.writer.openaiModel, 'gpt-6-astra');
+
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest(p);
+    await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    assert.deepEqual(calls[0], ['openai', 'gpt-6-astra', 'show']);
+    const ep = s.ctx.producer.get(s.ctx.producer.list()[0].id);
+    assert.equal(ep.writer.kind, 'template', 'a failed OpenAI call still leaves a script');
+    assert.equal(ep.writer.fallbackFrom, 'openai');
+
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { openaiModel: 'claude-opus-5-5' } });
+    assert.equal(r.status, 400);
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { writer: 'gemini' } });
+    assert.equal(r.status, 200);
+    assert.equal(r.json.writer, 'openai', 'unknown writers are ignored');
+  } finally { await s.close(); }
+});
+
+test('a writer picked without its key falls back to the one that has a key', async () => {
+  const openai = { available: () => true, model: 'gpt-6.1-sol', write: async () => { throw new Error('stub'); } };
+  const s = await boot({ openai });
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    let r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.writer.active, 'openai', 'auto with only an OpenAI key uses OpenAI');
+    await s.adminReq('PUT', '/api/admin/settings', { body: { writer: 'claude' } });
+    r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.writer.active, 'openai', 'Claude without ANTHROPIC_API_KEY falls through to OpenAI');
+    await s.adminReq('PUT', '/api/admin/settings', { body: { writer: 'template' } });
+    r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.writer.active, 'template');
+  } finally { await s.close(); }
+});
+
 test('settings: webhook validation and masking, persona overrides', async () => {
   const s = await boot();
   try {
