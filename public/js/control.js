@@ -120,7 +120,7 @@ async function viewDashboard() {
     h('section', { class: 'panel' }, h('h2', {}, 'Newsroom'),
       h('table', {}, h('tbody', {},
         row('Script writer', { claude: `Claude (${s.writer.model})`, openai: `OpenAI (${s.writer.openaiModel})` }[s.writer.active] || 'Template writer'),
-        row('Voices', `${s.tts.provider}${s.tts.status ? ` — ${s.tts.status}` : ''}${s.tts.error ? ` (${s.tts.error})` : ''}`),
+        row('Voices', `${s.tts.provider}${s.tts.status ? ` — ${s.tts.status}` : ''}${s.tts.error ? ` (${s.tts.error})` : ''}${s.tts.elevenlabs?.configured ? ` • ElevenLabs ${s.tts.voiceEngine === 'elevenlabs' ? 'on' : 'off'} (${s.tts.elevenlabs.model})${s.tts.elevenlabs.error ? ` — ${s.tts.elevenlabs.error}` : ''}` : ''}`),
         row('Audio', s.tts.ffmpeg ? 'MP3 (ffmpeg)' : 'WAV (no ffmpeg found)'),
         row('News wire', `${s.wire.unused} unused of ${s.wire.total} stories`),
         row('Chronicle', s.chronicle.fetchedAt ? `${s.chronicle.unused} new of ${s.chronicle.count}` : (s.chronicle.error || 'not configured')),
@@ -243,7 +243,8 @@ async function viewEpisode() {
     job && h('p', { class: 'notice' }, job.progress ? (job.progress.stage === 'voicing' ? `Voicing line ${job.progress.done} of ${job.progress.total}…` : `Writing… ${job.progress.chars || 0} characters so far`) : `${job.kind} ${job.status}…`),
     writerInfo(ep.writer),
     pollInfo(ep.script?.fanPoll, personas),
-    ep.audio && h('p', {}, `Audio: ${fmtDur(ep.audio.duration)} ${ep.audio.format.toUpperCase()} (${Math.round(ep.audio.bytes / 1024)} KB, ${ep.audio.provider} voices)${ep.audio.stale ? ' — script changed since, re-voice it' : ''}`),
+    ep.audio && h('p', {}, `Audio: ${fmtDur(ep.audio.duration)} ${ep.audio.format.toUpperCase()} (${Math.round(ep.audio.bytes / 1024)} KB, ${ep.audio.provider} voices)${elevenInfo(ep.audio)}${ep.audio.stale ? ' — script changed since, re-voice it' : ''}`),
+    ep.audio?.fallbackFrom && h('p', { class: 'error' }, `ElevenLabs failed, so Kokoro voiced this one: ${ep.audio.fallbackReason}`),
     ep.discordError && h('p', { class: 'error' }, `Discord: ${ep.discordError}`),
     actions(ep, busy));
 
@@ -251,6 +252,13 @@ async function viewEpisode() {
     h('ul', { class: 'flags' }, ep.validation.errors.map(e => h('li', { class: 'err' }, e)), ep.validation.warnings.map(w => h('li', {}, w)))) : null;
 
   return h('div', {}, header, val, ep.script ? scriptEditor(ep, personas, busy) : h('p', { class: 'muted' }, 'The script is being written…'));
+}
+
+// ElevenLabs spend for one voicing, at pay-as-you-go rates (Flash is half).
+function elevenInfo(a) {
+  if (a.elevenlabsChars == null || a.fallbackFrom) return '';
+  const usd = a.elevenlabsChars / 1000 * (a.elevenlabsModel === 'eleven_flash_v2_5' ? 0.04 : 0.08);
+  return ` • ElevenLabs: ${a.elevenlabsChars.toLocaleString()} characters${a.elevenlabsChars ? `, about ${usd.toFixed(2)}` : ' (all cached)'}`;
 }
 
 // The Discord poll the writer attached, as it will be posted.
@@ -376,7 +384,10 @@ async function viewSources() {
 
 // ── Settings ──────────────────────────────────────────────────────────────
 async function viewSettings() {
-  const st = await api('/api/admin/settings');
+  const [st, el] = await Promise.all([
+    api('/api/admin/settings'),
+    api('/api/admin/tts/elevenlabs/voices').catch(e => ({ configured: false, voices: [], error: e.message })),
+  ]);
   const f = {};
   const check = (k, label) => h('label', { class: 'row' }, f[k] = h('input', { type: 'checkbox', checked: st[k] }), label);
   const sel = (k, opts, labels = {}) => { const s = h('select', {}, opts.map(o => h('option', { value: o }, labels[o] || o))); s.value = st[k] ?? opts[0]; f[k] = s; return s; };
@@ -389,25 +400,29 @@ async function viewSettings() {
     const voice = h('select', {}, st.voices.map(v => h('option', { value: v }, v)));
     voice.value = p.voice;
     const speed = h('input', { type: 'number', min: '0.8', max: '1.25', step: '0.01', value: p.speed || 1 });
+    const elOpts = [...el.voices];
+    if (p.elevenVoice && !elOpts.some(v => v.id === p.elevenVoice)) elOpts.push({ id: p.elevenVoice, label: `${p.elevenVoice} (not on the account)` });
+    const eleven = h('select', {}, h('option', { value: '' }, '— Kokoro voice —'), elOpts.map(v => h('option', { value: v.id }, v.label)));
+    eleven.value = p.elevenVoice || '';
     const play = h('button', { class: 'btn', type: 'button', on: { click: async () => {
       play.disabled = true;
       try {
-        const res = await api('/api/admin/tts/preview', { method: 'POST', raw: true, body: { voice: voice.value, speed: Number(speed.value), text: `${p.catchphrases?.[0] || 'Hello'} I'm ${name.value}, and this is HFL-NN.` } });
+        const res = await api('/api/admin/tts/preview', { method: 'POST', raw: true, body: { voice: f.voiceEngine?.value === 'elevenlabs' && eleven.value ? `eleven:${eleven.value}` : voice.value, speed: Number(speed.value), text: `${p.catchphrases?.[0] || 'Hello'} I'm ${name.value}, and this is HFL-NN.` } });
         if (!res.ok) throw new Error((await res.json()).error);
         new Audio(URL.createObjectURL(await res.blob())).play();
       } catch (e) { toast(`Voice preview failed: ${e.message}`, true); } finally { play.disabled = false; }
     } } }, '▶ Hear');
-    return { id: p.id, name, voice, speed, el: h('tr', {}, h('td', {}, p.role), h('td', {}, name), h('td', {}, voice), h('td', {}, speed), h('td', {}, play)) };
+    return { id: p.id, name, voice, speed, eleven, el: h('tr', {}, h('td', {}, p.role), h('td', {}, name), h('td', {}, voice), el.configured && h('td', {}, eleven), h('td', {}, speed), h('td', {}, play)) };
   });
 
   const save = async () => {
     const patch = {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
-      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked,
+      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
-      personaOverrides: Object.fromEntries(personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value) }])),
+      personaOverrides: Object.fromEntries(personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value), elevenVoice: r.eleven.value }])),
     };
     if (webhook.value.trim()) patch.discordWebhook = webhook.value.trim();
     await act(() => api('/api/admin/settings', { method: 'PUT', body: patch }), 'Settings saved');
@@ -445,7 +460,13 @@ async function viewSettings() {
         h('button', { class: 'btn danger', type: 'button', disabled: !st.hasWebhook, on: { click: () => act(() => api('/api/admin/settings', { method: 'PUT', body: { clearWebhook: true } }), 'Webhook removed').then(render) } }, 'Remove webhook'))),
     h('section', { class: 'panel' }, h('h2', {}, 'Anchors'),
       h('p', { class: 'muted' }, 'Names and voices. Looks, bios and personalities live in config/personas.json.'),
-      h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'Voice', 'Speed', ''].map(t => h('th', {}, t)))), h('tbody', {}, personaRows.map(r => r.el)))),
+      h('div', { class: 'grid2' },
+        h('div', {}, h('label', {}, 'Voice engine'), sel('voiceEngine', ['kokoro', 'elevenlabs'], { kokoro: 'Kokoro (free, on the server)', elevenlabs: 'ElevenLabs for anchors with an ElevenLabs voice' })),
+        h('div', {}, h('label', {}, 'ElevenLabs model'), sel('elevenModel', st.elevenModels.map(m => m.id), Object.fromEntries(st.elevenModels.map(m => [m.id, m.label]))))),
+      h('p', { class: 'muted' }, el.configured
+        ? `ElevenLabs bills per character: a weekly show is roughly 6,000 to 7,000 characters, about 50 cents on Multilingual v2. Re-voicing only pays for changed lines. Anchors left on "Kokoro voice" stay free. If ElevenLabs fails (out of characters, bad key), the episode is voiced with Kokoro instead.${el.voices.length ? '' : ' No voices found on the account yet.'}`
+        : `Set ELEVENLABS_API_KEY on the server to give anchors ElevenLabs voices.${el.error ? ` (${el.error})` : ''}`),
+      h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'Kokoro voice', el.configured && 'ElevenLabs voice', 'Speed', ''].filter(t => t !== false).map(t => h('th', {}, t)))), h('tbody', {}, personaRows.map(r => r.el)))),
     h('section', { class: 'panel' }, h('h2', {}, 'Pronunciations'),
       h('p', { class: 'muted' }, 'One per line: how a name is written = how the voices should say it.'), pron),
     h('div', { class: 'row' }, h('button', { class: 'btn primary', type: 'button', on: { click: save } }, 'Save settings')),

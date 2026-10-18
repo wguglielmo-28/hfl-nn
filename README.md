@@ -228,8 +228,26 @@ cached, so editing one line and re-voicing only re-synthesizes that line.
 
 **Settings → Pronunciations** fixes names the voices get wrong (`Ja'Marr = Juh Mar`).
 
-A premium provider such as OpenAI or ElevenLabs can be added in `lib/tts/index.js`. All it needs
-is a `synth(text, voice, speed)` function.
+**ElevenLabs** (optional, paid) runs alongside Kokoro. Set `ELEVENLABS_API_KEY`, then in
+**Settings → Anchors** give any anchor an ElevenLabs voice from your account (premade, cloned or
+library voices) and set **Voice engine** to ElevenLabs. Anchors without one keep their Kokoro
+voice, so you can upgrade just Big Ray, say. Switch the engine back to Kokoro to go free again
+without losing the picks.
+
+| ElevenLabs model | Cost | |
+|---|---|---|
+| Multilingual v2 (default) | $0.08 per 1,000 characters | Stable on long scripts |
+| v4 | $0.08 per 1,000 characters | Most expressive |
+| Flash v2.5 | $0.04 per 1,000 characters | Half price |
+
+A weekly show is roughly 6,000–7,000 characters, so about 50 cents on Multilingual v2 if every
+anchor uses ElevenLabs. Lines are cached per voice and model, so re-voicing an edited script
+only pays for the changed lines. The episode page shows the characters and cost of each voicing.
+If ElevenLabs fails (out of characters, bad key), the episode is voiced with Kokoro and the
+episode page says why. With the engine on, automatic shows are voiced with ElevenLabs too.
+
+Another provider can be added in `lib/tts/index.js`. All it needs is a
+`synth(text, voice, speed)` function.
 
 ---
 
@@ -242,6 +260,8 @@ is a `synth(text, voice, speed)` function.
 | `HFLNN_MODEL` | `claude-sonnet-5-5` | Starting value for **Settings → Claude model** |
 | `OPENAI_API_KEY` | — | Enables the OpenAI writer |
 | `HFLNN_OPENAI_MODEL` | `gpt-6.1-sol` | Starting value for **Settings → OpenAI model** |
+| `ELEVENLABS_API_KEY` | — | Enables ElevenLabs voices |
+| `HFLNN_ELEVENLABS_MODEL` | `eleven_multilingual_v2` | Starting value for **Settings → ElevenLabs model** |
 | `INGEST_KEY` | generated, saved in `DATA_DIR` | The secret in the export URL |
 | `HUB_PUSH_KEY` | — | Bearer token the Hub uses for `POST /api/hub/push` |
 | `HUB_FEED_URL`, `CHRONICLE_FEED_URL`, `PUBLIC_URL` | — | Starting values for the same Settings fields |

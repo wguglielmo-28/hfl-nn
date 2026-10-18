@@ -20,7 +20,8 @@ const L = require('./lib/league');
 const { createMaddenIngest, detectPayload } = require('./lib/ingest/madden');
 const { createHubSource } = require('./lib/ingest/hub');
 const { createChronicleSource } = require('./lib/ingest/chronicle');
-const { createTTS, voiceLabel, KOKORO_VOICES } = require('./lib/tts');
+const { createTTS, voiceLabel, KOKORO_VOICES, isElevenVoice, ELEVEN_PREFIX } = require('./lib/tts');
+const { createElevenLabsProvider, VOICE_ID: ELEVEN_VOICE_ID } = require('./lib/tts/elevenlabs');
 const { encodeWav } = require('./lib/audio/wav');
 const { findFfmpeg } = require('./lib/audio/encode');
 const { createClaudeWriter } = require('./lib/writer/claude');
@@ -75,7 +76,8 @@ function createApp(opts = {}) {
   };
 
   // ── Services ─────────────────────────────────────────────────────────────
-  const tts = opts.tts || createTTS({ provider: env.TTS_PROVIDER || 'auto', cacheDir: path.join(dataDir, 'tts-cache'), modelDir: path.join(dataDir, 'models'), logger });
+  const elevenlabs = createElevenLabsProvider({ apiKey: env.ELEVENLABS_API_KEY, getModel: () => settings.get().elevenModel, logger });
+  const tts = opts.tts || createTTS({ provider: env.TTS_PROVIDER || 'auto', cacheDir: path.join(dataDir, 'tts-cache'), modelDir: path.join(dataDir, 'models'), elevenlabs, logger });
   const claude = opts.claude || createClaudeWriter({ apiKey: env.ANTHROPIC_API_KEY, model: env.HFLNN_MODEL || undefined, logger });
   const openai = opts.openai || createOpenAIWriter({ apiKey: env.OPENAI_API_KEY, model: env.HFLNN_OPENAI_MODEL || undefined, logger });
   let producer = null;
@@ -248,7 +250,7 @@ function createApp(opts = {}) {
         claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
         model: settings.get().claudeModel || claude.model, openaiModel: settings.get().openaiModel || openai.model,
       },
-      tts: { ...tts.status(), ffmpeg: !!findFfmpeg() },
+      tts: { ...tts.status(), ffmpeg: !!findFfmpeg(), voiceEngine: settings.get().voiceEngine },
       wire: { total: producer.wireStories().length, unused: producer.wireStories().filter(s => !s.usedIn.length && !s.excluded).length },
       jobs: producer.jobs().slice(0, 5),
       generatedPassword: !!auth.generatedPassword,
@@ -333,10 +335,18 @@ function createApp(opts = {}) {
     return { ok: true };
   }));
   admin.post('/tts/preview', wrap(async (req, res) => {
-    const voice = KOKORO_VOICES.includes(req.body?.voice) ? req.body.voice : 'am_michael';
-    const text = String(req.body?.text || `This is ${voiceLabel(voice)} on HFL-NN.`).slice(0, 240);
-    const out = await tts.speak(text, { voice, speed: Number(req.body?.speed) || 1 });
+    const asked = String(req.body?.voice || '');
+    const eleven = isElevenVoice(asked) && ELEVEN_VOICE_ID.test(asked.slice(ELEVEN_PREFIX.length));
+    const voice = eleven || KOKORO_VOICES.includes(asked) ? asked : 'am_michael';
+    const text = String(req.body?.text || `This is ${eleven ? 'your ElevenLabs voice' : voiceLabel(voice)} on HFL-NN.`).slice(0, 240);
+    const out = await tts.speak(text, { voice, speed: Number(req.body?.speed) || 1, elevenModel: settings.get().elevenModel });
     res.set('Content-Type', 'audio/wav').send(encodeWav(out.samples, out.sampleRate));
+  }));
+  // The ElevenLabs account's voices, for the anchor voice pickers.
+  admin.get('/tts/elevenlabs/voices', wrap(async req => {
+    const el = tts.elevenlabs;
+    if (!el?.configured()) return { configured: false, voices: [] };
+    return { configured: true, voices: await el.listVoices({ fresh: req.query.fresh === '1' }) };
   }));
   admin.get('/memory', wrap(() => M.loadMemory(store, settings.personas())));
   admin.post('/memory/prediction', wrap(req => {
@@ -436,7 +446,7 @@ if (require.main === module) {
     console.log(`\n  📺 HFL-NN v${VERSION} on http://localhost:${port}`);
     console.log(`     Control room:   http://localhost:${port}/control`);
     console.log(`     Data directory: ${ctx.store.dir}${persistent ? ' (persistent volume)' : ''}`);
-    console.log(`     Voices:         ${ctx.tts.provider}${ctx.tts.provider === 'silent' ? ' (install optional dependency kokoro-js for real voices)' : ''}`);
+    console.log(`     Voices:         ${ctx.tts.provider}${ctx.tts.provider === 'silent' ? ' (install optional dependency kokoro-js for real voices)' : ''}${process.env.ELEVENLABS_API_KEY ? ' + ElevenLabs' : ''}`);
     console.log(`     Writer:         ${[process.env.ANTHROPIC_API_KEY && 'Claude', process.env.OPENAI_API_KEY && 'OpenAI'].filter(Boolean).join(' + ') || 'template (set ANTHROPIC_API_KEY or OPENAI_API_KEY)'}\n`);
   });
 }

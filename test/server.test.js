@@ -5,6 +5,7 @@ const http = require('http');
 const zlib = require('zlib');
 const { createApp } = require('../server');
 const { createTTS } = require('../lib/tts');
+const { createElevenLabsProvider } = require('../lib/tts/elevenlabs');
 const { normalizeHubFeed } = require('../lib/ingest/hub');
 const { parseFeed, extractArticle } = require('../lib/ingest/chronicle');
 const { isDiscordWebhook, episodeMessage } = require('../lib/discord');
@@ -424,6 +425,70 @@ test('fan polls: written only when a Discord webhook is set, kept through script
     ep = s.ctx.producer.createEpisode({ type: 'weekly' });
     await s.ctx.producer.idle();
     assert.equal(s.ctx.producer.get(ep.id).script.fanPoll, null);
+  } finally { await s.close(); }
+});
+
+test('ElevenLabs voices: per-anchor picks, spend recorded per episode, Kokoro takes over when ElevenLabs fails', async () => {
+  const VOICE = 'JBFqnCBsd6RMkjVDRZzb';
+  let fail = false;
+  const calls = [];
+  const request = async r => {
+    calls.push(r.path);
+    if (r.method === 'GET') return { status: 200, body: Buffer.from(JSON.stringify({ voices: [{ voice_id: VOICE, name: 'George' }] })) };
+    if (fail) return { status: 401, body: Buffer.from('{"detail":{"status":"quota_exceeded","message":"quota"}}') };
+    return { status: 200, body: Buffer.alloc(24000) };
+  };
+  const elevenlabs = createElevenLabsProvider({ apiKey: 'xi-test', request, logger: quiet });
+  const s = await boot({ tts: createTTS({ provider: 'silent', cacheDir: tmpDir(), elevenlabs }) });
+  try {
+    await s.req('POST', '/api/login', { body: { password: 'letmein' } });
+    let r = await s.adminReq('GET', '/api/admin/tts/elevenlabs/voices');
+    assert.deepEqual(r.json, { configured: true, voices: [{ id: VOICE, name: 'George', label: 'George', category: '' }] });
+    r = await s.adminReq('GET', '/api/admin/settings');
+    assert.equal(r.json.voiceEngine, 'kokoro', 'Kokoro stays the default');
+    assert.deepEqual(r.json.elevenModels.map(m => m.id), ['eleven_multilingual_v2', 'eleven_v4', 'eleven_flash_v2_5']);
+
+    r = await s.adminReq('PUT', '/api/admin/settings', { body: { voiceEngine: 'elevenlabs', elevenModel: 'eleven_v4', personaOverrides: { ray: { elevenVoice: VOICE }, nate: { elevenVoice: '../bad' } } } });
+    assert.equal(r.status, 200);
+    assert.equal(r.json.personas.find(p => p.id === 'ray').elevenVoice, VOICE);
+    assert.equal(r.json.personas.find(p => p.id === 'nate').elevenVoice, undefined, 'bad voice ids are dropped');
+    await s.adminReq('PUT', '/api/admin/settings', { body: { voiceEngine: 'polly' } });
+    assert.equal(s.ctx.settings.get().voiceEngine, 'elevenlabs', 'unknown engines are ignored');
+
+    r = await s.adminReq('POST', '/api/admin/tts/preview', { body: { voice: `eleven:${VOICE}`, text: 'Grown-man football.' } });
+    assert.equal(r.status, 200);
+    assert.ok(calls.some(p => p.startsWith(`/v1/text-to-speech/${VOICE}`)), 'the preview used ElevenLabs');
+
+    // The export drafts and voices the weekly show by itself.
+    const before = calls.length;
+    for (const p of fixturePayloads()) s.ctx.ingest.ingest(p);
+    await s.ctx.ingest.flush();
+    await s.ctx.producer.idle();
+    const id = s.ctx.producer.list()[0].id;
+    let ep = s.ctx.producer.get(id);
+    assert.equal(ep.audio.provider, 'silent + elevenlabs');
+    assert.equal(ep.audio.elevenlabsModel, 'eleven_v4');
+    const rayLines = ep.script.segments.flatMap(x => x.lines).filter(l => l.speaker === 'ray');
+    assert.ok(rayLines.length > 0);
+    assert.ok(calls.length - before >= rayLines.length, 'every Ray line went to ElevenLabs');
+    assert.ok(ep.audio.elevenlabsChars >= rayLines.reduce((n, l) => n + l.text.length, 0) * 0.8, 'and was counted');
+
+    s.ctx.producer.voice(id);
+    await s.ctx.producer.idle();
+    assert.equal(s.ctx.producer.get(id).audio.elevenlabsChars, 0, 'a re-voice of an unchanged script is all cache');
+
+    fail = true;
+    await s.adminReq('PUT', '/api/admin/settings', { body: { elevenModel: 'eleven_flash_v2_5' } });
+    s.ctx.producer.voice(id);
+    await s.ctx.producer.idle();
+    ep = s.ctx.producer.get(id);
+    assert.equal(ep.audio.fallbackFrom, 'elevenlabs');
+    assert.match(ep.audio.fallbackReason, /out of characters/);
+    assert.equal(ep.audio.provider, 'silent');
+    assert.ok(ep.audio.duration > 0, 'the show still got voiced');
+    r = await s.adminReq('GET', '/api/admin/status');
+    assert.equal(r.json.tts.elevenlabs.status, 'error');
+    assert.equal(r.json.tts.voiceEngine, 'elevenlabs');
   } finally { await s.close(); }
 });
 
