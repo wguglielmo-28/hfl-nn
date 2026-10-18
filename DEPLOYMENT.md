@@ -16,6 +16,8 @@ league snapshots, episodes, audio, the voice model cache and settings. It has th
    - `ANTHROPIC_API_KEY`: optional. Enables the Claude writer.
    - `OPENAI_API_KEY`: optional. Enables the OpenAI (GPT) writer. Pick it in **Settings → Script
      writer**.
+   - `ELEVENLABS_API_KEY`: optional. Enables ElevenLabs voices; pick them per anchor in
+     **Settings → Anchors**.
    - `NODE_ENV=production`: turns on the HTTPS redirect and HSTS.
    - `PUBLIC_URL=https://<your-service>.up.railway.app`, or your custom domain. Discord links
      use it.
