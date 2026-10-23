@@ -79,5 +79,17 @@
   ],
   "feuds": [
     { "a": "ray", "b": "nate", "topic": "the eye test versus analytics" }
+  ],
+  "relationships": [
+    { "a": "ray", "b": "nate", "kind": "rivalry", "heat": 8, "note": "the eye test versus analytics; neither has ever admitted the other was right" },
+    { "a": "hal", "b": "ray", "kind": "needling", "heat": 4, "note": "old friends; Hal reins Ray in and loves watching him squirm when a take goes bad" },
+    { "a": "hal", "b": "sasha", "kind": "needling", "heat": 3, "note": "Sasha's scoops keep upstaging Hal's script, and she lets him know it" },
+    { "a": "hal", "b": "gus", "kind": "exasperation", "heat": 4, "note": "Hal keeps cutting Gus's segment short; Gus thinks Hal is in on it" },
+    { "a": "hal", "b": "nate", "kind": "respect", "heat": 2, "note": "Hal trusts Nate's numbers, which Ray takes personally" },
+    { "a": "ray", "b": "sasha", "kind": "alliance", "heat": 2, "note": "Ray trusts Sasha's sources over Nate's model; the alliance cracks when she sides with the numbers" },
+    { "a": "ray", "b": "gus", "kind": "alliance", "heat": 3, "note": "Ray half-believes Gus, especially about officiating, and hates that he does" },
+    { "a": "nate", "b": "sasha", "kind": "competition", "heat": 5, "note": "both claim they knew first: the model saw it coming, the sources confirmed it" },
+    { "a": "nate", "b": "gus", "kind": "rivalry", "heat": 6, "note": "Nate debunks every case Gus opens, one number at a time" },
+    { "a": "sasha", "b": "gus", "kind": "grudge", "heat": 5, "note": "Gus is sure Sasha's sources are plants; Sasha refuses to dignify it" }
   ]
 }
