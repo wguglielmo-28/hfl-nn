@@ -49,7 +49,7 @@ async function act(fn, ok) {
 
 const when = iso => (iso ? new Date(iso).toLocaleString() : '—');
 const pill = (text, kind = '') => h('span', { class: `pill ${kind}` }, text);
-const statusPill = s => pill(s, { published: 'ok', ready: 'ok', draft: '', needs_fixes: 'bad', failed: 'bad', writing: 'warn', voicing: 'warn' }[s] || '');
+const statusPill = s => pill(s, { published: 'ok', ready: 'ok', draft: '', needs_fixes: 'bad', failed: 'bad', writing: 'warn', voicing: 'warn', heating: 'warn', boiling: 'bad', payoff: 'ok', growing: 'warn', cracked: 'ok' }[s] || '');
 const fmtDur = t => (t ? `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}` : '—');
 
 // ── Login ─────────────────────────────────────────────────────────────────
@@ -494,10 +494,28 @@ async function viewMemory() {
         h('td', {}, name(p.persona)), h('td', {}, p.text, h('div', { class: 'muted' }, p.madeIn)), h('td', {}, statusPill(p.status)),
         h('td', {}, h('button', { class: 'btn', type: 'button', on: { click: () => grade(p, 'right') } }, 'Right'), ' ',
           h('button', { class: 'btn', type: 'button', on: { click: () => grade(p, 'wrong') } }, 'Wrong')))))) : h('p', { class: 'muted' }, 'None yet. Graded predictions get called back on air.')),
-    h('section', { class: 'panel' }, h('h2', {}, 'Moods and feuds'),
-      h('ul', {}, Object.entries(m.moods).map(([id, v]) => h('li', {}, `${name(id)}: ${v.mood}`)), m.feuds.map(f => h('li', {}, `${name(f.a)} vs. ${name(f.b)}: ${f.topic}`)))),
-    h('section', { class: 'panel' }, h('h2', {}, 'Running storylines'),
-      m.storylines.length ? h('ul', {}, m.storylines.map(s => h('li', {}, s.text))) : h('p', { class: 'muted' }, 'None yet.')),
+    h('section', { class: 'panel' }, h('h2', {}, 'Storylines'),
+      h('p', { class: 'muted' }, 'Arcs build over weeks: building, heating, boiling, payoff, closed. Each episode adds beats.'),
+      m.storylines.length ? h('table', {}, h('tbody', {}, m.storylines.slice().reverse().map(s => h('tr', {},
+        h('td', {}, s.title || s.text, h('div', { class: 'muted' }, [s.teams?.join(', '), s.stakes].filter(Boolean).join(' • '))),
+        h('td', {}, statusPill(s.status || 'building')),
+        h('td', {}, (s.beats || []).slice(-3).map(b => h('div', {}, b.text)), s.nextBeat ? h('div', { class: 'muted' }, `Next: ${s.nextBeat}`) : null),
+        h('td', {}, [s.champion && `${name(s.champion)} believes`, s.skeptic && `${name(s.skeptic)} doesn't`].filter(Boolean).join(', ')))))) : h('p', { class: 'muted' }, 'None yet.')),
+    h('section', { class: 'panel' }, h('h2', {}, 'The desk'),
+      h('table', {}, h('tbody', {}, (m.relationships || []).slice().sort((a, b) => b.heat - a.heat).map(r => h('tr', {},
+        h('td', {}, `${name(r.a)} & ${name(r.b)}`), h('td', {}, r.kind), h('td', {}, `heat ${r.heat}/10`),
+        h('td', {}, r.note, r.flashpoints?.length ? h('div', { class: 'muted' }, `Last: ${r.flashpoints.at(-1).text}`) : null))))),
+      h('h3', {}, 'Hot-take scoreboard'),
+      Object.keys(m.scoreboard || {}).length ? h('table', {}, h('thead', {}, h('tr', {}, ['', 'Arguments won', 'Lost', 'Predictions right', 'Wrong'].map(t => h('th', {}, t)))),
+        h('tbody', {}, Object.entries(m.scoreboard).map(([id, s]) => h('tr', {}, h('td', {}, name(id)), h('td', {}, s.won), h('td', {}, s.lost), h('td', {}, s.right), h('td', {}, s.wrong)))))
+        : h('p', { class: 'muted' }, 'Fills in as arguments are won and predictions graded.'),
+      h('h3', {}, 'Moods'),
+      h('ul', {}, Object.entries(m.moods).map(([id, v]) => h('li', {}, `${name(id)}: ${v.mood}`)))),
+    h('section', { class: 'panel' }, h('h2', {}, 'Gus\'s case file'),
+      (m.caseFile || []).length ? h('table', {}, h('tbody', {}, m.caseFile.slice().reverse().map(c => h('tr', {},
+        h('td', {}, c.title), h('td', {}, statusPill(c.status)),
+        h('td', {}, c.evidence.map((e, i) => h('div', {}, `Exhibit ${i + 1}: ${e.text}`))),
+        h('td', {}, c.believers?.length ? `Believers: ${c.believers.map(name).join(', ')}` : ''))))) : h('p', { class: 'muted' }, 'No open cases. Yet.')),
     h('section', { class: 'panel' }, h('h2', {}, 'Recent episodes'),
       m.episodes.length ? h('ul', {}, m.episodes.slice().reverse().map(e => h('li', {}, `${e.title}: ${e.summary}`))) : h('p', { class: 'muted' }, 'None yet.')));
 }

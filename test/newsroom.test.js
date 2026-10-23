@@ -302,7 +302,7 @@ test('validator: official league and team names, never slang', () => {
   assert.equal(r.script.title, 'Chargers stun the 49ers');
   assert.equal(r.script.summary, 'The Patriots roll.');
   assert.deepEqual(r.script.tickerItems, ['CHARGERS 24, 49ERS 21']);
-  assert.equal(r.script.memoryUpdates.storylines[0].text, 'Buccaneers on a heater');
+  assert.equal(r.script.memoryUpdates.storylines[0].beat, 'Buccaneers on a heater', 'an old-style { key, text } storyline becomes a beat');
   assert.ok(r.warnings.some(w => /Bolts → Chargers \(3x\)/.test(w) && /Hypnotical → Hypnotic/.test(w)), r.warnings.join('; '));
 
   // A team that isn't in the league never gets an NFL name pinned on it.
@@ -512,7 +512,7 @@ test('show memory remembers predictions and storylines', () => {
   assert.match(block, /Ray: "Bills win it all"/);
   assert.match(block, /Bills look unstoppable/);
   assert.match(block, /Ray is smug/);
-  assert.match(block, /Ray vs\. Nate/);
+  assert.match(block, /Ray and Nate: rivalry, heat 8/, 'the configured relationship web');
   M.resolvePrediction(mem, mem.predictions[0].id, 'wrong');
   assert.match(M.promptBlock(mem, personas), /WRONG/);
 });
