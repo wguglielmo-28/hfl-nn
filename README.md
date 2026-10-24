@@ -246,6 +246,19 @@ only pays for the changed lines. The episode page shows the characters and cost 
 If ElevenLabs fails (out of characters, bad key), the episode is voiced with Kokoro and the
 episode page says why. With the engine on, automatic shows are voiced with ElevenLabs too.
 
+**Emotion in the voices** (Settings → Anchors, on by default). Each line's emotion from the script
+shapes how it sounds:
+- Every engine: angry, excited and shocked lines sit a little louder in the mix, Gus's
+  suspicious whispers and sad lines quieter, and when two heated lines from different anchors
+  meet, the second comes in almost on top of the first. Kokoro also speeds up or slows down by
+  emotion, as before.
+- ElevenLabs: per-emotion delivery settings on every model (looser for a shout, steadier for
+  serious news). On **v4** the line also gets an audio tag: `[excited]`, `[laughs]`,
+  `[sarcastic]` for smug, `[whispers]` for suspicious, `[sighs]` for sad. The tag's characters
+  are billed, and v4 tag handling is still imperfect by ElevenLabs' own account.
+  Neutral lines go out exactly as before, so they reuse their cached audio. An emotional line is
+  voiced once more the first time after this change.
+
 Another provider can be added in `lib/tts/index.js`. All it needs is a
 `synth(text, voice, speed)` function.
 

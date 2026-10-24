@@ -418,7 +418,7 @@ async function viewSettings() {
   const save = async () => {
     const patch = {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
-      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
+      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
@@ -462,6 +462,7 @@ async function viewSettings() {
       h('p', { class: 'muted' }, 'Names and voices. Looks, bios and personalities live in config/personas.json.'),
       h('div', { class: 'grid2' },
         h('div', {}, h('label', {}, 'Voice engine'), sel('voiceEngine', ['kokoro', 'elevenlabs'], { kokoro: 'Kokoro (free, on the server)', elevenlabs: 'ElevenLabs for anchors with an ElevenLabs voice' })),
+        h('div', {}, check('voiceEmotion', 'Emotion in the voices: shouts louder, whispers quieter, heated exchanges faster, and ElevenLabs delivery per line (v4 also reads emotion tags)')),
         h('div', {}, h('label', {}, 'ElevenLabs model'), sel('elevenModel', st.elevenModels.map(m => m.id), Object.fromEntries(st.elevenModels.map(m => [m.id, m.label]))))),
       h('p', { class: 'muted' }, el.configured
         ? `ElevenLabs bills per character: a weekly show is roughly 6,000 to 7,000 characters, about 50 cents on Multilingual v2. Re-voicing only pays for changed lines. Anchors left on "Kokoro voice" stay free. If ElevenLabs fails (out of characters, bad key), the episode is voiced with Kokoro instead.${el.voices.length ? '' : ' No voices found on the account yet.'}`

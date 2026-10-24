@@ -119,3 +119,56 @@ test('mixer: an anchor uses ElevenLabs only when the engine is on and they have 
   assert.equal(voiceFor(ray, {}), 'am_onyx');
   assert.equal(voiceFor({}, {}), 'am_michael');
 });
+
+const { delivery } = require('../lib/tts/elevenlabs');
+const { buildEpisodeAudio, GAP_HEATED, GAP_OTHER } = require('../lib/audio/mixer');
+
+test('emotion delivery: v4 reads tags, every model gets per-emotion settings, neutral is untouched', () => {
+  assert.deepEqual(delivery('suspicious', 'eleven_v4'), { tag: '[whispers]', settings: { stability: 0.35, style: 0.3 }, key: 'suspicious' });
+  assert.deepEqual(delivery('excited', 'eleven_multilingual_v2'), { tag: '', settings: { stability: 0.3, style: 0.35 }, key: 'excited' }, 'no tags outside v4');
+  assert.equal(delivery('angry', 'eleven_v4').tag, '', 'no documented tag: settings carry it');
+  assert.deepEqual(delivery('neutral', 'eleven_v4'), { tag: '', settings: null, key: '' });
+  assert.deepEqual(delivery(null, 'eleven_v4'), { tag: '', settings: null, key: '' });
+});
+
+test('ElevenLabs requests carry the emotion, and neutral lines keep their old cache entries', async () => {
+  const api = fakeApi();
+  const eleven = createElevenLabsProvider({ apiKey: 'xi-test', getModel: () => 'eleven_v4', request: api.request });
+  const tts = createTTS({ provider: 'silent', cacheDir: tmpDir(), elevenlabs: eleven });
+  const voice = `eleven:${VOICE}`;
+
+  await tts.speak('Follow the red string.', { voice, emotion: 'suspicious' });
+  assert.equal(api.calls[0].json.text, '[whispers] Follow the red string.');
+  assert.equal(api.calls[0].json.voice_settings.stability, 0.35);
+  assert.equal(api.calls[0].json.voice_settings.style, 0.3);
+  assert.equal(tts.usage().elevenlabsChars, '[whispers] Follow the red string.'.length, 'the tag is billed too');
+
+  await tts.speak('Back to you.', { voice, emotion: null });
+  await tts.speak('Back to you.', { voice, emotion: 'neutral' });
+  assert.equal(api.calls.length, 2, 'neutral and no emotion are the same line');
+  assert.equal(api.calls[1].json.text, 'Back to you.');
+  assert.equal(api.calls[1].json.voice_settings.stability, 0.4);
+
+  await tts.speak('Back to you.', { voice, emotion: 'angry' });
+  assert.equal(api.calls.length, 3, 'an angry read is a different line');
+  assert.equal(api.calls[2].json.voice_settings.stability, 0.25);
+});
+
+test('mixer: heated back-and-forth is tighter and every line carries its emotion; the setting turns it off', async () => {
+  const calls = [];
+  const tts = { SAMPLE_RATE: 24000, speak: async (text, opts) => { calls.push(opts); return { samples: new Float32Array(24000).fill(0.1), synthetic: true }; } };
+  const line = (speaker, emotion) => ({ speaker, text: 'A line.', emotion, gesture: 'none', shot: 'auto', card: '' });
+  const script = { segments: [{ id: 's1', kind: 'debate', lines: [line('ray', 'angry'), line('nate', 'smug'), line('ray', 'neutral'), line('nate', 'neutral')] }] };
+  const rundown = { type: 'weekly', segments: [{ id: 's1', kind: 'debate', set: 'desk' }] };
+  const personas = { network: { name: 'HFL-NN' }, anchors: [{ id: 'ray', voice: 'am_onyx' }, { id: 'nate', voice: 'bm_george' }] };
+  const gaps = out => out.lines.slice(1).map((l, i) => +(l.t0 - out.lines[i].t1).toFixed(2));
+
+  const on = await buildEpisodeAudio({ script, rundown, personas, tts, settings: {} });
+  assert.deepEqual(gaps(on), [GAP_HEATED, GAP_OTHER, GAP_OTHER], 'angry into smug is heated; the rest is normal pacing');
+  assert.deepEqual(calls.map(c => c.emotion), ['angry', 'smug', 'neutral', 'neutral']);
+
+  calls.length = 0;
+  const off = await buildEpisodeAudio({ script, rundown, personas, tts, settings: { voiceEmotion: false } });
+  assert.deepEqual(gaps(off), [GAP_OTHER, GAP_OTHER, GAP_OTHER]);
+  assert.deepEqual(calls.map(c => c.emotion), [null, null, null, null]);
+});
