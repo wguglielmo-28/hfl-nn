@@ -49,7 +49,7 @@ async function act(fn, ok) {
 
 const when = iso => (iso ? new Date(iso).toLocaleString() : '—');
 const pill = (text, kind = '') => h('span', { class: `pill ${kind}` }, text);
-const statusPill = s => pill(s, { published: 'ok', ready: 'ok', draft: '', needs_fixes: 'bad', failed: 'bad', writing: 'warn', voicing: 'warn', heating: 'warn', boiling: 'bad', payoff: 'ok', growing: 'warn', cracked: 'ok' }[s] || '');
+const statusPill = s => pill(s, { published: 'ok', ready: 'ok', draft: '', needs_fixes: 'bad', failed: 'bad', writing: 'warn', voicing: 'warn', heating: 'warn', boiling: 'bad', payoff: 'ok', growing: 'warn', cracked: 'ok', right: 'ok', wrong: 'bad' }[s] || '');
 const fmtDur = t => (t ? `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}` : '—');
 
 // ── Login ─────────────────────────────────────────────────────────────────
@@ -491,7 +491,10 @@ async function viewMemory() {
   return h('div', {},
     h('section', { class: 'panel' }, h('h2', {}, 'Predictions made on air'),
       m.predictions.length ? h('table', {}, h('tbody', {}, m.predictions.slice().reverse().map(p => h('tr', {},
-        h('td', {}, name(p.persona)), h('td', {}, p.text, h('div', { class: 'muted' }, p.madeIn)), h('td', {}, statusPill(p.status)),
+        h('td', {}, name(p.persona)),
+        h('td', {}, p.text, h('div', { class: 'muted' }, [p.madeIn, p.check && p.status === 'open' && 'graded automatically from final scores',
+          p.result && `${p.gradedBy === 'auto' ? 'Auto' : 'Graded'}: ${p.result}`, p.calledOutIn && 'called out on air'].filter(Boolean).join(' • '))),
+        h('td', {}, statusPill(p.status)),
         h('td', {}, h('button', { class: 'btn', type: 'button', on: { click: () => grade(p, 'right') } }, 'Right'), ' ',
           h('button', { class: 'btn', type: 'button', on: { click: () => grade(p, 'wrong') } }, 'Wrong')))))) : h('p', { class: 'muted' }, 'None yet. Graded predictions get called back on air.')),
     h('section', { class: 'panel' }, h('h2', {}, 'Storylines'),
