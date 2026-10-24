@@ -169,7 +169,7 @@ Season Kickoff always airs as of the start of Week 1.
 
 Segments: Cold Open, Around the League, Game of the Week (the Spotlight Game until the Hub names
 one), Players of the Week, Standings and Playoff Race, The Wire (transactions), Injury Report,
-From the Chronicle, League Office, Hot Takes: Buy or Sell, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
+From the Chronicle, League Office, Receipts, Hot Takes: Buy or Sell, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
 Bold Predictions, Preseason in Review, Setting the 53, The Week 1 Slate, Draft Desk, Free Agency
 Frenzy, The Bracket, Season in Review, and the sign-off.
 They're defined in `config/show.json`.
@@ -181,9 +181,35 @@ fires one take per topic around the desk, up to three topics of different kinds,
 "Buy" or "Sell". The **Hot Take Hotline** debate is opening takes, rebuttals and a receipt from
 show memory, and the host names a winner or throws it to the Discord poll.
 
-**Show memory** (`memory.json`) carries persona moods, feuds, on-air predictions, running
-storylines and recent episodes from show to show. When a prediction comes true or falls flat,
-grade it in **Show Memory** and the anchors will bring it up.
+**Show memory** (`memory.json`, `lib/memory.js`) is what makes it a running show. It is updated
+only when an episode is published, so a draft can't rewrite history, and the **Show Memory** tab
+shows all of it:
+
+- **Storylines** are arcs that build over weeks: building, heating, boiling, payoff, closed.
+  Each has beats (one per episode that touched it), stakes, teams, an anchor who believes in it
+  and one who doesn't. When a segment's teams touch a live arc, the writer is told to add a beat
+  there. Old `{ key, text }` storylines upgrade in place.
+- **The desk:** every pair of anchors has a relationship (rivalry, alliance, grudge...) and a
+  heat from 0 to 10 that moves each episode, with its recent flashpoints. Seeded from
+  `relationships` in `config/personas.json`.
+- **Hot-take scoreboard:** arguments won and lost, predictions right and wrong, per anchor. The
+  anchors quote it at each other.
+- **Gus's case file:** running theories with numbered exhibits, added in Conspiracy Corner from
+  real facts. A case grows, cracks (Gus says so) or is debunked (Nate says so).
+- **Moods**, the last few **arguments**, and recent **episodes**.
+
+Each episode has an **A-story**, its main argument (the debate topic). The cold open teases it,
+two segments where its sides sit let it simmer, the Hot Take Hotline pays it off and the
+sign-off calls back to it. Up to three **cameos** let an anchor outside a segment's cast break
+in with a line or two.
+
+**Receipts.** Predictions carry a check the show can grade itself: a game pick (team beats
+opponent in a given week) or a win total (at least N regular-season wins). At publish each check
+is tied to a game still to be played, or to the season still ahead (so an offseason call isn't
+graded against the season that just ended). Every export grades what the final scores settle,
+straight from the games, never the standings. Graded calls open the next show's **Receipts**
+segment, right after the scores, with whoever made them at the desk. Anything else (an award, a
+trade) you still grade by hand in **Show Memory**, and a re-grade there makes a fresh receipt.
 
 ---
 
