@@ -224,3 +224,11 @@ test('script schema stays strict-mode safe: every object closes and requires all
   };
   walk(scriptJsonSchema(personaIds), 'script');
 });
+
+test('script schema keeps its enums to the spoken line, so strict output can compile it', () => {
+  const enums = schema => { const out = []; const walk = (n, p) => { if (!n || typeof n !== 'object') return; if (Array.isArray(n.enum)) out.push(p); for (const [k, v] of Object.entries(n)) if (k !== 'enum') walk(v, `${p}.${k}`); }; walk(schema, 'script'); return out; };
+  const full = enums(scriptJsonSchema(personaIds));
+  assert.equal(full.length, 4, `enums outside the line: ${full.filter(p => !/lines.items/.test(p)).join(', ')}`);
+  assert.ok(full.every(p => /lines.items.properties.(speaker|emotion|gesture|shot)$/.test(p)));
+  assert.deepEqual(enums(scriptJsonSchema(personaIds, { lean: true })), [], 'the lean schema has none');
+});

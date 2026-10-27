@@ -413,6 +413,24 @@ test('a Sonnet 5.5 decline is rewritten on Opus 5.5, and the repair stays there'
   assert.equal(out.model, 'claude-opus-5-5');
 });
 
+test('a "compiled grammar is too large" 400 is retried once with the lean schema, and the lean schema sticks', async () => {
+  const requests = [];
+  let first = true;
+  const fakeClient = { beta: { messages: { stream(req) {
+    requests.push(req);
+    if (first) { first = false; const err = new Error('400 {"type":"error","error":{"type":"invalid_request_error","message":"The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools."}}'); err.status = 400; throw err; }
+    return { on() { return this; }, finalMessage: async () => ({ model: req.model, stop_reason: 'end_turn', content: [{ type: 'text', text: '{}' }], usage: {} }) };
+  } } } };
+  const writer = createClaudeWriter({ client: fakeClient, logger: quiet });
+  await writer.write({ personas, leagueText: '', brief: '', validate: () => ({ ok: true, errors: [], warnings: [] }) });
+  await writer.write({ personas, leagueText: '', brief: '', validate: () => ({ ok: true, errors: [], warnings: [] }) });
+  const speaker = r => r.output_config.format.schema.properties.segments.items.properties.lines.items.properties.speaker;
+  assert.equal(requests.length, 3, 'one failed request, one lean retry, then the next episode');
+  assert.ok(Array.isArray(speaker(requests[0]).enum), 'the first try uses the full schema');
+  assert.equal(speaker(requests[1]).enum, undefined, 'the retry is lean');
+  assert.equal(speaker(requests[2]).enum, undefined, 'and later requests stay lean');
+});
+
 // A fake OpenAI transport: each request gets the next reply as a stream of
 // server-sent events, split mid-event to exercise the parser.
 function fakeOpenAI(replies) {

@@ -80,7 +80,9 @@ test('script schema: fanPoll is required and strict-mode safe', () => {
   assert.equal(poll.additionalProperties, false);
   assert.deepEqual(poll.required, ['question', 'answers']);
   assert.deepEqual(poll.properties.answers.items.required, ['text', 'persona']);
-  assert.deepEqual(poll.properties.answers.items.properties.persona.enum, [...personaIds, '']);
+  const pollPersona = poll.properties.answers.items.properties.persona;
+  assert.equal(pollPersona.enum, undefined, 'no enum: validate.js normalizes it');
+  for (const id of personaIds) assert.ok(pollPersona.description.includes(id), id);
 });
 
 test('template writer: hot takes rotate, the debate gets a winner or a poll, and both validate', async () => {
