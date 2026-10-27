@@ -431,6 +431,28 @@ test('a "compiled grammar is too large" 400 is retried once with the lean schema
   assert.equal(speaker(requests[2]).enum, undefined, 'and later requests stay lean');
 });
 
+test('Claude gets memoryUpdates as JSON text, and the writer turns it back into an object', async () => {
+  const requests = [];
+  const replies = [
+    { title: 't', summary: 's', tickerItems: [], segments: [], fanPoll: { question: '', answers: [] }, memoryUpdates: '{"storylines":[],"predictions":[],"moods":[{"persona":"hal","mood":"giddy"}],"relationships":[],"arguments":[],"caseFile":[]}' },
+    { title: 't', summary: 's', tickerItems: [], segments: [], fanPoll: { question: '', answers: [] }, memoryUpdates: 'not json at all' },
+  ];
+  const fakeClient = { beta: { messages: { stream(req) {
+    requests.push(req);
+    const body = replies.shift();
+    return { on() { return this; }, finalMessage: async () => ({ model: req.model, stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(body) }], usage: {} }) };
+  } } } };
+  const writer = createClaudeWriter({ client: fakeClient, logger: quiet });
+  const keep = s => ({ ok: true, errors: [], warnings: [], script: s });
+  const a = await writer.write({ personas, leagueText: '', brief: '', validate: keep });
+  const b = await writer.write({ personas, leagueText: '', brief: '', validate: keep });
+  const mu = requests[0].output_config.format.schema.properties.memoryUpdates;
+  assert.equal(mu.type, 'string', 'the nested memoryUpdates is too large to compile, so Claude writes it as text');
+  assert.ok(mu.description.includes('storylines: ['), 'the shape is spelled out');
+  assert.deepEqual(a.result.script.memoryUpdates.moods, [{ persona: 'hal', mood: 'giddy' }]);
+  assert.deepEqual(b.result.script.memoryUpdates, {}, 'bad memory JSON costs the memory, not the episode');
+});
+
 // A fake OpenAI transport: each request gets the next reply as a stream of
 // server-sent events, split mid-event to exercise the parser.
 function fakeOpenAI(replies) {
