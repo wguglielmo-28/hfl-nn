@@ -227,6 +227,12 @@ test('Game of the Week: the Hub names it; otherwise the segment is the Spotlight
   const key = S.officialGotwKey(league, wk, hub);
   assert.equal(key, g.key);
   assert.equal(S.officialGotwKey(league, { ...wk, week: wk.week + 1 }, hub), null, 'another week has no pick');
+  // Madden 27 calls Arizona AZ; the Hub keeps ARI. Either spelling matches.
+  const homeAbbr = league.teams[g.homeId].abbr;
+  league.teams[g.homeId].abbr = 'AZ';
+  const asHub = normalizeHubFeed({ gamesOfTheWeek: [{ week: wk.week, away: league.teams[g.awayId].abbr, home: 'ARI' }] });
+  assert.equal(S.officialGotwKey(league, wk, asHub), g.key, 'the Hub\'s ARI is the export\'s AZ');
+  league.teams[g.homeId].abbr = homeAbbr;
   const named = buildRundown({ type: 'weekly', phase: 'regular', show, personas, league, context, stories: S.withOfficialGotw(stories, key) });
   assert.equal(gotwSeg(named).title, 'Game of the Week');
   assert.deepEqual(gotwSeg(named).storyIds, [`game:${g.key}`]);

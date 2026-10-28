@@ -155,6 +155,48 @@ test('approving writes the show with the commissioner\'s Game of the Week, Playe
   } finally { await s.close(); }
 });
 
+test('the Hub\'s Players of the Week are suggested on the desk and air, even ones HFL-NN ranks low', async () => {
+  const s = await boot();
+  try {
+    await s.exportWeek();
+    let r = await s.req('GET', '/api/admin/desk');
+    const { entry, candidates } = r.json;
+    const wk = entry.week;
+    // One offensive pick per conference: HFL-NN ranks the AFC one higher, so
+    // it is the suggestion. On defense the Hub names someone HFL-NN doesn't rank.
+    const [high, low] = [candidates.offense[1], candidates.offense[3]];
+    s.ctx.hub.push({
+      playersOfTheWeek: [
+        { stage: 'reg', week: wk.week, side: 'offense', conference: 'NFC', rosterId: low.rosterId, name: low.name, team: low.team, line: low.line, manual: true },
+        { stage: 'reg', week: wk.week, side: 'offense', conference: 'AFC', rosterId: high.rosterId, name: high.name, team: high.team, line: high.line },
+        { stage: 'reg', week: wk.week, side: 'defense', conference: 'NFC', rosterId: 987654321, name: 'Hub Only', team: 'GB', line: '2 INT, 1 TD' },
+        { stage: 'reg', week: wk.week + 1, side: 'defense', conference: 'AFC', rosterId: 1, name: 'Next Week', team: 'BUF', line: 'x' },
+      ],
+    });
+    r = await s.req('GET', '/api/admin/desk');
+    const { candidates: c, suggested } = r.json;
+    assert.equal(suggested.potw.offense, high.rosterId, 'the Hub pick HFL-NN ranks highest');
+    assert.deepEqual(suggested.potwFromHub, { offense: true, defense: true });
+    assert.equal(c.offense.length, 5, 'both offensive picks were already in the top five');
+    assert.equal(c.offense.find(x => x.rosterId === high.rosterId).hub, 'AFC');
+    assert.equal(c.offense.find(x => x.rosterId === low.rosterId).hub, 'NFC');
+    assert.equal(c.offense.filter(x => x.hub).length, 2);
+    assert.equal(suggested.potw.defense, '987654321');
+    assert.deepEqual(c.defense.at(-1), { rosterId: '987654321', name: 'Hub Only', team: 'GB', line: '2 INT, 1 TD', hub: 'NFC' });
+    assert.ok(!c.defense.some(x => x.name === 'Next Week'), 'another week\'s pick stays out');
+
+    // Approving with the suggestions (what the desk preselects) airs both.
+    await s.req('PUT', '/api/admin/desk', { potw: { offense: { rosterId: suggested.potw.offense }, defense: { rosterId: suggested.potw.defense } } });
+    r = await s.req('POST', '/api/admin/desk/approve', { voice: false });
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    await s.ctx.producer.idle();
+    const ep = s.ctx.producer.get(r.json.episode.id);
+    const seg = ep.rundown.segments.find(x => x.kind === 'top_performers');
+    assert.ok(seg.cards.some(card => card.data.name === high.name), 'the Hub\'s offensive pick');
+    assert.ok(seg.cards.some(card => card.data.name === 'Hub Only' && card.data.line === '2 INT, 1 TD'), 'the Hub\'s defensive pick, from its own line');
+  } finally { await s.close(); }
+});
+
 test('approval off keeps the classic flow; a request body can never smuggle desk picks in', async () => {
   const s = await boot({ settings: { approveWeekly: false } });
   try {

@@ -536,6 +536,17 @@ test('hub push needs the key; feeds are normalized', async () => {
     { season: null, stage: 'reg', week: 20, away: 'PHI', home: 'GB' },
     { season: null, stage: 'pre', week: 3, away: 'NE', home: 'NYG' },
   ]);
+  const potw = normalizeHubFeed({
+    playersOfTheWeek: [
+      { season: 9, stage: 'reg', week: 2, side: 'offense', conference: 'nfc', rosterId: 555220998, name: "De'Von Achane", team: 'atl', position: 'HB', line: '16 car · 206 yds · 3 TD', manual: true },
+      { week: 2, side: 'special teams', name: 'No Side' }, { week: 0, side: 'defense', name: 'No Week' }, { week: 2, side: 'defense', name: '' },
+      { week: '2', side: 'Defense', name: 'Typed In', rosterId: '' },
+    ],
+  }).playersOfTheWeek;
+  assert.deepEqual(potw, [
+    { season: 9, stage: 'reg', week: 2, side: 'offense', conference: 'NFC', rosterId: '555220998', name: "De'Von Achane", team: 'ATL', position: 'HB', line: '16 car · 206 yds · 3 TD', manual: true },
+    { season: null, stage: 'reg', week: 2, side: 'defense', conference: '', rosterId: null, name: 'Typed In', team: '', position: '', line: '', manual: false },
+  ]);
   assert.throws(() => normalizeHubFeed('nope'));
 });
 

@@ -507,12 +507,13 @@ async function viewDesk() {
   const potwPicker = side => {
     const pick = e.potw?.[side];
     const sel = h('select', {}, h('option', { value: '' }, 'Automatic (the best stat line)'),
-      c[side].map(p => h('option', { value: p.rosterId }, `${p.name} (${p.team}): ${p.line}`)), h('option', { value: 'manual' }, 'Someone else…'));
+      c[side].map(p => h('option', { value: p.rosterId }, `${p.name} (${p.team}): ${p.line}${p.hub ? ` (Hub pick, ${p.hub})` : ''}`)), h('option', { value: 'manual' }, 'Someone else…'));
     const name = h('input', { type: 'text', placeholder: 'Player name', value: pick?.name || '' });
     const team = h('input', { type: 'text', placeholder: 'Team, e.g. BUF', value: pick?.team || '' });
     const line = h('input', { type: 'text', placeholder: 'Stat line, e.g. 3 sacks, 2 forced fumbles', value: pick?.line || '' });
     const manual = h('div', { class: 'grid2' }, name, team, line);
-    sel.value = pick?.rosterId ? pick.rosterId : pick?.name ? 'manual' : '';
+    // Nothing saved yet: the Hub's pick when it named one, else automatic.
+    sel.value = pick?.rosterId ? pick.rosterId : pick?.name ? 'manual' : sug.potwFromHub?.[side] ? sug.potw[side] : '';
     const sync = () => { manual.hidden = sel.value !== 'manual'; };
     sel.addEventListener('change', sync);
     sync();
