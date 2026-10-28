@@ -32,6 +32,11 @@ must be under 2 MB. Send the full current state each time (not just changes).
     { "season": 9, "stage": "reg", "week": 7, "away": "PHI", "home": "GB" }
   ],
 
+  "playersOfTheWeek": [
+    { "season": 9, "stage": "reg", "week": 7, "side": "offense", "conference": "NFC", "rosterId": 555220998,
+      "name": "De'Von Achane", "team": "ATL", "position": "HB", "line": "16 car · 206 yds · 3 TD", "manual": true }
+  ],
+
   "announcements": [
     { "id": "trade-deadline-2027", "title": "Trade deadline set for the Week 9 advance",
       "body": "All trades must be approved before the Week 9 advance.", "date": "2027-10-01", "breaking": false }
@@ -51,7 +56,8 @@ must be under 2 MB. Send the full current state each time (not just changes).
 | Section | Used for |
 |---|---|
 | `owners` | The writers know who runs each team (gamer tags are used sparingly and only playfully). `coach` is the owner's in-league persona, the name the Chronicle uses, and the anchors call them by it. `teamAbbr` must match the Madden abbreviation. |
-| `gamesOfTheWeek` | The league's own Game of the Week. `week` is the week number as Madden shows it, starting at 1 (Wildcard 19, Divisional 20, Conference 21, Championship 23); a database `week_index` is one less. `stage` is `reg` or `pre`; `season` is informational. Teams can be in either order. Without a pick for the week, the show's top game is called the **Spotlight Game**, never the Game of the Week. |
+| `gamesOfTheWeek` | The league's own Game of the Week. `week` is the week number as Madden shows it, starting at 1 (Wildcard 19, Divisional 20, Conference 21, Championship 23); a database `week_index` is one less. `stage` is `reg` or `pre`; `season` is informational. Teams can be in either order. Without a pick for the week, the show's top game is called the **Spotlight Game**, never the Game of the Week. Arizona matches as `ARI` or `AZ` (Madden 27's code). |
+| `playersOfTheWeek` | The league's own Players of the Week: one `offense` and one `defense` pick per `conference` per week, weeks numbered as above. `rosterId` is the export's own, so the **Week Desk** preselects the Hub's pick: of the Hub's picks for a side, the one HFL-NN's stat ranking puts highest (a `manual` commissioner pick wins a tie). A pick HFL-NN doesn't rank still airs, with the Hub's `name`, `team` and `line`. |
 | `announcements` | Each new `id` becomes a story for the **League Office** segment. `breaking: true` can trigger an automatic bulletin. Announcements air once. |
 | `powerRankings` | Replaces the Madden power index on the **Power Rankings** card when present. |
 | `awards`, `rivalries`, `records`, `history` | Background the writers can call back to. |
