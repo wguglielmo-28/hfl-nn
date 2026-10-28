@@ -246,6 +246,7 @@ function createApp(opts = {}) {
       batches: store.readJSON('league/batches.json', []).slice(-10).reverse(),
       chronicle: chronicle.status(),
       hub: hub.status(),
+      desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
       writer: {
         claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
         model: settings.get().claudeModel || claude.model, openaiModel: settings.get().openaiModel || openai.model,
@@ -297,7 +298,17 @@ function createApp(opts = {}) {
   admin.get('/hub', wrap(() => hub.data() || {}));
 
   admin.get('/episodes', wrap(() => producer.list()));
-  admin.post('/episodes', wrap(req => producer.createEpisode(req.body || {})));
+  // The desk object only ever comes from the week desk, never a request body.
+  admin.post('/episodes', wrap(req => { const { desk: _ignored, ...opts } = req.body || {}; return producer.createEpisode(opts); }));
+
+  // ── The week desk (lib/desk.js) ──────────────────────────────────────────
+  admin.get('/desk', wrap(() => producer.deskView()));
+  admin.post('/desk/open', wrap(() => { producer.openDesk(); return producer.deskView(); }));
+  admin.put('/desk', wrap(req => { producer.desk.update(req.body || {}); return producer.deskView(); }));
+  admin.post('/desk/headlines', wrap(req => { producer.desk.addHeadline(req.body || {}); return producer.deskView(); }));
+  admin.delete('/desk/headlines/:id', wrap(req => { producer.desk.removeHeadline(req.params.id); return producer.deskView(); }));
+  admin.post('/desk/approve', wrap(req => ({ episode: producer.approveDesk({ voice: !!req.body?.voice }) })));
+  admin.post('/desk/dismiss', wrap(() => { producer.desk.dismiss(); return producer.deskView(); }));
   admin.get('/episodes/:id', wrap(req => {
     const ep = producer.get(req.params.id);
     need(ep, 'Episode not found');
