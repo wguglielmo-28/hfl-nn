@@ -10,12 +10,18 @@ const { normalizeHubFeed } = require('../lib/ingest/hub');
 const { parseFeed, extractArticle } = require('../lib/ingest/chronicle');
 const { isDiscordWebhook, episodeMessage } = require('../lib/discord');
 const { fixture, fixturePayloads, secondBatch, tmpDir, clone } = require('./helpers');
+const { createStore } = require('../lib/store');
 
 const quiet = { log() {}, warn() {}, error() {} };
 
-async function boot(extra = {}) {
+// Most tests exercise the classic flow, where a finished week is written at
+// once; the week desk has its own tests (desk.test.js). `settings` seeds
+// settings.json before the app starts.
+async function boot({ settings = { approveWeekly: false }, ...extra } = {}) {
+  const dataDir = tmpDir();
+  if (settings) createStore(dataDir).writeJSON('settings.json', settings);
   const ctx = createApp({
-    dataDir: tmpDir(),
+    dataDir,
     env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', HUB_PUSH_KEY: 'hub-key', NODE_ENV: 'test' },
     tts: createTTS({ provider: 'silent' }),
     claude: { available: () => false, model: 'none', write: async () => { throw new Error('no'); } },

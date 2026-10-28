@@ -127,4 +127,4 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
 .control .login { max-width: 360px; margin: 60px auto; }
 @media (max-width: 640px) { .control .line { grid-template-columns: 1fr 1fr; } .control .line textarea { grid-column: 1 / -1; } }
 /* [hidden] must win over display rules above */
-.power[hidden], .captions[hidden] { display: none; }
+.power[hidden], .captions[hidden], .control [hidden] { display: none; }

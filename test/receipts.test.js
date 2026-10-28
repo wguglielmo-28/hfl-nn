@@ -150,6 +150,7 @@ test('the Receipts segment seats whoever made the calls, with a card each, and t
 test('end to end: an export grades an open pick, and the automatic weekly opens with its receipt', async () => {
   const dataDir = tmpDir();
   // Ray picked the Bills over the Dolphins in Week 1 (they won 49 to 24 in the fixture).
+  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false });
   createStore(dataDir).writeJSON('memory.json', { ...M.emptyMemory(personas), predictions: [
     { id: 'old:0', persona: 'ray', text: 'Bills beat the Dolphins', madeIn: 'Preseason Special', episodeId: 'old', at: '2026-09-01T00:00:00Z', status: 'open', check: { kind: 'game', team: 'BUF', opponent: 'MIA', week: 1, wins: 0 } },
   ] });

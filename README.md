@@ -105,8 +105,27 @@ the host tells viewers to vote. Breaking-news bulletins never carry one. Switch 
 ## 🎬 How an episode gets made
 
 ```
-export batch ──▶ story engine ──▶ rundown ──▶ script ──▶ voices + mix ──▶ review ──▶ publish
+export batch ──▶ story engine ──▶ week desk ──▶ rundown ──▶ script ──▶ voices + mix ──▶ review ──▶ publish
 ```
+
+**The week desk** (`lib/desk.js`, the control room's **Week Desk** tab). When an export
+finishes a week, the weekly show isn't written yet. The week waits on the desk, the dashboard
+says so, and you:
+
+- pick the **Game of the Week** from the week's games. The Hub's pick or Madden's flag is
+  preselected when there is one; with none named, the best game airs as the Spotlight Game.
+- pick the **Offensive and Defensive Players of the Week** from the week's top five each, or
+  type in someone else with their stat line. Picked players are announced as the official
+  choices; a side left on "Automatic" gets the best stat line.
+- add **headlines the export missed** (a trade agreed in Discord, an owner change, a rivalry
+  flaring up), with a category, the teams and the details the anchors may report. Only what you
+  write is stated as fact. Breaking ones lead the show; the rest air in **Also Making News**.
+- leave **notes for the writers**.
+
+Then **Approve** writes the show (tick "voice it" to voice it straight away, and publish it if
+auto-publish is on). **Skip this week** writes nothing. Exports that arrive while a week waits
+keep the news wire fresh, and your picks stay. Turn the desk off with **Settings → Wait for my
+approval**; then the weekly is drafted as soon as a week is final, as before.
 
 1. **Story engine** (`lib/stories.js`) compares this batch with the last one. It finds:
    - upsets, blowouts and nail-biters
@@ -169,7 +188,7 @@ Season Kickoff always airs as of the start of Week 1.
 
 Segments: Cold Open, Around the League, Game of the Week (the Spotlight Game until the Hub names
 one), Players of the Week, Standings and Playoff Race, The Wire (transactions), Injury Report,
-From the Chronicle, League Office, Receipts, Hot Takes: Buy or Sell, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
+From the Chronicle, League Office, Also Making News, Receipts, Hot Takes: Buy or Sell, Hot Take Hotline, Conspiracy Corner, Up Next, Power Rankings,
 Bold Predictions, Preseason in Review, Setting the 53, The Week 1 Slate, Draft Desk, Free Agency
 Frenzy, The Bracket, Season in Review, and the sign-off.
 They're defined in `config/show.json`.

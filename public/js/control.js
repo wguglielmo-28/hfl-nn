@@ -69,7 +69,7 @@ function renderLogin() {
 }
 
 // ── Shell ─────────────────────────────────────────────────────────────────
-const TABS = [['dashboard', 'Dashboard'], ['wire', 'News Wire'], ['episodes', 'Episodes'], ['sources', 'Sources'], ['settings', 'Settings'], ['memory', 'Show Memory']];
+const TABS = [['dashboard', 'Dashboard'], ['desk', 'Week Desk'], ['wire', 'News Wire'], ['episodes', 'Episodes'], ['sources', 'Sources'], ['settings', 'Settings'], ['memory', 'Show Memory']];
 
 function shell(content) {
   const tabs = h('nav', { class: 'tabs', role: 'tablist' }, TABS.map(([id, label]) => h('button', {
@@ -82,7 +82,7 @@ function shell(content) {
 async function render() {
   clearInterval(state.poll);
   try {
-    const view = { dashboard: viewDashboard, wire: viewWire, episodes: state.episode ? viewEpisode : viewEpisodes, sources: viewSources, settings: viewSettings, memory: viewMemory }[state.tab];
+    const view = { dashboard: viewDashboard, desk: viewDesk, wire: viewWire, episodes: state.episode ? viewEpisode : viewEpisodes, sources: viewSources, settings: viewSettings, memory: viewMemory }[state.tab];
     shell(await view());
   } catch (e) {
     if (!/log in/i.test(e.message)) shell(h('p', { class: 'error' }, e.message));
@@ -142,7 +142,10 @@ async function viewDashboard() {
       h('tbody', {}, s.batches.map(b => h('tr', {}, h('td', {}, when(b.finishedAt)), h('td', {}, b.source), h('td', {}, Object.entries(b.parts).map(([k, v]) => `${k}×${v}`).join(', ')))))) : h('p', { class: 'muted' }, 'No exports yet.'));
 
   if (s.jobs.some(j => ['queued', 'running'].includes(j.status)) || s.ingest.open) state.poll = setInterval(render, 3000);
-  return h('div', {}, cards, setup, jobs, batches);
+  const waiting = s.desk && h('section', { class: 'panel' }, h('h2', {}, `${s.desk.label} is waiting for your approval`),
+    h('p', {}, 'Set the Game of the Week and the Players of the Week, add any headlines the export missed, then approve to have the show written.'),
+    h('button', { class: 'btn primary', type: 'button', on: { click: () => { state.tab = 'desk'; render(); } } }, 'Open the week desk'));
+  return h('div', {}, waiting, cards, setup, jobs, batches);
 }
 
 const row = (k, v) => h('tr', {}, h('th', {}, k), h('td', {}, v));
@@ -418,7 +421,7 @@ async function viewSettings() {
   const save = async () => {
     const patch = {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
-      autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
+      approveWeekly: f.approveWeekly.checked, autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
@@ -443,7 +446,8 @@ async function viewSettings() {
         h('div', {}, h('label', {}, 'Spice level'), sel('spice', ['mild', 'medium', 'spicy'])),
         h('div', {}, h('label', {}, 'Season number'), text('seasonNumber', 'number', 'e.g. 9'),
           h('p', { class: 'muted' }, 'Used in show titles ("Season IX Kickoff"). Blank uses the HFL Hub feed\'s season, if it sends one.'))),
-      check('autoProduce', 'Draft the weekly show automatically once a week\'s games are all final'),
+      check('approveWeekly', 'Wait for my approval on the Week Desk before writing the weekly show'),
+      check('autoProduce', 'Draft the weekly show automatically once a week\'s games are all final (only when approval is off)'),
       check('autoPublish', '…and publish it without review'),
       check('autoBreaking', 'Draft breaking bulletins for big moves and Chronicle "breaking" posts'),
       check('autoPublishBreaking', '…and publish bulletins without review'),
@@ -485,6 +489,86 @@ function startOverPanel() {
 }
 
 // ── Memory ────────────────────────────────────────────────────────────────
+// ── Week desk ─────────────────────────────────────────────────────────────
+async function viewDesk() {
+  const d = await api('/api/admin/desk');
+  const reload = r => { if (r) render(); };
+  if (!d.entry) {
+    return h('section', { class: 'panel' }, h('h2', {}, 'Week desk'),
+      h('p', {}, 'Nothing is waiting. When an export finishes a week, the week lands here for your approval before the weekly show is written.'),
+      d.latestWeek && h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/desk/open', { method: 'POST', body: {} }), 'Desk opened').then(reload) } }, `Open the desk for ${d.latestWeek.label}`));
+  }
+  const e = d.entry, c = d.candidates, sug = d.suggested;
+
+  const gotw = h('select', {}, h('option', { value: '' }, 'None named (the best game airs as the Spotlight Game)'),
+    c.games.map(g => h('option', { value: g.id }, `${g.headline}${g.id === c.hubGotw ? ' (Hub pick)' : g.madden ? ' (Madden flag)' : ''}`)));
+  gotw.value = e.gotwStoryId ?? sug.gotwStoryId ?? '';
+
+  const potwPicker = side => {
+    const pick = e.potw?.[side];
+    const sel = h('select', {}, h('option', { value: '' }, 'Automatic (the best stat line)'),
+      c[side].map(p => h('option', { value: p.rosterId }, `${p.name} (${p.team}): ${p.line}`)), h('option', { value: 'manual' }, 'Someone else…'));
+    const name = h('input', { type: 'text', placeholder: 'Player name', value: pick?.name || '' });
+    const team = h('input', { type: 'text', placeholder: 'Team, e.g. BUF', value: pick?.team || '' });
+    const line = h('input', { type: 'text', placeholder: 'Stat line, e.g. 3 sacks, 2 forced fumbles', value: pick?.line || '' });
+    const manual = h('div', { class: 'grid2' }, name, team, line);
+    sel.value = pick?.rosterId ? pick.rosterId : pick?.name ? 'manual' : '';
+    const sync = () => { manual.hidden = sel.value !== 'manual'; };
+    sel.addEventListener('change', sync);
+    sync();
+    return { el: h('div', {}, sel, manual), value: () => (sel.value === 'manual' ? { name: name.value, team: team.value, line: line.value } : sel.value ? { rosterId: sel.value } : null) };
+  };
+  const off = potwPicker('offense'), def = potwPicker('defense');
+  const notes = h('textarea', { value: e.notes || '', placeholder: 'Anything the anchors should know or mention: a correction, a running joke, context the export cannot give.' });
+  const save = () => api('/api/admin/desk', { method: 'PUT', body: { gotwStoryId: gotw.value || null, potw: { offense: off.value(), defense: def.value() }, notes: notes.value } });
+
+  const headline = h('input', { type: 'text', maxlength: '140', placeholder: 'Headline, e.g. Packers and Bears agree to a blockbuster trade' });
+  const details = h('textarea', { placeholder: 'The details the anchors may report. Only what you write here is stated as fact.' });
+  const category = h('select', {}, d.categories.map(x => h('option', { value: x }, x)));
+  const teams = h('input', { type: 'text', placeholder: 'Teams involved, e.g. GB CHI' });
+  const breaking = h('input', { type: 'checkbox' });
+  const addHeadline = () => act(async () => {
+    await save();
+    return api('/api/admin/desk/headlines', { method: 'POST', body: { headline: headline.value, details: details.value, category: category.value, teams: teams.value, breaking: breaking.checked } });
+  }, 'Headline added').then(reload);
+  const headlines = e.headlines.length
+    ? h('ul', {}, e.headlines.map(x => h('li', {},
+      `${x.breaking ? 'BREAKING: ' : ''}[${x.category}] ${x.headline}${x.teams.length ? ` (${x.teams.join(', ')})` : ''} `,
+      h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api(`/api/admin/desk/headlines/${x.id}`, { method: 'DELETE' }), 'Removed').then(reload) } }, 'Remove'),
+      x.details ? h('div', { class: 'muted' }, x.details) : null)))
+    : h('p', { class: 'muted' }, 'No extra headlines yet.');
+
+  const voice = h('input', { type: 'checkbox' });
+  const approve = () => {
+    if (!confirm(`Approve ${e.label} and write the weekly show now?${voice.checked ? '\n\nIt will be voiced as soon as it is written.' : ''}`)) return;
+    act(async () => { await save(); return api('/api/admin/desk/approve', { method: 'POST', body: { voice: voice.checked } }); }, 'Approved: the script is being written')
+      .then(r => { if (r?.episode) { state.tab = 'episodes'; state.episode = r.episode.id; render(); } });
+  };
+  const skip = () => {
+    if (confirm(`Skip ${e.label}? No weekly show will be written for it.`)) act(() => api('/api/admin/desk/dismiss', { method: 'POST', body: {} }), 'Skipped').then(reload);
+  };
+
+  return h('div', {},
+    h('section', { class: 'panel' }, h('h2', {}, `Week desk: ${e.label}`),
+      h('p', { class: 'muted' }, `Opened ${when(e.openedAt)}. Later exports keep updating the news wire; your picks stay. Nothing is written until you approve.`),
+      h('label', {}, 'Game of the Week'), gotw,
+      h('div', { class: 'grid2' }, h('div', {}, h('label', {}, 'Offensive Player of the Week'), off.el), h('div', {}, h('label', {}, 'Defensive Player of the Week'), def.el)),
+      h('label', {}, 'Notes for the writers'), notes,
+      h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: () => act(save, 'Desk saved').then(reload) } }, 'Save picks'))),
+    h('section', { class: 'panel' }, h('h2', {}, 'Headlines the export missed'),
+      headlines,
+      h('label', {}, 'Headline'), headline,
+      h('div', { class: 'grid2' }, h('div', {}, h('label', {}, 'Category'), category), h('div', {}, h('label', {}, 'Teams'), teams)),
+      h('label', {}, 'Details'), details,
+      h('label', { class: 'row' }, breaking, 'Breaking: lead the show with it'),
+      h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: addHeadline } }, 'Add headline'))),
+    h('section', { class: 'panel' }, h('h2', {}, 'Approve'),
+      h('label', { class: 'row' }, voice, 'Voice it as soon as it is written (and publish it, if auto-publish is on)'),
+      h('div', { class: 'row', style: 'margin-top:8px' },
+        h('button', { class: 'btn primary', type: 'button', on: { click: approve } }, 'Approve and write the show'),
+        h('button', { class: 'btn danger', type: 'button', on: { click: skip } }, 'Skip this week'))));
+}
+
 async function viewMemory() {
   const [m, st] = await Promise.all([api('/api/admin/memory'), api('/api/admin/settings')]);
   const name = id => st.personas.find(p => p.id === id)?.short || id;
