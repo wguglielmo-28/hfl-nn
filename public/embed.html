@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFL-NN</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/embed.css">
+</head>
+<body class="embed">
+  <!-- The bare player the HFL Hub frames: no guide, lineup or ticker. See docs/embed.md. -->
+  <div class="tv" id="tv">
+    <canvas id="screen" width="480" height="270" aria-label="The HFL-NN studio"></canvas>
+    <button id="power" class="power" type="button" hidden>
+      <span class="power-icon" aria-hidden="true">▶</span>
+      <span class="power-label">Watch</span>
+      <span class="power-sub" id="power-sub">Sound on</span>
+    </button>
+    <div id="captions" class="captions" hidden aria-live="polite"></div>
+    <a class="watch-link" id="watch-link" href="/" target="_blank" rel="noopener">Watch on HFL-NN ↗</a>
+    <p class="error" id="error" hidden></p>
+  </div>
+
+  <div class="controls" id="controls">
+    <button type="button" id="prev" title="Previous segment" aria-label="Previous segment">⏮</button>
+    <button type="button" id="play" title="Play/pause" aria-label="Play">▶</button>
+    <button type="button" id="next" title="Next segment" aria-label="Next segment">⏭</button>
+    <div class="progress" id="progress" role="slider" aria-label="Seek" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="bar" id="bar"></div>
+      <div class="marks" id="marks"></div>
+    </div>
+    <span class="time" id="time">0:00 / 0:00</span>
+    <button type="button" id="cc" title="Captions" aria-pressed="false">CC</button>
+    <input type="range" id="volume" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+    <button type="button" id="fullscreen" title="Full screen" aria-label="Full screen">⛶</button>
+  </div>
+
+  <script type="module" src="/js/embed.js"></script>
+</body>
+</html>
