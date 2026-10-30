@@ -19,7 +19,7 @@ Published episodes, newest first. The Hub fetches it server-side (a Worker sends
    "audioFile": "audio.mp3" }]
 ```
 
-`type` is `weekly`, `breaking`, `premiere`, `kickoff` or `special`. `audioFile` can be
+`type` is `weekly`, `breaking`, `premiere`, `kickoff`, `special` or `custom`. `audioFile` can be
 `null` on very old episodes; fall back to `audio.mp3`. From these the Hub builds:
 
 | Link | URL |
