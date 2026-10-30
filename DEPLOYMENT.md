@@ -24,6 +24,9 @@ league snapshots, episodes, audio, the voice model cache and settings. It has th
    - `CHRONICLE_FEED_URL=https://hfl-hub-5kc.pages.dev/chronicle`: optional. You can also set
      it later in the control room.
    - `HUB_PUSH_KEY`: optional, if the Hub pushes its feed.
+   - `EMBED_ORIGINS`: optional, comma-separated. The sites allowed to frame `/embed/*`. Defaults
+     to `https://hfl-hub-5kc.pages.dev,https://*.hfl-hub-5kc.pages.dev` (see
+     [`docs/embed.md`](docs/embed.md)).
 4. **Resources**: give the service **at least 1 GB of RAM**. Kokoro uses about 300–400 MB while
    voicing. CPU spikes for a few minutes per episode and is idle otherwise.
 5. Open `https://<service>/control`, log in, and copy the **Madden export URL** into the HFL's
@@ -55,7 +58,9 @@ vulnerable paths aren't reachable. Re-check when Kokoro updates.
 - **Discord webhook**: encrypted at rest (AES-256-GCM, as in hfl-draft) and never sent back to
   the browser. Mentions are disabled on every post.
 - **Pages**: a strict Content Security Policy (scripts only from this origin), HSTS, and
-  frame-ancestors none. Cross-origin browser requests are refused.
+  frame-ancestors none with `X-Frame-Options: DENY`. The one exception is the bare player at
+  `/embed/*`, which only the `EMBED_ORIGINS` sites may frame. Cross-origin browser requests
+  are refused, except that episode audio under `/media` may be played from other sites.
 
 ## Backups
 
