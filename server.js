@@ -109,7 +109,11 @@ function createApp(opts = {}) {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);   // Railway terminates TLS one hop in front
 
-  app.use(helmet({
+  // Pages refuse to be framed, except /embed/*, which the HFL Hub frames
+  // (EMBED_ORIGINS, comma-separated). See docs/embed.md.
+  const embedOrigins = String(env.EMBED_ORIGINS ?? 'https://hfl-hub-5kc.pages.dev,https://*.hfl-hub-5kc.pages.dev')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  const helmetFor = ({ frameAncestors, frameguard }) => helmet({
     contentSecurityPolicy: {
       useDefaults: false,
       directives: {
@@ -126,15 +130,19 @@ function createApp(opts = {}) {
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
-        frameAncestors: ["'none'"],
+        frameAncestors,
         upgradeInsecureRequests: httpsOnly ? [] : null,
       },
     },
     crossOriginEmbedderPolicy: false,
-    frameguard: { action: 'deny' },
+    frameguard,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: false },
-  }));
+  });
+  const pageHelmet = helmetFor({ frameAncestors: ["'none'"], frameguard: { action: 'deny' } });
+  const embedHelmet = helmetFor({ frameAncestors: ["'self'", ...embedOrigins], frameguard: false });
+  const isEmbed = p => p === '/embed' || p.startsWith('/embed/');
+  app.use((req, res, next) => (isEmbed(req.path) ? embedHelmet : pageHelmet)(req, res, next));
   app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()');
     next();
@@ -172,7 +180,12 @@ function createApp(opts = {}) {
   });
 
   // ── Public API ───────────────────────────────────────────────────────────
-  const pickEpisode = e => ({ id: e.id, type: e.type, title: e.title, summary: e.summary, weekLabel: e.weekLabel, publishedAt: e.publishedAt, duration: e.duration });
+  const pickEpisode = e => ({
+    id: e.id, type: e.type, phase: e.phase, title: e.title, summary: e.summary, weekLabel: e.weekLabel,
+    publishedAt: e.publishedAt, duration: e.duration,
+    // Indexes written before audioFile was summarised fall back to the episode file.
+    audioFile: e.audioFile ?? producer.get(e.id)?.audio?.file ?? null,
+  });
   app.get('/api/health', (req, res) => res.json({ ok: true, version: VERSION }));
   app.get('/api/episodes', (req, res) => res.json(producer.published().map(pickEpisode)));
   app.get('/api/episodes/:id', (req, res) => {
@@ -187,7 +200,8 @@ function createApp(opts = {}) {
     const ep = producer.get(id);
     const file = ep?.audio?.file;
     if (!file || req.params.file !== file) return res.status(404).end();
-    res.set('Cache-Control', 'public, max-age=3600');
+    // The Hub plays episodes in its own <audio> (docs/embed.md).
+    res.set({ 'Cache-Control': 'public, max-age=3600', 'Cross-Origin-Resource-Policy': 'cross-origin' });
     res.sendFile(store.path(`episodes/${id}/${file}`));
   };
   app.get('/media/:id/:file', (req, res) => {
@@ -388,6 +402,15 @@ function createApp(opts = {}) {
   app.get('/watch/:id', (req, res) => {
     const sum = producer.list().find(e => e.id === req.params.id && e.status === 'published');
     res.type('html').status(sum ? 200 : 404).send(channelPage(req, sum));
+  });
+  // The bare player the HFL Hub frames. /embed/latest always answers 200 (the
+  // page shows off-air when nothing is published) so the Hub can probe it.
+  const embedFile = path.join(PUBLIC, 'embed.html');
+  app.get('/embed/latest', (req, res) => res.sendFile(embedFile));
+  app.get('/embed/:id', (req, res) => {
+    const sum = producer.list().find(e => e.id === req.params.id && e.status === 'published');
+    if (!sum) return res.status(404).type('text').send('Episode not found');
+    res.sendFile(embedFile);
   });
   app.get('/control', (req, res) => res.sendFile(path.join(PUBLIC, 'control.html')));
   app.use(express.static(PUBLIC, { index: false, maxAge: '1h' }));

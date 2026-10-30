@@ -1,0 +1,16 @@
+/* The framed player (/embed/:id): the screen fills the frame at 16:9 with a
+   thin control bar under it. Loaded after site.css. */
+html, body.embed { height: 100%; overflow: hidden; }
+body.embed { display: flex; flex-direction: column; background: #000; min-height: 0; }
+.embed .tv { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 0; box-shadow: none; background: #000; }
+.embed #screen { width: auto; height: auto; max-width: 100%; max-height: 100%; aspect-ratio: 16 / 9; }
+.embed .controls { flex: 0 0 auto; margin: 0; padding: 4px 6px; gap: 6px; flex-wrap: nowrap; background: var(--deep); }
+.embed .controls button { min-width: 30px; height: 28px; }
+.embed .progress { flex: 1 1 60px; }
+.embed .time { min-width: 0; font-size: 0.65rem; }
+.embed #volume { width: 70px; }
+.watch-link { position: absolute; top: 6px; right: 8px; padding: 3px 8px; border-radius: 4px; background: rgba(0,0,0,0.65); font-family: var(--pixel); font-size: 0.7rem; text-decoration: none; }
+.watch-link:hover, .watch-link:focus-visible { background: var(--violet); }
+.embed .error { position: absolute; left: 8px; bottom: 6px; margin: 0; padding: 3px 8px; background: rgba(0,0,0,0.75); border-radius: 4px; font-size: 0.8rem; }
+.embed .error[hidden] { display: none; }
+@media (max-width: 420px) { .embed #volume, .embed .time { display: none; } }
