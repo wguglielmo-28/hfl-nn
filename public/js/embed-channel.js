@@ -2,11 +2,12 @@
 // captions and what is on now. The picture is live from the moment it loads;
 // sound waits for a click, as browsers require. See docs/embed.md.
 import { Player } from './studio/player.js';
-import { Tuner, tunerOptions, clockTime, onAirTitle } from './studio/channelPlayer.js';
+import { Tuner, tunerOptions, clockTime, nowText } from './studio/channelPlayer.js';
+import { Footage } from './studio/footage.js';
 
 const $ = id => document.getElementById(id);
 const player = new Player($('screen'));
-const tuner = new Tuner(player, tunerOptions());
+const tuner = new Tuner(player, { ...tunerOptions(), footage: new Footage($('tv')) });
 window.hflnn = { player, tuner };
 
 const state = { cc: readPref('hflnn.cc', 'false') === 'true' };
@@ -33,9 +34,10 @@ player.addEventListener('error', e => showError(e.detail.message));
 
 tuner.addEventListener('block', e => {
   const { block, next } = e.detail;
-  $('now').textContent = block?.kind === 'episode' ? onAirTitle(block) : next ? `Next ${clockTime(next.from)}: ${next.title}` : 'Stand by';
-  $('time').textContent = block?.kind === 'episode' ? `ends ${clockTime(block.until)}` : '';
-  $('power-sub').textContent = block?.kind === 'episode' ? block.title : 'Sound on';
+  const programme = ['episode', 'replay', 'clip', 'live'].includes(block?.kind);
+  $('now').textContent = programme ? nowText(block) : next ? `Next ${clockTime(next.from)}: ${next.title}` : 'Stand by';
+  $('time').textContent = programme && Number.isFinite(block.until) ? `ends ${clockTime(block.until)}` : '';
+  $('power-sub').textContent = programme ? block.title : 'Sound on';
   if (block?.kind !== 'episode') $('captions').hidden = true;
 });
 tuner.addEventListener('sound', e => {

@@ -2,9 +2,14 @@
 // keeps the player on that block at the right moment — tune in halfway
 // through a show and you land halfway through it, in step with everyone else.
 //
-// The picture runs off the channel clock, so it is live even with the sound
-// off. Once the viewer turns the sound on, the audio is started at the
-// matching offset and nudged back if it drifts.
+// Studio shows: the picture runs off the channel clock, so it is live even
+// with the sound off. Once the viewer turns the sound on, the audio is
+// started at the matching offset and nudged back if it drifts.
+//
+// Game footage (a replay, a clip, or a member's live stream) is handed to
+// footage.js, which plays it in Twitch's or YouTube's own player. A league
+// game that is live right now cuts in over the schedule; the viewer can go
+// back to the studio, or pick another game when several are on.
 //
 //   ?at=<epoch ms>   start the channel clock at another instant
 //   ?speed=<n>       run the channel clock faster (checking block changes)
@@ -12,19 +17,24 @@
 const RESYNC_S = 1.5;
 const POLL_MS = 30000;
 const TICK_MS = 250;
+const FOOTAGE = new Set(['live', 'replay', 'clip']);
+const PROGRAMME = new Set(['episode', 'replay', 'clip']);
 
-const keyOf = b => (b ? `${b.kind}:${b.episodeId || ''}:${b.from}` : '');
+const keyOf = b => (b ? `${b.kind}:${b.episodeId || b.clipId || b.liveId || b.stream?.videoId || ''}:${b.from}` : '');
 
 export class Tuner extends EventTarget {
-  constructor(player, { at = null, speed = 1 } = {}) {
+  constructor(player, { at = null, speed = 1, footage = null } = {}) {
     super();
     this.player = player;
+    this.footage = footage;
     this.at = Number.isFinite(at) ? at : null;
     this.speed = Number.isFinite(speed) && speed > 0 ? speed : 1;
     this.sim = this.at != null || this.speed !== 1;
     this.base = null;         // channel time at `mark`
     this.mark = 0;
     this.blocks = [];
+    this.live = [];           // league games live right now
+    this.liveChoice = null;   // a live game's id, 'studio' to stay with the schedule, or null (automatic)
     this.guide = null;
     this.cur = null;          // block on air
     this.ready = null;        // key of the block whose episode is loaded
@@ -56,6 +66,10 @@ export class Tuner extends EventTarget {
       if (first || !this.sim) { this.base = g.now + (this.sim ? 0 : (t1 - t0) / 2); this.mark = t1; }
       this.guide = g;
       this.blocks = g.blocks || [];
+      this.live = this.footage ? (g.live || []) : [];
+      // A choice only lasts as long as the game it named; once nothing is
+      // live, the next game cuts in again by itself.
+      if (!this.live.length || (this.liveChoice && this.liveChoice !== 'studio' && !this.live.some(l => l.id === this.liveChoice))) this.liveChoice = null;
       this.emit('guide', { guide: g });
     } catch (e) {
       this.emit('error', { message: 'Lost the channel. Retrying…' });
@@ -72,6 +86,7 @@ export class Tuner extends EventTarget {
   stop() {
     clearInterval(this.timer);
     this.timer = null;
+    this.footage?.hide();
     this.player.clock = null;
     this.player.bugLabel = null;
     this.player.audio.playbackRate = 1;
@@ -79,12 +94,34 @@ export class Tuner extends EventTarget {
     this.ready = null;
   }
 
-  blockAt(t) { return this.blocks.find(b => b.from <= t && t < b.until) || null; }
-  nextEpisode(t = this.now()) { return this.blocks.find(b => b.kind === 'episode' && b.from > t) || null; }
+  // What the schedule says is on, ignoring live games.
+  scheduled(t) { return this.blocks.find(b => b.from <= t && t < b.until) || null; }
+
+  // The live game on screen, if any: the viewer's pick, else the first (the
+  // server lists the Game of the Week first).
+  liveBlock() {
+    if (!this.live.length || this.liveChoice === 'studio') return null;
+    const l = this.live.find(x => x.id === this.liveChoice) || this.live[0];
+    return { kind: 'live', liveId: l.id, show: 'live', showTitle: 'HFL Live', title: l.title, from: l.startedAt, until: Infinity, stream: l.stream, game: l.game };
+  }
+
+  blockAt(t) { return this.liveBlock() || this.scheduled(t); }
+  nextEpisode(t = this.now()) { return this.blocks.find(b => PROGRAMME.has(b.kind) && b.from > t) || null; }
+
+  // 'studio', a live game's id, or null to let the channel decide.
+  chooseLive(choice) {
+    this.liveChoice = choice;
+    this.tick();
+    this.emit('guide', { guide: this.guide });
+  }
+
+  // Seconds into a footage block. A live stream has no offset.
+  offsetOf(b, t = this.now()) { return b.kind === 'replay' ? Math.max(0, (t - b.from) / 1000) : 0; }
 
   setSound(on) {
     this.sound = !!on;
     if (!this.sound) this.player.audio.pause();
+    if (this.footage?.active && this.cur) this.footage.setMuted(!this.sound, this.offsetOf(this.cur));
     this.tick();
     this.emit('sound', { on: this.sound });
   }
@@ -95,9 +132,15 @@ export class Tuner extends EventTarget {
     const stale = performance.now() - this.lastPoll;
     const last = this.blocks[this.blocks.length - 1];
     // Poll on a timer, and sooner when the listings are about to run out.
-    if (stale > POLL_MS || ((!b || !last || last.until - t < 10 * 60000) && stale > 5000)) this.refresh();
+    if (stale > POLL_MS || ((!this.scheduled(t) || !last || last.until - t < 10 * 60000) && stale > 5000)) this.refresh();
     if (keyOf(b) !== keyOf(this.cur)) this.enter(b);
     if (b?.kind === 'episode' && this.ready === keyOf(b)) this.sync(b, t);
+  }
+
+  standby(b, message) {
+    const next = this.nextEpisode();
+    this.player.clock = null;
+    this.player.unload({ ...this.offAir, bug: b ? 'HFL-NN' : 'STAND BY', message: message || (next ? `NEXT: ${String(next.title).toUpperCase()}` : 'STAND BY') });
   }
 
   async enter(b) {
@@ -105,13 +148,17 @@ export class Tuner extends EventTarget {
     this.cur = b;
     this.ready = null;
     const key = keyOf(b);
-    this.emit('block', { block: b, next: this.nextEpisode(b ? b.until - 1 : this.now()) });
-    if (b?.kind !== 'episode') {
-      const next = this.nextEpisode();
-      p.clock = null;
-      p.unload({ ...this.offAir, bug: b ? 'HFL-NN' : 'STAND BY', message: next ? `NEXT: ${String(next.title).toUpperCase()}` : 'STAND BY' });
+    this.emit('block', { block: b, next: this.nextEpisode(b && Number.isFinite(b.until) ? b.until - 1 : this.now()) });
+    if (b && FOOTAGE.has(b.kind)) {
+      // The studio goes quiet underneath; if the footage cannot be shown
+      // (no player on this page, or ids that do not look right) it stays up.
+      p.audio.pause();
+      this.standby(b, String(b.title).toUpperCase());
+      if (!this.footage?.show(b, this.offsetOf(b), !this.sound)) this.footage?.hide();
       return;
     }
+    this.footage?.hide();
+    if (b?.kind !== 'episode') return this.standby(b);
     try {
       const id = encodeURIComponent(b.episodeId);
       p.clock = () => (this.now() - b.from) / 1000;
@@ -157,3 +204,11 @@ export const clockTime = ms => new Date(ms).toLocaleTimeString([], { hour: 'nume
 
 // "HFL-NN Tonight: Week 2" already names its show; "Breaking: …" on The Wire does not.
 export const onAirTitle = b => (String(b.title).toLowerCase().startsWith(String(b.showTitle).toLowerCase()) ? b.title : `${b.showTitle}: ${b.title}`);
+
+// What the "now" strip says for any kind of block.
+export function nowText(block) {
+  if (!block) return 'Stand by';
+  if (block.kind === 'ident' || block.kind === 'standby') return `${block.showTitle} — back in a moment`;
+  if (block.kind === 'live') return `Live now: ${block.title}`;
+  return onAirTitle(block);
+}

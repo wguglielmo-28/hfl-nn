@@ -15,6 +15,18 @@
       "types": ["breaking"],
       "order": "latest"
     },
+    "rewind": {
+      "title": "HFL Rewind",
+      "blurb": "A league game, replayed from the stream of the member who played it.",
+      "kind": "replay",
+      "types": []
+    },
+    "plays": {
+      "title": "Top Plays",
+      "blurb": "The most-watched clips from the last two weeks of league games.",
+      "kind": "clips",
+      "types": []
+    },
     "vault": {
       "title": "The Vault",
       "blurb": "Past broadcasts, back on the air.",
@@ -29,10 +41,13 @@
     { "at": "10:00", "show": "vault" },
     { "at": "12:00", "show": "tonight" },
     { "at": "14:00", "show": "vault" },
+    { "at": "15:00", "show": "rewind" },
     { "at": "17:00", "show": "wire" },
-    { "at": "18:00", "show": "vault" },
+    { "at": "18:00", "show": "plays" },
+    { "at": "18:30", "show": "vault" },
     { "at": "20:00", "show": "tonight" },
-    { "at": "22:00", "show": "wire" },
-    { "at": "23:00", "show": "vault" }
+    { "at": "21:30", "show": "wire" },
+    { "at": "22:00", "show": "rewind" },
+    { "at": "23:30", "show": "vault" }
   ]
 }

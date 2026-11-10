@@ -93,6 +93,23 @@ main { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; display: grid;
 .lineup .role { font-family: var(--pixel); font-size: 0.7rem; color: var(--teal); }
 .lineup .bio { font-size: 0.85rem; color: var(--muted); margin: 2px 0 0; }
 
+/* ── Game footage (public/js/studio/footage.js): Twitch's or YouTube's player over the studio screen ── */
+.footage { position: absolute; inset: 0; background: #000; display: flex; flex-direction: column; }
+.footage[hidden] { display: none; }
+.footage-frame { flex: 1 1 auto; min-height: 0; }
+.footage-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+.footage-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 4px 8px; background: var(--night); border-top: 2px solid var(--teal); font-size: 0.8rem; min-width: 0; }
+.footage-badge { flex: 0 0 auto; font-family: var(--pixel); font-size: 0.65rem; padding: 1px 6px; border-radius: 3px; background: var(--violet); }
+.footage-badge.live { background: var(--red); }
+.footage-what { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.footage-who { margin-left: auto; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.power { z-index: 2; }
+.live-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.live-bar[hidden] { display: none; }
+.live-bar button { background: var(--purple); border: 1px solid var(--lilac); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-family: var(--pixel); font-size: 0.75rem; }
+.live-bar button:hover { background: var(--violet); }
+.live-bar button[aria-pressed="true"] { background: var(--teal); color: var(--ink); }
+
 /* ── The live channel ── */
 .live .controls #prev, .live .controls #next { display: none; }
 .live .progress { cursor: default; }
