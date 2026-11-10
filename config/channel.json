@@ -15,6 +15,30 @@
       "types": ["breaking"],
       "order": "latest"
     },
+    "blitz": {
+      "title": "Morning Blitz",
+      "blurb": "The morning catch-up: where the league stands, who is hurt, who moved and what is next.",
+      "types": [],
+      "order": "latest",
+      "keepDays": 2,
+      "produce": { "kinds": ["cold_open", "standings", "top_performers", "transactions", "injuries", "preview", "signoff"], "leadMinutes": 45, "minFresh": 2, "maxStories": 8, "estUsd": 0.25 }
+    },
+    "statlab": {
+      "title": "Stat Lab",
+      "blurb": "The numbers behind the week: top performers, rankings and the playoff picture.",
+      "types": [],
+      "order": "latest",
+      "keepDays": 4,
+      "produce": { "kinds": ["cold_open", "top_performers", "power_rankings", "playoff_race", "signoff"], "leadMinutes": 45, "minFresh": 2, "maxStories": 8, "estUsd": 0.25 }
+    },
+    "afterdark": {
+      "title": "Grimley After Dark",
+      "blurb": "Late night with Gus: theories, hot takes and an argument to end the day.",
+      "types": [],
+      "order": "latest",
+      "keepDays": 4,
+      "produce": { "kinds": ["cold_open", "conspiracy_corner", "hot_takes", "debate", "signoff"], "leadMinutes": 45, "minFresh": 2, "maxStories": 8, "estUsd": 0.25 }
+    },
     "rewind": {
       "title": "HFL Rewind",
       "blurb": "A league game, replayed from the stream of the member who played it.",
@@ -36,11 +60,14 @@
   },
   "grid": [
     { "at": "00:00", "show": "vault" },
-    { "at": "07:00", "show": "tonight" },
+    { "at": "07:00", "show": "blitz" },
+    { "at": "07:30", "show": "tonight" },
     { "at": "09:00", "show": "wire" },
+    { "at": "09:30", "show": "blitz" },
     { "at": "10:00", "show": "vault" },
     { "at": "12:00", "show": "tonight" },
-    { "at": "14:00", "show": "vault" },
+    { "at": "13:00", "show": "statlab" },
+    { "at": "13:30", "show": "vault" },
     { "at": "15:00", "show": "rewind" },
     { "at": "17:00", "show": "wire" },
     { "at": "18:00", "show": "plays" },
@@ -48,6 +75,6 @@
     { "at": "20:00", "show": "tonight" },
     { "at": "21:30", "show": "wire" },
     { "at": "22:00", "show": "rewind" },
-    { "at": "23:30", "show": "vault" }
+    { "at": "23:30", "show": "afterdark" }
   ]
 }
