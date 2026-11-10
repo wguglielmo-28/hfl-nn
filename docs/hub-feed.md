@@ -67,3 +67,31 @@ must be under 2 MB. Send the full current state each time (not just changes).
 If the Hub already stores this information, the quickest path is one read-only
 route that assembles the document, for example `GET /api/hfl-nn-feed`. Keep it
 public-safe (no emails or tokens) or protect it and push instead.
+
+## Game streams for the 24/7 channel
+
+Separate from the feed above, HFL-NN reads the Hub's `GET /api/hfl-nn-streams` once a minute
+for members' game streams. The URL is the Hub feed URL with `hfl-nn-feed` replaced by
+`hfl-nn-streams`; set `HUB_STREAMS_URL` to point somewhere else.
+
+```json
+{
+  "version": 1,
+  "live":    [{ "platform": "twitch", "member": "…", "channel": "login", "videoId": null,
+                "startedAt": "…", "game": { "away": "NE", "home": "BUF", "awayName": "Patriots",
+                "homeName": "Bills", "season": 9, "stage": "reg", "week": 6, "gotw": false } }],
+  "replays": [{ "platform": "twitch", "member": "…", "channel": "login", "videoId": "777",
+                "startedAt": "…", "endedAt": "…", "duration": 4800, "replayExpiresAt": "…",
+                "game": { … }, "clips": [{ "id": "slug", "title": "…", "duration": 28.5, "views": 40 }] }]
+}
+```
+
+- Only streams tied to a league game are used. Every id is checked against the shape Twitch
+  or YouTube uses before it goes anywhere near a player address; anything else is dropped.
+- **Live** games cut in over the schedule (Game of the Week first). If the Hub has not
+  answered for five minutes, nothing is treated as live.
+- **Replays** air in the `HFL Rewind` slots and **clips** in `Top Plays` (`config/channel.json`).
+  A replay is not scheduled past its `replayExpiresAt`.
+- Nothing is downloaded. Footage plays in Twitch's and YouTube's own embedded players, so
+  HFL-NN's pages allow frames from `player.twitch.tv`, `clips.twitch.tv` and
+  `www.youtube-nocookie.com`. Twitch only plays on HTTPS pages (or `localhost`).

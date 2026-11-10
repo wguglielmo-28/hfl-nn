@@ -5,11 +5,13 @@
 // on air, and the anchor lineup.
 import { Player } from './studio/player.js';
 import { drawAnchor, ANCHOR_W, ANCHOR_H } from './studio/anchors.js';
-import { Tuner, tunerOptions, clockTime, onAirTitle } from './studio/channelPlayer.js';
+import { Tuner, tunerOptions, clockTime, nowText } from './studio/channelPlayer.js';
+import { Footage } from './studio/footage.js';
 
 const $ = id => document.getElementById(id);
 const player = new Player($('screen'));
-const tuner = new Tuner(player, tunerOptions());
+const footage = new Footage(document.querySelector('.tv'));
+const tuner = new Tuner(player, { ...tunerOptions(), footage });
 window.hflnn = { player, tuner };
 
 const state = { live: false, episodes: [], current: null, preview: false, cc: readPref('hflnn.cc', 'false') === 'true' };
@@ -63,7 +65,7 @@ async function renderListings() {
       <li class="${b.from <= t ? 'on' : ''}">
         <span class="when">${b.from <= t ? 'ON NOW' : esc(clockTime(b.from))}</span>
         <span class="what">
-          <span class="show">${esc(b.showTitle)}<span class="tag">${b.rerun ? 'ENCORE' : 'NEW'}</span></span>
+          <span class="show">${esc(b.showTitle)}<span class="tag">${b.kind === 'replay' ? 'REPLAY' : b.kind === 'clips' ? 'CLIPS' : b.rerun ? 'ENCORE' : 'NEW'}</span></span>
           <span class="ep-title">${esc(b.title)}</span>
         </span>
       </li>`).join('');
@@ -107,10 +109,11 @@ function leaveLive() {
 
 tuner.addEventListener('block', e => {
   const { block, next } = e.detail;
-  $('now').textContent = block?.kind === 'episode' ? onAirTitle(block) : block ? `${block.showTitle} — back in a moment` : 'Stand by';
+  const programme = ['episode', 'replay', 'clip', 'live'].includes(block?.kind);
+  $('now').textContent = nowText(block);
   $('upnext').textContent = next ? `${clockTime(next.from)} · ${next.title}` : '—';
-  $('power-sub').textContent = block?.kind === 'episode' ? block.title : 'Sound on';
-  document.title = block?.kind === 'episode' ? `${block.title} — HFL-NN` : 'HFL-NN — HFL News Network';
+  $('power-sub').textContent = programme ? block.title : 'Sound on';
+  document.title = programme ? `${block.title} — HFL-NN` : 'HFL-NN — HFL News Network';
   if (block?.kind !== 'episode') { renderSources(null); $('captions').hidden = true; }
   renderListings();
 });
@@ -120,7 +123,24 @@ tuner.addEventListener('sound', e => {
   if (e.detail.blocked) $('power').hidden = false;
 });
 tuner.addEventListener('error', e => showError(e.detail.message));
-tuner.addEventListener('guide', () => showError(''));
+tuner.addEventListener('guide', () => { showError(''); renderLiveBar(); });
+
+// League games live right now: the channel cuts to one by itself; these
+// buttons switch between them or go back to the studio.
+function renderLiveBar() {
+  const bar = $('live-bar');
+  const live = tuner.live;
+  bar.hidden = !live.length;
+  if (!live.length) { bar.innerHTML = ''; return; }
+  const on = tuner.liveBlock()?.liveId || 'studio';
+  bar.innerHTML = '<span class="label">● LIVE GAMES</span>' + live.map(l => `
+    <button type="button" data-live="${esc(l.id)}" aria-pressed="${l.id === on}">${esc(l.game.away)} at ${esc(l.game.home)}${l.game.gotw ? ' ★' : ''}</button>`).join('')
+    + `<button type="button" data-live="studio" aria-pressed="${on === 'studio'}">Studio</button>`;
+}
+$('live-bar').addEventListener('click', e => {
+  const b = e.target.closest('button[data-live]');
+  if (b) tuner.chooseLive(b.dataset.live);
+});
 
 // ── The desk ─────────────────────────────────────────────────────────────
 function renderLineup(lineup) {
@@ -261,9 +281,10 @@ setInterval(() => {
   if (state.live) {
     // How far through the block on air, and when it ends.
     const b = tuner.cur;
-    d = b ? (b.until - b.from) / 1000 : 0;
-    t = b ? Math.min(d, (tuner.now() - b.from) / 1000) : 0;
-    $('time').textContent = b ? `ends ${clockTime(b.until)}` : 'LIVE';
+    const open = !b || !Number.isFinite(b.until);   // a live game ends when it ends
+    d = open ? 0 : (b.until - b.from) / 1000;
+    t = open ? 0 : Math.min(d, (tuner.now() - b.from) / 1000);
+    $('time').textContent = open ? 'LIVE' : `ends ${clockTime(b.until)}`;
   } else $('time').textContent = `${fmt(t)} / ${fmt(d)}`;
   $('bar').style.width = d ? `${(100 * t) / d}%` : '0';
   $('progress').setAttribute('aria-valuenow', d ? String(Math.round((100 * t) / d)) : '0');

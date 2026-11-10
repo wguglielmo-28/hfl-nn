@@ -20,6 +20,7 @@ const L = require('./lib/league');
 const { createMaddenIngest, detectPayload } = require('./lib/ingest/madden');
 const { createHubSource } = require('./lib/ingest/hub');
 const { createChronicleSource } = require('./lib/ingest/chronicle');
+const { createStreamsSource, streamsUrlFrom } = require('./lib/ingest/streams');
 const { createTTS, voiceLabel, KOKORO_VOICES, isElevenVoice, ELEVEN_PREFIX } = require('./lib/tts');
 const { createElevenLabsProvider, VOICE_ID: ELEVEN_VOICE_ID } = require('./lib/tts/elevenlabs');
 const { encodeWav } = require('./lib/audio/wav');
@@ -88,6 +89,10 @@ function createApp(opts = {}) {
     onNew: fresh => producer?.onChronicle(fresh), fetchImpl: opts.fetchImpl, logger,
   });
   const hub = createHubSource({ store, getUrl: () => settings.get().hubFeedUrl, onUpdate: u => producer?.onHub(u), fetchImpl: opts.fetchImpl, logger });
+  // Members' game streams for the channel: live cut-ins, replays and clips.
+  // The URL sits beside the Hub feed unless HUB_STREAMS_URL says otherwise.
+  const streamsUrl = () => streamsUrlFrom(settings.get().hubFeedUrl, env.HUB_STREAMS_URL);
+  const streams = createStreamsSource({ store, getUrl: streamsUrl, fetchImpl: opts.fetchImpl, logger });
   const publicUrl = () => settings.get().publicUrl || (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : '');
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
@@ -98,6 +103,8 @@ function createApp(opts = {}) {
     store, logger, now: opts.now || Date.now,
     config: validateConfig(opts.channel || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'channel.json'), 'utf8'))),
     getEpisodes: () => producer.published(),
+    getReplays: () => streams.replays(),
+    getLive: t => streams.live(t),
   });
   let quietBatches = false;   // set while loading the sample league's first batch
   const ingest = createMaddenIngest({
@@ -134,6 +141,8 @@ function createApp(opts = {}) {
         imgSrc: ["'self'", 'data:'],
         mediaSrc: ["'self'", 'blob:'],
         connectSrc: ["'self'"],
+        // Game footage plays in Twitch's and YouTube's own players (public/js/studio/footage.js).
+        frameSrc: ["'self'", 'https://player.twitch.tv', 'https://clips.twitch.tv', 'https://www.youtube-nocookie.com'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
@@ -276,6 +285,7 @@ function createApp(opts = {}) {
       batches: store.readJSON('league/batches.json', []).slice(-10).reverse(),
       chronicle: chronicle.status(),
       hub: hub.status(),
+      streams: { ...streams.status(), url: streamsUrl() },
       desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
       writer: {
         claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
@@ -431,11 +441,19 @@ function createApp(opts = {}) {
     res.sendFile(embedFile);
   });
   app.get('/control', (req, res) => res.sendFile(path.join(PUBLIC, 'control.html')));
-  app.use(express.static(PUBLIC, { index: false, maxAge: '1h' }));
+  // Scripts and styles import each other by plain path, so a browser holding
+  // an hour-old copy of one beside a new copy of another breaks the page
+  // after a deploy. They are revalidated every time (a 304 when unchanged);
+  // images and fonts keep the hour.
+  app.use(express.static(PUBLIC, {
+    index: false, maxAge: '1h',
+    setHeaders: (res, file) => { if (/\.(js|css|html)$/.test(file)) res.setHeader('Cache-Control', 'no-cache'); },
+  }));
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
   // ── Background polling of the Hub and the Chronicle ─────────────────────
   let pollTimer = null;
+  let streamTimer = null;
   function startPolling() {
     const tick = async () => {
       if (settings.get().chronicleFeedUrl) await chronicle.refresh().catch(() => {});
@@ -445,6 +463,14 @@ function createApp(opts = {}) {
     };
     pollTimer = setTimeout(tick, 10 * 1000);
     pollTimer.unref?.();
+    // Streams are asked about every minute: a live game should cut in promptly.
+    const streamTick = async () => {
+      if (streamsUrl()) await streams.refresh().catch(() => {});
+      streamTimer = setTimeout(streamTick, 60 * 1000);
+      streamTimer.unref?.();
+    };
+    streamTimer = setTimeout(streamTick, 5 * 1000);
+    streamTimer.unref?.();
   }
 
   // Remove the league and everything made from it — the sample league, or
@@ -459,6 +485,7 @@ function createApp(opts = {}) {
     producer.reset();
     chronicle.reset();
     hub.reset();
+    streams.reset();
     logger.log(`[control] started over: removed league ${removed.leagueId}, ${removed.episodes} episodes, ${removed.stories} stories`);
     for (const src of [chronicle, hub]) src.refresh().catch(e => logger.warn(`[control] refresh after start-over failed: ${e.message}`));
     return { ok: true, removed };
@@ -485,7 +512,8 @@ function createApp(opts = {}) {
     app, store, producer, ingest, settings, tts, auth, chronicle, hub, channel,
     ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
-    close: async () => { clearTimeout(pollTimer); clearTimeout(saveTimer); await tts.close?.(); },
+    streams,
+    close: async () => { clearTimeout(pollTimer); clearTimeout(streamTimer); clearTimeout(saveTimer); await tts.close?.(); },
   };
 }
 
