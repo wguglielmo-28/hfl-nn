@@ -441,7 +441,14 @@ function createApp(opts = {}) {
     res.sendFile(embedFile);
   });
   app.get('/control', (req, res) => res.sendFile(path.join(PUBLIC, 'control.html')));
-  app.use(express.static(PUBLIC, { index: false, maxAge: '1h' }));
+  // Scripts and styles import each other by plain path, so a browser holding
+  // an hour-old copy of one beside a new copy of another breaks the page
+  // after a deploy. They are revalidated every time (a 304 when unchanged);
+  // images and fonts keep the hour.
+  app.use(express.static(PUBLIC, {
+    index: false, maxAge: '1h',
+    setHeaders: (res, file) => { if (/\.(js|css|html)$/.test(file)) res.setHeader('Cache-Control', 'no-cache'); },
+  }));
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
   // ── Background polling of the Hub and the Chronicle ─────────────────────

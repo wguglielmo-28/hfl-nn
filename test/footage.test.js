@@ -220,3 +220,19 @@ test('server: the page may frame Twitch and YouTube players, and /api/channel ca
     }
   } finally { server.close(); await ctx.close(); }
 });
+
+test('server: scripts and styles are revalidated on every load, so a deploy never mixes old and new', async () => {
+  const ctx = createApp({ dataDir: tmpDir(), env: { ADMIN_PASSWORD: 'letmein', NODE_ENV: 'test' }, tts: createTTS({ provider: 'silent' }), logger: quiet });
+  const server = http.createServer(ctx.app);
+  await new Promise(r => server.listen(0, r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    for (const p of ['/js/channel.js', '/js/studio/footage.js', '/css/site.css']) {
+      const r = await fetch(base + p);
+      assert.equal(r.status, 200, p);
+      assert.equal(r.headers.get('cache-control'), 'no-cache', p);
+      assert.ok(r.headers.get('etag'), p);
+    }
+    assert.match((await fetch(`${base}/img/favicon.svg`)).headers.get('cache-control'), /max-age=3600/);
+  } finally { server.close(); await ctx.close(); }
+});

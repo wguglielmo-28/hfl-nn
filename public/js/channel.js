@@ -132,7 +132,7 @@ function renderLiveBar() {
   const live = tuner.live;
   bar.hidden = !live.length;
   if (!live.length) { bar.innerHTML = ''; return; }
-  const on = tuner.cur?.kind === 'live' ? tuner.cur.liveId : 'studio';
+  const on = tuner.liveBlock()?.liveId || 'studio';
   bar.innerHTML = '<span class="label">● LIVE GAMES</span>' + live.map(l => `
     <button type="button" data-live="${esc(l.id)}" aria-pressed="${l.id === on}">${esc(l.game.away)} at ${esc(l.game.home)}${l.game.gotw ? ' ★' : ''}</button>`).join('')
     + `<button type="button" data-live="studio" aria-pressed="${on === 'studio'}">Studio</button>`;
