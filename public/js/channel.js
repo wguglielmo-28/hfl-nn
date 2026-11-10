@@ -1,13 +1,18 @@
-// The public channel page: player controls, captions, the episode guide,
-// sources for the segment on air, and the anchor lineup.
+// The public channel page. It opens on the live channel (whatever is on air
+// right now, in step with every other viewer); picking an episode from the
+// on-demand list, or opening /watch/<id>, plays that episode with the full
+// controls instead. Also: captions, today's listings, sources for the segment
+// on air, and the anchor lineup.
 import { Player } from './studio/player.js';
 import { drawAnchor, ANCHOR_W, ANCHOR_H } from './studio/anchors.js';
+import { Tuner, tunerOptions, clockTime, onAirTitle } from './studio/channelPlayer.js';
 
 const $ = id => document.getElementById(id);
 const player = new Player($('screen'));
-window.hflnn = { player };
+const tuner = new Tuner(player, tunerOptions());
+window.hflnn = { player, tuner };
 
-const state = { episodes: [], current: null, preview: false, cc: readPref('hflnn.cc', 'false') === 'true' };
+const state = { live: false, episodes: [], current: null, preview: false, cc: readPref('hflnn.cc', 'false') === 'true' };
 
 function readPref(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } }
 function writePref(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
@@ -42,8 +47,80 @@ function renderGuide() {
 }
 $('episodes').addEventListener('click', e => {
   const b = e.target.closest('button[data-id]');
-  if (b) open(b.dataset.id, { autoplay: true });
+  if (b) { leaveLive(); open(b.dataset.id, { autoplay: true }); }
 });
+
+// ── The live channel ─────────────────────────────────────────────────────
+async function renderListings() {
+  const ol = $('listings');
+  try {
+    const q = tuner.sim ? `?at=${Math.round(tuner.now())}` : '';
+    const { blocks } = await api(`/api/channel/listings${q}`);
+    const t = tuner.now();
+    const rows = blocks.filter(b => b.until > t).slice(0, 12);
+    if (!rows.length) { ol.innerHTML = '<li class="muted">Nothing more today. The channel starts again with the next broadcast.</li>'; return; }
+    ol.innerHTML = rows.map(b => `
+      <li class="${b.from <= t ? 'on' : ''}">
+        <span class="when">${b.from <= t ? 'ON NOW' : esc(clockTime(b.from))}</span>
+        <span class="what">
+          <span class="show">${esc(b.showTitle)}<span class="tag">${b.rerun ? 'ENCORE' : 'NEW'}</span></span>
+          <span class="ep-title">${esc(b.title)}</span>
+        </span>
+      </li>`).join('');
+  } catch { ol.innerHTML = '<li class="muted">The listings are not available right now.</li>'; }
+}
+
+function setSoundButton() {
+  $('play').textContent = tuner.sound ? '🔊' : '🔇';
+  $('play').setAttribute('aria-label', tuner.sound ? 'Turn the sound off' : 'Turn the sound on');
+  $('play').title = 'Sound on/off';
+}
+
+function tuneIn() {
+  $('power').hidden = true;
+  tuner.setSound(true);
+}
+
+async function goLive(offAir) {
+  state.live = true;
+  state.current = null;
+  document.body.classList.add('live');
+  $('back-live').hidden = true;
+  $('now-label').textContent = 'LIVE';
+  $('marks').innerHTML = '';
+  $('power').querySelector('.power-label').textContent = 'Tune in';
+  $('power').hidden = false;
+  setSoundButton();
+  await tuner.start(offAir);
+}
+
+function leaveLive() {
+  if (!state.live) return;
+  state.live = false;
+  tuner.stop();
+  document.body.classList.remove('live');
+  $('back-live').hidden = false;
+  $('now-label').textContent = 'NOW';
+  $('play').title = 'Play/pause';
+  $('power').querySelector('.power-label').textContent = 'Turn on the TV';
+}
+
+tuner.addEventListener('block', e => {
+  const { block, next } = e.detail;
+  $('now').textContent = block?.kind === 'episode' ? onAirTitle(block) : block ? `${block.showTitle} — back in a moment` : 'Stand by';
+  $('upnext').textContent = next ? `${clockTime(next.from)} · ${next.title}` : '—';
+  $('power-sub').textContent = block?.kind === 'episode' ? block.title : 'Sound on';
+  document.title = block?.kind === 'episode' ? `${block.title} — HFL-NN` : 'HFL-NN — HFL News Network';
+  if (block?.kind !== 'episode') { renderSources(null); $('captions').hidden = true; }
+  renderListings();
+});
+tuner.addEventListener('loaded', e => { if (e.detail.manifest?.lineup?.length) renderLineup(e.detail.manifest.lineup); });
+tuner.addEventListener('sound', e => {
+  setSoundButton();
+  if (e.detail.blocked) $('power').hidden = false;
+});
+tuner.addEventListener('error', e => showError(e.detail.message));
+tuner.addEventListener('guide', () => showError(''));
 
 // ── The desk ─────────────────────────────────────────────────────────────
 function renderLineup(lineup) {
@@ -118,15 +195,18 @@ player.addEventListener('segment', e => {
   const seg = e.detail.segment;
   const segs = player.manifest?.segments || [];
   const i = segs.findIndex(s => s.id === seg?.id);
+  renderSources(seg);
+  if (state.live) return;   // the live strip names the show, not the segment
   $('now').textContent = seg?.title || '—';
   $('upnext').textContent = segs[i + 1]?.title || 'Sign-off';
-  renderSources(seg);
 });
 player.addEventListener('state', () => {
+  if (state.live) return;
   $('play').textContent = player.playing ? '⏸' : '▶';
   $('play').setAttribute('aria-label', player.playing ? 'Pause' : 'Play');
 });
 player.addEventListener('ended', () => {
+  if (state.live) return;   // the channel moves on by itself
   $('power').hidden = false;
   $('power').querySelector('.power-label').textContent = 'Watch again';
 });
@@ -134,11 +214,13 @@ player.addEventListener('error', e => showError(e.detail.message));
 
 // ── Controls ─────────────────────────────────────────────────────────────
 $('power').addEventListener('click', () => {
+  if (state.live) return tuneIn();
   if (!player.manifest) return;
   if (player.audio.ended) player.seek(0);
   start();
 });
 $('play').addEventListener('click', () => {
+  if (state.live) { $('power').hidden = true; return tuner.setSound(!tuner.sound); }
   if (!player.manifest) return;
   $('power').hidden = true;
   player.toggle();
@@ -158,28 +240,37 @@ $('fullscreen').addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen(); else tv.requestFullscreen?.();
 });
 const seekFromEvent = e => {
+  if (state.live) return;   // live television does not rewind
   const r = $('progress').getBoundingClientRect();
   player.seek(((e.clientX - r.left) / r.width) * player.duration);
 };
 $('progress').addEventListener('click', seekFromEvent);
 $('progress').addEventListener('keydown', e => {
+  if (state.live) return;
   if (e.key === 'ArrowRight') player.seek(player.time + 5);
   if (e.key === 'ArrowLeft') player.seek(player.time - 5);
 });
 document.addEventListener('keydown', e => {
   if (e.target.closest('input, textarea, select, [role=slider]')) return;
-  if (e.key === ' ' && player.manifest) { e.preventDefault(); $('power').hidden = true; player.toggle(); }
+  if (e.key === ' ' && state.live) { e.preventDefault(); $('power').hidden = true; tuner.setSound(!tuner.sound); }
+  else if (e.key === ' ' && player.manifest) { e.preventDefault(); $('power').hidden = true; player.toggle(); }
   if (e.key === 'c') $('cc').click();
 });
 setInterval(() => {
-  const d = player.duration, t = player.time;
+  let d = player.duration, t = player.time;
+  if (state.live) {
+    // How far through the block on air, and when it ends.
+    const b = tuner.cur;
+    d = b ? (b.until - b.from) / 1000 : 0;
+    t = b ? Math.min(d, (tuner.now() - b.from) / 1000) : 0;
+    $('time').textContent = b ? `ends ${clockTime(b.until)}` : 'LIVE';
+  } else $('time').textContent = `${fmt(t)} / ${fmt(d)}`;
   $('bar').style.width = d ? `${(100 * t) / d}%` : '0';
-  $('time').textContent = `${fmt(t)} / ${fmt(d)}`;
   $('progress').setAttribute('aria-valuenow', d ? String(Math.round((100 * t) / d)) : '0');
 }, 250);
 window.addEventListener('popstate', () => {
   const m = location.pathname.match(/^\/watch\/([\w-]+)/);
-  if (m) open(m[1], { quiet: true });
+  if (m) { leaveLive(); open(m[1], { quiet: true }); } else location.reload();
 });
 
 // ── Boot ─────────────────────────────────────────────────────────────────
@@ -192,14 +283,19 @@ window.addEventListener('popstate', () => {
   state.episodes = episodes;
   renderGuide();
   renderLineup(ticker.lineup || []);
-  player.unload({ ticker: ticker.items || [], message: ticker.message || 'OFF AIR', lineup: ticker.lineup || [] });
+  const offAir = { ticker: ticker.items || [], message: ticker.message || 'OFF AIR', lineup: ticker.lineup || [] };
+  player.unload(offAir);
 
   const preview = params.get('preview');
   const watch = location.pathname.match(/^\/watch\/([\w-]+)/);
-  if (preview) await open(preview, { preview: true });
-  else if (watch) await open(watch[1], { quiet: true });
-  else if (episodes[0]) await open(episodes[0].id, { quiet: true });
-  else $('power').hidden = true;
+  if (preview || watch) {
+    $('back-live').hidden = false;
+    $('listings').closest('section').hidden = true;
+    if (preview) await open(preview, { preview: true }); else await open(watch[1], { quiet: true });
+  } else {
+    await goLive(offAir);
+    if (!episodes.length) $('power').hidden = true;
+  }
 
   // Still frames for tools/snap.js: /watch/<id>?t=42 renders that instant.
   if (params.has('t') && player.manifest) {

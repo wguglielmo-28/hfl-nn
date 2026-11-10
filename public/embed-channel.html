@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFL-NN — live</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/embed.css">
+</head>
+<body class="embed live">
+  <!-- The live channel, framed (/embed/channel): whatever is on air now. See docs/embed.md. -->
+  <div class="tv" id="tv">
+    <canvas id="screen" width="480" height="270" aria-label="The HFL-NN studio"></canvas>
+    <button id="power" class="power" type="button">
+      <span class="power-icon" aria-hidden="true">▶</span>
+      <span class="power-label">Tune in</span>
+      <span class="power-sub" id="power-sub">Sound on</span>
+    </button>
+    <div id="captions" class="captions" hidden aria-live="polite"></div>
+    <a class="watch-link" id="watch-link" href="/" target="_blank" rel="noopener">Watch on HFL-NN ↗</a>
+    <p class="error" id="error" hidden></p>
+  </div>
+
+  <div class="controls" id="controls">
+    <button type="button" id="play" title="Sound on/off" aria-label="Turn the sound on">🔇</button>
+    <span class="label">● LIVE</span>
+    <span class="onair" id="now">Stand by</span>
+    <span class="time" id="time"></span>
+    <button type="button" id="cc" title="Captions" aria-pressed="false">CC</button>
+    <input type="range" id="volume" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+    <button type="button" id="fullscreen" title="Full screen" aria-label="Full screen">⛶</button>
+  </div>
+
+  <script type="module" src="/js/embed-channel.js"></script>
+</body>
+</html>

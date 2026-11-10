@@ -45,8 +45,9 @@
       </div>
 
       <div class="now">
-        <div><span class="label">NOW</span> <span id="now">Off air</span></div>
+        <div><span class="label" id="now-label">NOW</span> <span id="now">Off air</span></div>
         <div><span class="label dim">UP NEXT</span> <span id="upnext">—</span></div>
+        <a class="back-live" id="back-live" href="/" hidden>● Back to the live channel</a>
       </div>
       <p class="error" id="error" hidden></p>
     </section>
@@ -57,8 +58,13 @@
       <ul id="sources"><li class="muted">Nothing on air yet.</li></ul>
     </section>
 
+    <section class="panel listings" aria-labelledby="listings-h">
+      <h2 id="listings-h">On the Channel Today</h2>
+      <ol id="listings" class="listings-list"><li class="muted">Loading…</li></ol>
+    </section>
+
     <section class="panel guide" aria-labelledby="guide-h">
-      <h2 id="guide-h">Episode Guide</h2>
+      <h2 id="guide-h">Watch On Demand</h2>
       <ul id="episodes" class="episodes"><li class="muted">Loading…</li></ul>
     </section>
 

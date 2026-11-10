@@ -14,3 +14,6 @@ body.embed { display: flex; flex-direction: column; background: #000; min-height
 .embed .error { position: absolute; left: 8px; bottom: 6px; margin: 0; padding: 3px 8px; background: rgba(0,0,0,0.75); border-radius: 4px; font-size: 0.8rem; }
 .embed .error[hidden] { display: none; }
 @media (max-width: 420px) { .embed #volume, .embed .time { display: none; } }
+/* The live channel (/embed/channel): what is on now, in place of the seek bar. */
+.embed .onair { flex: 1 1 60px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; }
+.embed.live .label { flex: 0 0 auto; margin: 0; }

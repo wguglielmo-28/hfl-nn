@@ -233,7 +233,7 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
 }
 
 // Off-air: empty desk, dim lights, ticker still running.
-export function renderOffAir(g, t, { ticker = [], message = 'OFF AIR', lineup = [] } = {}) {
+export function renderOffAir(g, t, { ticker = [], message = 'OFF AIR', lineup = [], bug = 'OFF AIR' } = {}) {
   g.imageSmoothingEnabled = false;
   drawStudio(g, t, { segmentTitle: message, dim: false });
   const n = Math.max(lineup.length, 5);
@@ -241,6 +241,6 @@ export function renderOffAir(g, t, { ticker = [], message = 'OFF AIR', lineup = 
   drawDesk(g, DESK_TOP);
   g.fillStyle = 'rgba(5,3,15,0.45)';
   g.fillRect(0, 0, W, H - 16);
-  drawBug(g, t, 'OFF AIR');
+  drawBug(g, t, bug);
   drawTicker(g, t, ticker);
 }
