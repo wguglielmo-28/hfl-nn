@@ -30,6 +30,7 @@ const { createOpenAIWriter } = require('./lib/writer/openai');
 const { createProducer } = require('./lib/producer');
 const { createChannel } = require('./lib/channel/plan');
 const { validateConfig } = require('./lib/channel/programme');
+const { createScheduler } = require('./lib/channel/scheduler');
 const { createAuth } = require('./lib/auth');
 const { createSettings } = require('./lib/settings');
 const { postWebhook } = require('./lib/discord');
@@ -99,9 +100,12 @@ function createApp(opts = {}) {
     tts, claude, openai, chronicle, hub, publicUrl, logger,
     baselineBefore: wk => ingest.baselineBefore(wk),
   });
+  const channelConfig = validateConfig(opts.channel || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'channel.json'), 'utf8')));
+  // Writes the channel's daily shows, inside the daily spending cap.
+  const scheduler = createScheduler({ store, config: channelConfig, producer, getSettings: settings.get, now: opts.now || Date.now, logger });
   const channel = createChannel({
     store, logger, now: opts.now || Date.now,
-    config: validateConfig(opts.channel || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'channel.json'), 'utf8'))),
+    config: channelConfig,
     getEpisodes: () => producer.published(),
     getReplays: () => streams.replays(),
     getLive: t => streams.live(t),
@@ -286,6 +290,7 @@ function createApp(opts = {}) {
       chronicle: chronicle.status(),
       hub: hub.status(),
       streams: { ...streams.status(), url: streamsUrl() },
+      channel: scheduler.status(),
       desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
       writer: {
         claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
@@ -454,6 +459,7 @@ function createApp(opts = {}) {
   // ── Background polling of the Hub and the Chronicle ─────────────────────
   let pollTimer = null;
   let streamTimer = null;
+  let dailyTimer = null;
   function startPolling() {
     const tick = async () => {
       if (settings.get().chronicleFeedUrl) await chronicle.refresh().catch(() => {});
@@ -471,6 +477,9 @@ function createApp(opts = {}) {
     };
     streamTimer = setTimeout(streamTick, 5 * 1000);
     streamTimer.unref?.();
+    // The daily shows are checked every minute; each is made at most once a day.
+    dailyTimer = setInterval(() => { try { scheduler.tick(); } catch (e) { logger.warn(`[channel] scheduler: ${e.message}`); } }, 60 * 1000);
+    dailyTimer.unref?.();
   }
 
   // Remove the league and everything made from it — the sample league, or
@@ -486,6 +495,7 @@ function createApp(opts = {}) {
     chronicle.reset();
     hub.reset();
     streams.reset();
+    scheduler.reset();
     logger.log(`[control] started over: removed league ${removed.leagueId}, ${removed.episodes} episodes, ${removed.stories} stories`);
     for (const src of [chronicle, hub]) src.refresh().catch(e => logger.warn(`[control] refresh after start-over failed: ${e.message}`));
     return { ok: true, removed };
@@ -512,8 +522,8 @@ function createApp(opts = {}) {
     app, store, producer, ingest, settings, tts, auth, chronicle, hub, channel,
     ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
-    streams,
-    close: async () => { clearTimeout(pollTimer); clearTimeout(streamTimer); clearTimeout(saveTimer); await tts.close?.(); },
+    streams, scheduler,
+    close: async () => { clearTimeout(pollTimer); clearTimeout(streamTimer); clearInterval(dailyTimer); clearTimeout(saveTimer); await tts.close?.(); },
   };
 }
 
