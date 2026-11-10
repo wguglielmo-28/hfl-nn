@@ -27,6 +27,8 @@ const { findFfmpeg } = require('./lib/audio/encode');
 const { createClaudeWriter } = require('./lib/writer/claude');
 const { createOpenAIWriter } = require('./lib/writer/openai');
 const { createProducer } = require('./lib/producer');
+const { createChannel } = require('./lib/channel/plan');
+const { validateConfig } = require('./lib/channel/programme');
 const { createAuth } = require('./lib/auth');
 const { createSettings } = require('./lib/settings');
 const { postWebhook } = require('./lib/discord');
@@ -91,6 +93,11 @@ function createApp(opts = {}) {
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
     tts, claude, openai, chronicle, hub, publicUrl, logger,
     baselineBefore: wk => ingest.baselineBefore(wk),
+  });
+  const channel = createChannel({
+    store, logger, now: opts.now || Date.now,
+    config: validateConfig(opts.channel || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'channel.json'), 'utf8'))),
+    getEpisodes: () => producer.published(),
   });
   let quietBatches = false;   // set while loading the sample league's first batch
   const ingest = createMaddenIngest({
@@ -195,6 +202,15 @@ function createApp(opts = {}) {
     res.set('Cache-Control', 'public, max-age=60').json(m);
   });
   app.get('/api/ticker', (req, res) => res.json(producer.ticker()));
+
+  // The 24/7 channel: what is on now and next (lib/channel). ?at=<epoch ms>
+  // looks at another instant, for checking the schedule.
+  const atOf = req => {
+    const at = Number(req.query.at);
+    return req.query.at !== undefined && Number.isFinite(at) && Math.abs(at - Date.now()) < 400 * 86400000 ? at : undefined;
+  };
+  app.get('/api/channel', (req, res) => res.set('Cache-Control', 'no-store').json(channel.guide(atOf(req))));
+  app.get('/api/channel/listings', (req, res) => res.set('Cache-Control', 'no-store').json(channel.listings(atOf(req))));
 
   const sendMedia = (req, res, id) => {
     const ep = producer.get(id);
@@ -407,6 +423,8 @@ function createApp(opts = {}) {
   // page shows off-air when nothing is published) so the Hub can probe it.
   const embedFile = path.join(PUBLIC, 'embed.html');
   app.get('/embed/latest', (req, res) => res.sendFile(embedFile));
+  // The live channel, framed: whatever is on air right now.
+  app.get('/embed/channel', (req, res) => res.sendFile(path.join(PUBLIC, 'embed-channel.html')));
   app.get('/embed/:id', (req, res) => {
     const sum = producer.list().find(e => e.id === req.params.id && e.status === 'published');
     if (!sum) return res.status(404).type('text').send('Episode not found');
@@ -464,7 +482,7 @@ function createApp(opts = {}) {
   }
 
   return {
-    app, store, producer, ingest, settings, tts, auth, chronicle, hub,
+    app, store, producer, ingest, settings, tts, auth, chronicle, hub, channel,
     ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
     close: async () => { clearTimeout(pollTimer); clearTimeout(saveTimer); await tts.close?.(); },

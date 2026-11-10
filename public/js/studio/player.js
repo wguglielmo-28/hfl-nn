@@ -16,6 +16,8 @@ export class Player extends EventTarget {
     this.manifest = null;
     this.offAir = { ticker: [], message: 'OFF AIR' };
     this.manualTime = null;     // set by renderAt() for screenshots
+    this.clock = null;          // () => seconds into the episode, set by the live channel
+    this.bugLabel = null;       // overrides the manifest's corner label (e.g. ENCORE)
     this.lastLine = -1;
     this.lastSeg = null;
     this.audio.addEventListener('ended', () => this.emit('ended'));
@@ -50,7 +52,13 @@ export class Player extends EventTarget {
     this.offAir = { ...this.offAir, ...offAir };
   }
 
-  get time() { return this.manualTime ?? this.audio.currentTime ?? 0; }
+  // The live channel (channelPlayer.js) sets `clock`: while the sound is off
+  // the picture follows it instead of the audio element.
+  get time() {
+    if (this.manualTime != null) return this.manualTime;
+    if (this.clock && !this.playing) return Math.max(0, this.clock());
+    return this.audio.currentTime ?? 0;
+  }
   get duration() { return this.manifest?.duration || this.audio.duration || 0; }
   get playing() { return !this.audio.paused && !this.audio.ended; }
 
@@ -88,7 +96,7 @@ export class Player extends EventTarget {
       return;
     }
     const m = this.manifest;
-    const scene = renderFrame(this.g, this.director, t, { ticker: m.ticker, bugLabel: m.bugLabel || '', title: m.title });
+    const scene = renderFrame(this.g, this.director, t, { ticker: m.ticker, bugLabel: this.bugLabel ?? (m.bugLabel || ''), title: m.title });
     if (scene.kind === 'show') {
       if (scene.lineIdx !== this.lastLine) { this.lastLine = scene.lineIdx; this.emit('line', { line: scene.ln, talking: scene.talking }); }
       if (scene.seg?.id !== this.lastSeg) { this.lastSeg = scene.seg?.id; this.emit('segment', { segment: scene.seg }); }

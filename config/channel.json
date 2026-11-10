@@ -1,0 +1,38 @@
+{
+  "timeZone": "America/New_York",
+  "alignMinutes": 5,
+  "filler": "vault",
+  "shows": {
+    "tonight": {
+      "title": "HFL-NN Tonight",
+      "blurb": "The flagship show: the week's games, the Game of the Week and the desk's picks.",
+      "types": ["weekly", "premiere", "kickoff", "special", "custom"],
+      "order": "latest"
+    },
+    "wire": {
+      "title": "The Wire",
+      "blurb": "Breaking bulletins from around the league.",
+      "types": ["breaking"],
+      "order": "latest"
+    },
+    "vault": {
+      "title": "The Vault",
+      "blurb": "Past broadcasts, back on the air.",
+      "types": ["*"],
+      "order": "rotate"
+    }
+  },
+  "grid": [
+    { "at": "00:00", "show": "vault" },
+    { "at": "07:00", "show": "tonight" },
+    { "at": "09:00", "show": "wire" },
+    { "at": "10:00", "show": "vault" },
+    { "at": "12:00", "show": "tonight" },
+    { "at": "14:00", "show": "vault" },
+    { "at": "17:00", "show": "wire" },
+    { "at": "18:00", "show": "vault" },
+    { "at": "20:00", "show": "tonight" },
+    { "at": "22:00", "show": "wire" },
+    { "at": "23:00", "show": "vault" }
+  ]
+}

@@ -47,6 +47,12 @@ transcript line with `speaker`, `text` and `t0`) for chapters and transcripts.
 - `/embed/latest` plays the newest episode and always answers **200** (it shows "No
   broadcasts yet" when nothing is published). The Hub probes it to tell whether embedding
   is deployed: 200 with no `X-Frame-Options` means yes.
+- `/embed/channel` is the **live channel**: whatever is on air right now, in step with
+  every other viewer. It always answers **200**. The picture is live as soon as it loads;
+  sound starts when the viewer clicks. It has a sound switch, captions, volume and full
+  screen, and no seek bar. `GET /api/channel` says what is on (`onNow`, `upNext`, and the
+  blocks for the next six hours, times in epoch milliseconds); `GET /api/channel/listings`
+  is today's full schedule. The schedule itself is `config/channel.json`.
 
 Only `/embed/*` may be framed. It sends `Content-Security-Policy: frame-ancestors 'self'
 <EMBED_ORIGINS>` and no `X-Frame-Options`. Every other page sends `frame-ancestors 'none'`
