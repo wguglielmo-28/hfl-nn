@@ -74,9 +74,10 @@ test('daily shows: Morning Blitz is made once, in the run-up to its slot, and ai
     // Once a day: nothing more for this show, however often it is asked.
     assert.equal(ctx.scheduler.tick().reason, 'nothing due');
     assert.equal(ctx.producer.list().length, 1);
+    const blocksBefore = ctx.channel.blocksFor(DAY);
 
     // It leads its 7:00 slot and its 9:30 re-air, and never passes for the flagship.
-    const blocks = ctx.channel.blocksFor(DAY);
+    const blocks = blocksBefore;
     const seven = blockAt(blocks, at('07:00'));
     assert.deepEqual([seven.kind, seven.show, seven.episodeId], ['episode', 'blitz', ep.id]);
     assert.deepEqual([blockAt(blocks, at('09:30')).show, blockAt(blocks, at('09:30')).episodeId, blockAt(blocks, at('09:30')).rerun], ['blitz', ep.id, true]);
@@ -84,10 +85,22 @@ test('daily shows: Morning Blitz is made once, in the run-up to its slot, and ai
     // Three days on it has gone stale and is off the schedule altogether.
     assert.ok(ctx.channel.blocksFor(nextDay(DAY, 4)).every(b => b.episodeId !== ep.id));
 
+    // The public episode list says which show it is, so the Hub can file it as a daily.
+    const server = require('http').createServer(ctx.app);
+    await new Promise(r => server.listen(0, r));
+    try {
+      const weekly = ctx.producer.createEpisode({ type: 'weekly', writer: 'template', chain: { voice: true, publish: true } });
+      await ctx.producer.idle(); await ctx.producer.idle();
+      const list = await (await fetch(`http://127.0.0.1:${server.address().port}/api/episodes`)).json();
+      assert.equal(list.find(e => e.id === ep.id).show, 'blitz');
+      assert.equal(list.find(e => e.id === weekly.id).show, null);
+    } finally { server.close(); }
+
     const st = ctx.scheduler.status();
     assert.equal(st.shows[0].made.episodeId, ep.id);
     assert.equal(st.log[0].outcome, 'started');
     assert.equal(st.spent, 0, 'the template writer costs nothing');
+    assert.equal(ctx.producer.list().length, 2);
   } finally { await s.close(); }
 });
 
