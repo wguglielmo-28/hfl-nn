@@ -203,6 +203,8 @@ function createApp(opts = {}) {
   const pickEpisode = e => ({
     id: e.id, type: e.type, phase: e.phase, title: e.title, summary: e.summary, weekLabel: e.weekLabel,
     publishedAt: e.publishedAt, duration: e.duration,
+    // Set on the channel's daily shows ("blitz", "statlab", …); null for everything else.
+    show: e.channelShow || null,
     // Indexes written before audioFile was summarised fall back to the episode file.
     audioFile: e.audioFile ?? producer.get(e.id)?.audio?.file ?? null,
   });

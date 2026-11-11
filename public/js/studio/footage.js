@@ -17,6 +17,8 @@ const YOUTUBE_VIDEO = /^[A-Za-z0-9_-]{11}$/;
 function twitchParents() {
   const hosts = new Set([location.hostname]);
   for (const o of Array.from(location.ancestorOrigins || [])) { try { hosts.add(new URL(o).hostname); } catch { /* opaque origin */ } }
+  // Firefox has no ancestorOrigins; when framed, the referrer is the page doing the framing.
+  if (window.top !== window.self && document.referrer) { try { hosts.add(new URL(document.referrer).hostname); } catch { /* not a URL */ } }
   return [...hosts].map(h => `parent=${encodeURIComponent(h)}`).join('&');
 }
 
