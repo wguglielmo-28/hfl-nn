@@ -172,3 +172,51 @@ test('daily shows: held in the preseason, like every other automatic show', asyn
     assert.equal(s.ctx.scheduler.status().held, true);
   } finally { await s.close(); }
 });
+
+test('daily shows: the control room can see where each show stands today', async () => {
+  const s = await boot({ channelAuto: true, channelWriter: 'template' });
+  try {
+    const { ctx, clock } = s;
+    const today = () => Object.fromEntries(ctx.scheduler.status().shows.map(x => [x.key, x.today]));
+
+    clock.t = at('05:00');
+    assert.equal(ctx.scheduler.status().writer, 'template');
+    assert.deepEqual(today().blitz, { state: 'waiting', reason: null, startsAt: at('06:15') });
+
+    // In the run-up with nothing new to say: due, with the scheduler's reason.
+    clock.t = at('06:20');
+    const all = ctx.producer.wireStories();
+    for (const st of all) st.excluded = true;
+    assert.equal(ctx.scheduler.tick().made, null);
+    assert.equal(today().blitz.state, 'due');
+    assert.match(today().blitz.reason, /nothing new/);
+    for (const st of all) st.excluded = false;
+
+    const made = ctx.scheduler.tick();
+    assert.equal(today().blitz.state, 'working');
+    await ctx.producer.idle(); await ctx.producer.idle();
+    const t = today().blitz;
+    assert.deepEqual([t.state, t.episodeId, t.writer, t.costUsd, t.title], ['made', made.made, 'template', 0, 'Morning Blitz']);
+
+    // A paid script's cost shows against the show that spent it.
+    const file = `episodes/${made.made}/episode.json`;
+    const ep = ctx.store.readJSON(file);
+    ep.writer = { kind: 'claude', costUsd: 0.11, at: new Date().toISOString(), history: [{ kind: 'claude', costUsd: 0.04, at: new Date().toISOString() }] };
+    ctx.store.writeJSON(file, ep);
+    assert.deepEqual([today().blitz.writer, today().blitz.costUsd], ['claude', 0.15]);
+
+    // A script left needing fixes is the commissioner's to sort out.
+    ep.status = 'needs_fixes';
+    ctx.store.writeJSON(file, ep);
+    assert.equal(today().blitz.state, 'stuck');
+    assert.match(today().blitz.reason, /needs fixes/);
+
+    // Past its slot with no show: missed, and why.
+    clock.t = at('13:05');
+    assert.equal(today().statlab.state, 'missed');
+    assert.match(today().statlab.reason, /not running/);
+    ctx.settings.update({ channelAuto: false });
+    assert.match(today().statlab.reason, /switched off/);
+    assert.equal(today().afterdark.state, 'waiting');
+  } finally { await s.close(); }
+});
