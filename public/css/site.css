@@ -162,3 +162,9 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
 @media (max-width: 640px) { .control .line { grid-template-columns: 1fr 1fr; } .control .line textarea { grid-column: 1 / -1; } }
 /* [hidden] must win over display rules above */
 .power[hidden], .captions[hidden], .control [hidden] { display: none; }
+
+/* The channel panel's spend meter (control room dashboard). */
+.control .meter { display: inline-block; vertical-align: middle; width: 120px; height: 8px; margin: 0 10px; background: var(--deep); border: 1px solid var(--lilac); border-radius: 3px; overflow: hidden; }
+.control .meter span { display: block; height: 100%; background: var(--teal); }
+.control .meter span.full { background: var(--red); }
+.control details summary { cursor: pointer; margin: 10px 0 6px; color: var(--muted); }

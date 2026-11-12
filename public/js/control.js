@@ -96,7 +96,7 @@ function removeSample() {
 }
 
 async function viewDashboard() {
-  const s = await api('/api/admin/status');
+  const [s, guide] = await Promise.all([api('/api/admin/status'), api('/api/channel').catch(() => null)]);
   state.status = s;
   const lg = s.league;
   const empty = !lg.teams;
@@ -145,7 +145,47 @@ async function viewDashboard() {
   const waiting = s.desk && h('section', { class: 'panel' }, h('h2', {}, `${s.desk.label} is waiting for your approval`),
     h('p', {}, 'Set the Game of the Week and the Players of the Week, add any headlines the export missed, then approve to have the show written.'),
     h('button', { class: 'btn primary', type: 'button', on: { click: () => { state.tab = 'desk'; render(); } } }, 'Open the week desk'));
-  return h('div', {}, waiting, cards, setup, jobs, batches);
+  return h('div', {}, waiting, cards, channelPanel(s, guide), setup, jobs, batches);
+}
+
+// The 24/7 channel at a glance: what is on, what today's script writing has
+// cost against the cap, and where each daily show stands.
+const money = n => `$${(Number(n) || 0).toFixed(2)}`;
+const clockAt = ms => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+const SHOW_STATE = {
+  made: ['on air', 'ok'], working: ['being made', 'warn'], due: ['due', 'warn'], waiting: ['later today', ''],
+  stuck: ['needs you', 'bad'], failed: ['failed', 'bad'], missed: ['not made', ''],
+};
+function channelPanel(s, guide) {
+  const c = s.channel;
+  if (!c) return null;
+  const on = guide?.onNow;
+  const used = c.cap > 0 ? Math.min(100, Math.round((100 * c.spent) / c.cap)) : (c.spent > 0 ? 100 : 0);
+  const paid = c.writer !== 'template';
+  const showRow = x => {
+    const t = x.today || { state: 'waiting' };
+    const [label, kind] = SHOW_STATE[t.state] || [t.state, ''];
+    const detail = t.state === 'made' ? `${t.writer === 'template' ? 'template writer, free' : `${t.writer || 'writer'}, ${money(t.costUsd)}`}`
+      : t.state === 'waiting' && t.startsAt ? `will be made around ${clockAt(t.startsAt)} if there is news`
+        : t.reason || '';
+    return h('tr', {},
+      h('th', {}, x.title),
+      h('td', {}, x.slot ? clockAt(x.slot) : '—'),
+      h('td', {}, pill(label, kind)),
+      h('td', {}, t.episodeId ? h('a', { href: '#', on: { click: e => { e.preventDefault(); openEpisode(t.episodeId); } } }, detail || t.episodeId) : h('span', { class: 'muted' }, detail)));
+  };
+  return h('section', { class: 'panel' }, h('h2', {}, 'The 24/7 channel'),
+    h('table', {}, h('tbody', {},
+      row('On air now', on ? `${on.kind === 'ident' || on.kind === 'standby' ? `${on.showTitle} (between programmes)` : `${on.showTitle}: ${on.title}`}${guide.live?.length ? ` — cut to a live game: ${guide.live[0].title}` : ''}` : 'could not read the schedule'),
+      row('Game streams', s.streams?.fetchedAt ? `${s.streams.live} live, ${s.streams.replays} replay${s.streams.replays === 1 ? '' : 's'} (checked ${when(s.streams.fetchedAt)})${s.streams.error ? ` — last check failed: ${s.streams.error}` : ''}` : (s.streams?.error || (s.streams?.url ? 'not checked yet' : 'no Hub feed URL set'))),
+      row('Daily shows', c.held ? 'held: the league is in the preseason' : c.auto ? `on, written by ${paid ? c.writer : 'the template writer (free)'}` : 'off (Settings → The 24/7 channel)'),
+      row('Script spend today', h('span', {}, `${money(c.spent)} of ${money(c.cap)}`, h('span', { class: 'meter', title: `${used}% of today's cap` }, h('span', { style: `width:${used}%`, class: used >= 100 ? 'full' : '' })), h('span', { class: 'muted' }, c.left > 0 ? `${money(c.left)} left` : 'cap reached: daily shows stop until tomorrow'))))),
+    h('p', { class: 'muted' }, 'Spend counts every script written today (the weekly show and bulletins too). A daily show is skipped when its estimate would go over the cap.'),
+    h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Daily show'), h('th', {}, 'First airs'), h('th', {}, 'Today'), h('th', {}, ''))),
+      h('tbody', {}, c.shows.map(showRow))),
+    c.log?.length ? h('details', {}, h('summary', {}, 'What the scheduler decided lately'),
+      h('table', {}, h('tbody', {}, c.log.map(l => h('tr', {},
+        h('td', { class: 'muted' }, when(l.at)), h('td', {}, l.key), h('td', {}, l.outcome), h('td', { class: 'muted' }, l.reason || (l.episodeId ? `${l.episodeId} (${l.writer}, ${l.stories} stories)` : ''))))))) : null);
 }
 
 const row = (k, v) => h('tr', {}, h('th', {}, k), h('td', {}, v));
