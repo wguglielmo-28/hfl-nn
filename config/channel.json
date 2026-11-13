@@ -10,7 +10,7 @@
       "order": "latest",
       "keepDays": 2,
       "produce": {
-        "kinds": ["cold_open", "scoreboard", "game_recaps", "top_performers", "standings", "transactions", "slate", "hot_takes", "debate", "signoff"],
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "top_performers", "standings", "transactions", "slate", "hot_takes", "debate", "chat_check", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
@@ -49,7 +49,7 @@
       "order": "latest",
       "keepDays": 2,
       "produce": {
-        "kinds": ["cold_open", "scoreboard", "game_recaps", "standings", "injuries", "transactions", "slate", "signoff"],
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "standings", "injuries", "transactions", "slate", "chat_check", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
@@ -65,7 +65,7 @@
       "order": "latest",
       "keepDays": 4,
       "produce": {
-        "kinds": ["cold_open", "best_lines", "season_leaders", "power_rankings", "playoff_race", "debate", "signoff"],
+        "kinds": ["cold_open", "best_lines", "season_leaders", "power_rankings", "playoff_race", "debate", "chat_check", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
@@ -81,7 +81,7 @@
       "order": "latest",
       "keepDays": 4,
       "produce": {
-        "kinds": ["cold_open", "conspiracy_corner", "game_recaps", "hot_takes", "debate", "slate", "signoff"],
+        "kinds": ["cold_open", "conspiracy_corner", "game_recaps", "hot_takes", "debate", "slate", "chat_check", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
@@ -103,7 +103,7 @@
       "types": [],
       "keepDays": 3,
       "produce": {
-        "kinds": ["cold_open", "best_lines", "game_recaps", "hot_takes", "signoff"],
+        "kinds": ["cold_open", "best_lines", "game_recaps", "hot_takes", "chat_check", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
