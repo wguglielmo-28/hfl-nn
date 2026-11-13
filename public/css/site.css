@@ -168,3 +168,42 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
 .control .meter span { display: block; height: 100%; background: var(--teal); }
 .control .meter span.full { background: var(--red); }
 .control details summary { cursor: pointer; margin: 10px 0 6px; color: var(--muted); }
+
+/* ── The Hub's chat, read-only (public/js/studio/audience.js) ── */
+.aud-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+.aud-overlay[hidden] { display: none; }
+.aud-floater { position: absolute; bottom: 14%; font-size: clamp(1.2rem, 3vw, 2rem); animation: aud-rise 2.6s ease-out forwards; text-shadow: 0 2px 6px #0008; }
+@keyframes aud-rise {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  12% { opacity: 1; transform: translate(0, -10%) scale(1); }
+  100% { transform: translate(var(--drift), -260%) scale(1.15); opacity: 0; }
+}
+.aud-meter { position: absolute; right: 8px; top: 22%; width: 10px; height: 42%; border-radius: 5px; background: #0009; border: 1px solid #ffffff33; overflow: hidden; }
+.aud-meter-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(0deg, var(--red), var(--gold)); transition: height 0.6s ease; }
+.aud-meter-label { display: none; }
+.aud-poll-card { position: absolute; top: 14%; right: 26px; width: min(44%, 260px); display: grid; gap: 3px; padding: 6px 8px; border-radius: 6px; background: rgba(13, 8, 32, 0.88); border: 1px solid var(--gold); font-size: clamp(0.6rem, 1.3vw, 0.78rem); }
+.aud-poll-card[hidden] { display: none; }
+.aud-poll-q { font-family: var(--pixel); color: var(--gold); }
+.aud-pc-row, .aud-pb-row { position: relative; display: flex; justify-content: space-between; gap: 6px; padding: 2px 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.aud-pc-bar, .aud-pb-bar { position: absolute; inset: 0 auto 0 0; background: rgba(255, 46, 77, 0.45); transition: width 0.6s ease; }
+.aud-pc-o, .aud-pc-n, .aud-pb-o, .aud-pb-n { position: relative; }
+.audience { margin-top: 14px; display: grid; gap: 10px; }
+.audience[hidden] { display: none; }
+.aud-says { display: flex; gap: 10px; align-items: baseline; min-width: 0; padding: 8px 12px; border: 1px solid var(--violet); border-radius: 8px; background: rgba(22, 13, 51, 0.85); }
+.aud-says-label { flex-shrink: 0; font-family: var(--pixel); font-size: 0.65rem; color: var(--gold); }
+.aud-says-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.aud-crowd { margin: 0; font-size: 0.85rem; }
+.aud-poll { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--gold); border-radius: 8px; background: rgba(22, 13, 51, 0.85); }
+.aud-poll[hidden] { display: none; }
+.aud-poll-head { margin: 0 0 4px; }
+.aud-tag { font-family: var(--pixel); font-size: 0.65rem; background: var(--red); color: #fff; padding: 1px 6px; border-radius: 3px; }
+.aud-pb-row { padding: 8px 10px; }
+.aud-vote, .aud-join { font-family: var(--pixel); font-size: 0.75rem; color: var(--teal); }
+.aud-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.aud-head h2 { margin: 0; font-family: var(--pixel); font-size: 1rem; color: var(--gold); }
+.aud-messages { list-style: none; margin: 0; padding: 8px 12px; height: min(380px, 50vh); overflow-y: auto; border: 1px solid var(--violet); border-radius: 8px; background: rgba(22, 13, 51, 0.85); display: grid; align-content: start; gap: 6px; }
+.aud-messages li { line-height: 1.4; overflow-wrap: anywhere; }
+.aud-who { font-weight: 700; color: var(--gold); margin-right: 6px; }
+.aud-when { font-size: 0.7rem; color: var(--muted); margin-right: 6px; }
+.aud-note { margin: 0; font-size: 0.8rem; }
+@media (prefers-reduced-motion: reduce) { .aud-meter-fill, .aud-pc-bar, .aud-pb-bar { transition: none; } }

@@ -21,6 +21,7 @@ const { createMaddenIngest, detectPayload } = require('./lib/ingest/madden');
 const { createHubSource } = require('./lib/ingest/hub');
 const { createChronicleSource } = require('./lib/ingest/chronicle');
 const { createStreamsSource, streamsUrlFrom } = require('./lib/ingest/streams');
+const { createAudience, hubOriginFrom } = require('./lib/ingest/audience');
 const { createTTS, voiceLabel, KOKORO_VOICES, isElevenVoice, ELEVEN_PREFIX } = require('./lib/tts');
 const { createElevenLabsProvider, VOICE_ID: ELEVEN_VOICE_ID } = require('./lib/tts/elevenlabs');
 const { encodeWav } = require('./lib/audio/wav');
@@ -94,6 +95,8 @@ function createApp(opts = {}) {
   // The URL sits beside the Hub feed unless HUB_STREAMS_URL says otherwise.
   const streamsUrl = () => streamsUrlFrom(settings.get().hubFeedUrl, env.HUB_STREAMS_URL);
   const streams = createStreamsSource({ store, getUrl: streamsUrl, fetchImpl: opts.fetchImpl, logger });
+  // The Hub's channel chat, shown read-only on the channel page (lib/ingest/audience.js).
+  const audience = createAudience({ getHubOrigin: () => hubOriginFrom(settings.get().hubFeedUrl, env.HUB_URL), fetchImpl: opts.fetchImpl, logger });
   const publicUrl = () => settings.get().publicUrl || (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : '');
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
@@ -225,6 +228,11 @@ function createApp(opts = {}) {
     return req.query.at !== undefined && Number.isFinite(at) && Math.abs(at - Date.now()) < 400 * 86400000 ? at : undefined;
   };
   app.get('/api/channel', (req, res) => res.set('Cache-Control', 'no-store').json(channel.guide(atOf(req))));
+  // The Hub's chat, reactions and poll, read-only. ?m / ?r: the last ids this viewer has.
+  app.get('/api/audience', async (req, res) => {
+    const n = v => (v === undefined ? null : Number.isInteger(Number(v)) && Number(v) >= 0 ? Number(v) : null);
+    res.set('Cache-Control', 'no-store').json(await audience.view({ m: n(req.query.m), r: n(req.query.r) }));
+  });
   app.get('/api/channel/listings', (req, res) => res.set('Cache-Control', 'no-store').json(channel.listings(atOf(req))));
 
   const sendMedia = (req, res, id) => {
@@ -292,6 +300,7 @@ function createApp(opts = {}) {
       chronicle: chronicle.status(),
       hub: hub.status(),
       streams: { ...streams.status(), url: streamsUrl() },
+      audience: audience.status(),
       channel: scheduler.status(),
       desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
       writer: {
