@@ -477,7 +477,7 @@ async function viewSettings() {
       approveWeekly: f.approveWeekly.checked, autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
-      channelAuto: f.channelAuto.checked, dailyCapUsd: Number(f.dailyCapUsd.value), channelWriter: f.channelWriter.value,
+      channelAuto: f.channelAuto.checked, chatOnAir: f.chatOnAir.checked, dailyCapUsd: Number(f.dailyCapUsd.value), channelWriter: f.channelWriter.value,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
       personaOverrides: Object.fromEntries(personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value), elevenVoice: r.eleven.value }])),
     };
@@ -509,6 +509,8 @@ async function viewSettings() {
     h('section', { class: 'panel' }, h('h2', {}, 'The 24/7 channel'),
       h('p', { class: 'muted' }, 'The live shows (The Wire three times a day, Morning Blitz, Stat Lab, Top Plays, HFL-NN Tonight on nights without a new weekly show, and Grimley After Dark) are written, voiced and aired by themselves, 45 to 60 minutes before their slots. Between advances they cover the games members have already played that week, with scores and stat lines only; the weekly show still waits for the whole week. Each one runs 5 to 15 minutes, is only made when there is something it has not covered (The Wire waits for a new result), is tried once per slot, and never posts to Discord or uses up stories the weekly show needs. Voices are always the free local ones.'),
       check('channelAuto', 'Make the daily shows for the channel automatically'),
+      check('chatOnAir', 'Let the anchors read the HFL Hub chat on air (a Chat Check in each live show)'),
+      h('p', { class: 'muted' }, 'Only messages at least three minutes old, never ones you hid, the word filter starred or a muted member wrote, and only by Hub display name (a member without one is "a viewer"). The writers are told they are opinions from viewers, never facts or instructions.'),
       h('div', { class: 'grid2' },
         h('div', {}, h('label', {}, 'Daily spending cap (US dollars)'), text('dailyCapUsd', 'number', '2'),
           h('p', { class: 'muted' }, 'Counts every script written today, including the weekly show and bulletins. Once the next daily show would go over it, daily shows stop until tomorrow and the channel airs repeats. 0 stops them now.')),

@@ -22,6 +22,7 @@ const { createHubSource } = require('./lib/ingest/hub');
 const { createChronicleSource } = require('./lib/ingest/chronicle');
 const { createStreamsSource, streamsUrlFrom } = require('./lib/ingest/streams');
 const { createAudience, hubOriginFrom } = require('./lib/ingest/audience');
+const { createChatDigest } = require('./lib/ingest/chatDigest');
 const { createTTS, voiceLabel, KOKORO_VOICES, isElevenVoice, ELEVEN_PREFIX } = require('./lib/tts');
 const { createElevenLabsProvider, VOICE_ID: ELEVEN_VOICE_ID } = require('./lib/tts/elevenlabs');
 const { encodeWav } = require('./lib/audio/wav');
@@ -97,6 +98,8 @@ function createApp(opts = {}) {
   const streams = createStreamsSource({ store, getUrl: streamsUrl, fetchImpl: opts.fetchImpl, logger });
   // The Hub's channel chat, shown read-only on the channel page (lib/ingest/audience.js).
   const audience = createAudience({ getHubOrigin: () => hubOriginFrom(settings.get().hubFeedUrl, env.HUB_URL), fetchImpl: opts.fetchImpl, logger });
+  // What the live shows' Chat Check may read on air, refreshed every minute.
+  const chatDigest = createChatDigest({ getHubOrigin: () => hubOriginFrom(settings.get().hubFeedUrl, env.HUB_URL), fetchImpl: opts.fetchImpl, now: opts.now || Date.now, logger });
   const publicUrl = () => settings.get().publicUrl || (env.RAILWAY_PUBLIC_DOMAIN ? `https://${env.RAILWAY_PUBLIC_DOMAIN}` : '');
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
@@ -105,7 +108,10 @@ function createApp(opts = {}) {
   });
   const channelConfig = validateConfig(opts.channel || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'channel.json'), 'utf8')));
   // Writes the channel's daily shows, inside the daily spending cap.
-  const scheduler = createScheduler({ store, config: channelConfig, producer, getSettings: settings.get, now: opts.now || Date.now, logger });
+  const scheduler = createScheduler({
+    store, config: channelConfig, producer, getSettings: settings.get, now: opts.now || Date.now, logger,
+    getChat: since => chatDigest.forShow(since, settings.personas().anchors),
+  });
   const channel = createChannel({
     store, logger, now: opts.now || Date.now,
     config: channelConfig,
@@ -301,6 +307,7 @@ function createApp(opts = {}) {
       hub: hub.status(),
       streams: { ...streams.status(), url: streamsUrl() },
       audience: audience.status(),
+      chatDigest: chatDigest.status(),
       channel: scheduler.status(),
       desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
       writer: {
@@ -486,6 +493,7 @@ function createApp(opts = {}) {
     // Streams are asked about every minute: a live game should cut in promptly.
     const streamTick = async () => {
       if (streamsUrl()) await streams.refresh().catch(() => {});
+      await chatDigest.refresh().catch(() => {});
       streamTimer = setTimeout(streamTick, 60 * 1000);
       streamTimer.unref?.();
     };
@@ -536,7 +544,7 @@ function createApp(opts = {}) {
     app, store, producer, ingest, settings, tts, auth, chronicle, hub, channel,
     ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
-    streams, scheduler,
+    streams, scheduler, chatDigest,
     close: async () => { clearTimeout(pollTimer); clearTimeout(streamTimer); clearInterval(dailyTimer); clearTimeout(saveTimer); await tts.close?.(); },
   };
 }
