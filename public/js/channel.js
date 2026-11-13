@@ -7,12 +7,15 @@ import { Player } from './studio/player.js';
 import { drawAnchor, ANCHOR_W, ANCHOR_H } from './studio/anchors.js';
 import { Tuner, tunerOptions, clockTime, nowText } from './studio/channelPlayer.js';
 import { Footage } from './studio/footage.js';
+import { Audience } from './studio/audience.js';
 
 const $ = id => document.getElementById(id);
 const player = new Player($('screen'));
 const footage = new Footage(document.querySelector('.tv'));
 const tuner = new Tuner(player, { ...tunerOptions(), footage });
-window.hflnn = { player, tuner };
+// The Hub's chat, reactions and poll, read-only, under and over the live channel.
+const audience = new Audience(document.querySelector('.tv'), document.querySelector('.tv-wrap'));
+window.hflnn = { player, tuner, audience };
 
 const state = { live: false, episodes: [], current: null, preview: false, cc: readPref('hflnn.cc', 'false') === 'true' };
 
@@ -93,6 +96,7 @@ async function goLive(offAir) {
   $('power').querySelector('.power-label').textContent = 'Tune in';
   $('power').hidden = false;
   setSoundButton();
+  audience.start();
   await tuner.start(offAir);
 }
 
@@ -100,6 +104,7 @@ function leaveLive() {
   if (!state.live) return;
   state.live = false;
   tuner.stop();
+  audience.stop();
   document.body.classList.remove('live');
   $('back-live').hidden = false;
   $('now-label').textContent = 'NOW';
