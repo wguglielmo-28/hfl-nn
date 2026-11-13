@@ -18,7 +18,8 @@ const quiet = { log() {}, warn() {}, error() {} };
 const DAY = nextDay(dayKey(Date.now(), TZ));
 const at = (hhmm, day = DAY) => wallToMs(day, hhmm, TZ);
 
-async function boot(settings = {}) {
+// claudeOn: whether the stand-in Claude counts as configured (its calls always fail).
+async function boot(settings = {}, { claudeOn = false } = {}) {
   const dataDir = tmpDir();
   createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false, autoBreaking: false, ...settings });
   const clock = { t: at('05:00') };
@@ -26,7 +27,7 @@ async function boot(settings = {}) {
   const ctx = createApp({
     dataDir, env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', NODE_ENV: 'test' },
     tts: createTTS({ provider: 'silent' }), logger: quiet, debounceMs: 60 * 60 * 1000, now: () => clock.t,
-    claude: { available: () => false, model: 'none', write: async () => { claudeCalls++; throw new Error('no'); } },
+    claude: { available: () => claudeOn, model: 'none', write: async () => { claudeCalls++; throw new Error('no'); } },
   });
   await ctx.loadSampleLeague();
   await ctx.producer.idle();
@@ -43,7 +44,8 @@ test('daily shows: nothing is made until the commissioner switches them on', asy
     assert.equal(s.ctx.producer.list().length, 0);
     const st = s.ctx.scheduler.status();
     assert.deepEqual([st.auto, st.spent, st.cap, st.left], [false, 0, 2, 2]);
-    assert.deepEqual(st.shows.map(x => x.key), ['blitz', 'statlab', 'afterdark']);
+    assert.deepEqual(st.shows.map(x => x.key), ['tonight', 'wire', 'wire', 'wire', 'blitz', 'statlab', 'afterdark', 'plays']);
+    assert.deepEqual(st.shows.filter(x => x.key === 'wire').map(x => x.edition), [`${DAY}:wire@09:00`, `${DAY}:wire@17:00`, `${DAY}:wire@21:30`]);
   } finally { await s.close(); }
 });
 
@@ -97,7 +99,7 @@ test('daily shows: Morning Blitz is made once, in the run-up to its slot, and ai
     } finally { server.close(); }
 
     const st = ctx.scheduler.status();
-    assert.equal(st.shows[0].made.episodeId, ep.id);
+    assert.equal(st.shows.find(x => x.key === 'blitz').made.episodeId, ep.id);
     assert.equal(st.log[0].outcome, 'started');
     assert.equal(st.spent, 0, 'the template writer costs nothing');
     assert.equal(ctx.producer.list().length, 2);
@@ -125,17 +127,18 @@ test('daily shows: a show only goes out with news it has not covered', async () 
     assert.equal(skipped.outcome, 'skipped');
     assert.match(skipped.reason, /nothing new/);
     // Another show has its own record of what it covered.
-    assert.ok(ctx.scheduler.freshStories('afterdark', at('06:20'), 8).length >= 2);  } finally { await s.close(); }
+    assert.ok(ctx.scheduler.freshStories('afterdark', at('06:20'), 8).length >= 2);
+  } finally { await s.close(); }
 });
 
 test('daily shows: the daily cap stops a paid show before a single token is spent', async () => {
-  const s = await boot({ channelAuto: true, channelWriter: 'claude', dailyCapUsd: 0.2 });
+  const s = await boot({ channelAuto: true, channelWriter: 'claude', dailyCapUsd: 0.15 }, { claudeOn: true });
   try {
     const { ctx, clock } = s;
     // Today, so what is "spent" below falls inside the day being budgeted.
     clock.t = at('06:20', dayKey(Date.now(), TZ));
     assert.equal(ctx.scheduler.tick().made, null);
-    assert.match(ctx.scheduler.status().log[0].reason, /daily cap: \$0\.00 spent of \$0\.20, this show is about \$0\.25/);
+    assert.match(ctx.scheduler.status().log[0].reason, /daily cap: \$0\.00 spent of \$0\.15, this show is about \$0\.20/);
     assert.equal(s.claudeCalls(), 0);
     assert.equal(ctx.producer.list().length, 0);
 
@@ -181,16 +184,16 @@ test('daily shows: the control room can see where each show stands today', async
 
     clock.t = at('05:00');
     assert.equal(ctx.scheduler.status().writer, 'template');
-    assert.deepEqual(today().blitz, { state: 'waiting', reason: null, startsAt: at('06:15') });
+    assert.deepEqual(today().blitz, { state: 'waiting', reason: null, startsAt: at('06:00') });
 
     // In the run-up with nothing new to say: due, with the scheduler's reason.
     clock.t = at('06:20');
-    const all = ctx.producer.wireStories();
-    for (const st of all) st.excluded = true;
+    const realStories = ctx.producer.liveStories;
+    ctx.producer.liveStories = () => [];
     assert.equal(ctx.scheduler.tick().made, null);
     assert.equal(today().blitz.state, 'due');
     assert.match(today().blitz.reason, /nothing new/);
-    for (const st of all) st.excluded = false;
+    ctx.producer.liveStories = realStories;
 
     const made = ctx.scheduler.tick();
     assert.equal(today().blitz.state, 'working');

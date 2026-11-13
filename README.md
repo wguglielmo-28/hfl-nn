@@ -240,9 +240,15 @@ trade) you still grade by hand in **Show Memory**, and a re-grade there makes a 
 | Quality | Real banter, callbacks, arguments and jokes | Same prompts, schema and validator | Plain but accurate |
 | Cost | Sonnet 5.5: roughly $0.10–0.20 per weekly show and a cent or two per bulletin. Opus 5.5: about twice that (prompt cached either way) | GPT-6.1 Sol: same per-token price as Sonnet 5.5 | Free |
 
-**Settings → Script writer** picks who writes: `auto` (Claude if its key is set, else OpenAI,
-else the template), `claude`, `openai` or `template`. A writer picked without its key falls
-through the same way. Each episode's page shows which model wrote it and what it cost.
+**Settings → Script writer** picks who writes first: `auto` (Claude), `claude`, `openai` or
+`template`. If that writer has no key, runs out of credits, has its key refused, is rate-limited
+or down, the script goes to the other AI writer, then the template, so a show always gets
+written. A writer that failed for one of those reasons is skipped for a while (six hours for
+credits or a refused key, 15 minutes for a rate limit, 10 for an outage); the Dashboard says
+so and has **Try it again now** for after a top-up. `template` never moves up to a paid
+writer, and a writer picked by hand for one episode is used as is. Failed attempts that were
+billed still count toward the channel's daily cap. Each episode's page shows which model
+wrote it, what it cost, and any writer that failed first.
 
 **Settings → Claude model** picks the model:
 - **Claude Sonnet 5.5** (the default): $2 / $10 per million input/output tokens. Full shows run at
