@@ -18,7 +18,8 @@ const quiet = { log() {}, warn() {}, error() {} };
 const DAY = nextDay(dayKey(Date.now(), TZ));
 const at = (hhmm, day = DAY) => wallToMs(day, hhmm, TZ);
 
-async function boot(settings = {}) {
+// claudeOn: whether the stand-in Claude counts as configured (its calls always fail).
+async function boot(settings = {}, { claudeOn = false } = {}) {
   const dataDir = tmpDir();
   createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false, autoBreaking: false, ...settings });
   const clock = { t: at('05:00') };
@@ -26,7 +27,7 @@ async function boot(settings = {}) {
   const ctx = createApp({
     dataDir, env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', NODE_ENV: 'test' },
     tts: createTTS({ provider: 'silent' }), logger: quiet, debounceMs: 60 * 60 * 1000, now: () => clock.t,
-    claude: { available: () => false, model: 'none', write: async () => { claudeCalls++; throw new Error('no'); } },
+    claude: { available: () => claudeOn, model: 'none', write: async () => { claudeCalls++; throw new Error('no'); } },
   });
   await ctx.loadSampleLeague();
   await ctx.producer.idle();
@@ -125,11 +126,12 @@ test('daily shows: a show only goes out with news it has not covered', async () 
     assert.equal(skipped.outcome, 'skipped');
     assert.match(skipped.reason, /nothing new/);
     // Another show has its own record of what it covered.
-    assert.ok(ctx.scheduler.freshStories('afterdark', at('06:20'), 8).length >= 2);  } finally { await s.close(); }
+    assert.ok(ctx.scheduler.freshStories('afterdark', at('06:20'), 8).length >= 2);
+  } finally { await s.close(); }
 });
 
 test('daily shows: the daily cap stops a paid show before a single token is spent', async () => {
-  const s = await boot({ channelAuto: true, channelWriter: 'claude', dailyCapUsd: 0.2 });
+  const s = await boot({ channelAuto: true, channelWriter: 'claude', dailyCapUsd: 0.2 }, { claudeOn: true });
   try {
     const { ctx, clock } = s;
     // Today, so what is "spent" below falls inside the day being budgeted.

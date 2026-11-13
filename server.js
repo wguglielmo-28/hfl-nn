@@ -296,6 +296,7 @@ function createApp(opts = {}) {
       desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
       writer: {
         claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
+        chain: producer.writerChain(), benched: producer.benchedWriters(),
         model: settings.get().claudeModel || claude.model, openaiModel: settings.get().openaiModel || openai.model,
       },
       tts: { ...tts.status(), ffmpeg: !!findFfmpeg(), voiceEngine: settings.get().voiceEngine },
@@ -354,6 +355,8 @@ function createApp(opts = {}) {
   admin.put('/desk', wrap(req => { producer.desk.update(req.body || {}); return producer.deskView(); }));
   admin.post('/desk/headlines', wrap(req => { producer.desk.addHeadline(req.body || {}); return producer.deskView(); }));
   admin.delete('/desk/headlines/:id', wrap(req => { producer.desk.removeHeadline(req.params.id); return producer.deskView(); }));
+  // A benched writer (out of credits, refused key…) is tried again on the next script.
+  admin.post('/writers/:kind/retry', wrap(req => ({ ok: producer.unbenchWriter(req.params.kind) })));
   admin.post('/desk/approve', wrap(req => ({ episode: producer.approveDesk({ voice: !!req.body?.voice }) })));
   admin.post('/desk/dismiss', wrap(() => { producer.desk.dismiss(); return producer.deskView(); }));
   admin.get('/episodes/:id', wrap(req => {

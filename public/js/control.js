@@ -119,7 +119,7 @@ async function viewDashboard() {
         h('button', { class: 'btn danger', type: 'button', on: { click: removeSample } }, 'Remove sample league'))),
     h('section', { class: 'panel' }, h('h2', {}, 'Newsroom'),
       h('table', {}, h('tbody', {},
-        row('Script writer', { claude: `Claude (${s.writer.model})`, openai: `OpenAI (${s.writer.openaiModel})` }[s.writer.active] || 'Template writer'),
+        row('Script writer', writerLine(s.writer)),
         row('Voices', `${s.tts.provider}${s.tts.status ? ` — ${s.tts.status}` : ''}${s.tts.error ? ` (${s.tts.error})` : ''}${s.tts.elevenlabs?.configured ? ` • ElevenLabs ${s.tts.voiceEngine === 'elevenlabs' ? 'on' : 'off'} (${s.tts.elevenlabs.model})${s.tts.elevenlabs.error ? ` — ${s.tts.elevenlabs.error}` : ''}` : ''}`),
         row('Audio', s.tts.ffmpeg ? 'MP3 (ffmpeg)' : 'WAV (no ffmpeg found)'),
         row('News wire', `${s.wire.unused} unused of ${s.wire.total} stories`),
@@ -165,7 +165,7 @@ function channelPanel(s, guide) {
   const showRow = x => {
     const t = x.today || { state: 'waiting' };
     const [label, kind] = SHOW_STATE[t.state] || [t.state, ''];
-    const detail = t.state === 'made' ? `${t.writer === 'template' ? 'template writer, free' : `${t.writer || 'writer'}, ${money(t.costUsd)}`}`
+    const detail = t.state === 'made' ? `${t.writer === 'template' ? 'template writer, free' : `${t.writer || 'writer'}, ${money(t.costUsd)}`}${t.fallbackFrom ? ` (${WRITER_NAME[t.fallbackFrom] || t.fallbackFrom} failed)` : ''}`
       : t.state === 'waiting' && t.startsAt ? `will be made around ${clockAt(t.startsAt)} if there is news`
         : t.reason || '';
     return h('tr', {},
@@ -178,7 +178,7 @@ function channelPanel(s, guide) {
     h('table', {}, h('tbody', {},
       row('On air now', on ? `${on.kind === 'ident' || on.kind === 'standby' ? `${on.showTitle} (between programmes)` : `${on.showTitle}: ${on.title}`}${guide.live?.length ? ` — cut to a live game: ${guide.live[0].title}` : ''}` : 'could not read the schedule'),
       row('Game streams', s.streams?.fetchedAt ? `${s.streams.live} live, ${s.streams.replays} replay${s.streams.replays === 1 ? '' : 's'} (checked ${when(s.streams.fetchedAt)})${s.streams.error ? ` — last check failed: ${s.streams.error}` : ''}` : (s.streams?.error || (s.streams?.url ? 'not checked yet' : 'no Hub feed URL set'))),
-      row('Daily shows', c.held ? 'held: the league is in the preseason' : c.auto ? `on, written by ${paid ? c.writer : 'the template writer (free)'}` : 'off (Settings → The 24/7 channel)'),
+      row('Daily shows', c.held ? 'held: the league is in the preseason' : c.auto ? `on, written by ${(c.writers || [c.writer]).map(k => WRITER_NAME[k] || k).join(', then ')}${paid ? '' : ' (free)'}` : 'off (Settings → The 24/7 channel)'),
       row('Script spend today', h('span', {}, `${money(c.spent)} of ${money(c.cap)}`, h('span', { class: 'meter', title: `${used}% of today's cap` }, h('span', { style: `width:${used}%`, class: used >= 100 ? 'full' : '' })), h('span', { class: 'muted' }, c.left > 0 ? `${money(c.left)} left` : 'cap reached: daily shows stop until tomorrow'))))),
     h('p', { class: 'muted' }, 'Spend counts every script written today (the weekly show and bulletins too). A daily show is skipped when its estimate would go over the cap.'),
     h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Daily show'), h('th', {}, 'First airs'), h('th', {}, 'Today'), h('th', {}, ''))),
@@ -189,6 +189,19 @@ function channelPanel(s, guide) {
 }
 
 const row = (k, v) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+
+// "OpenAI (gpt-6.1-sol), then Claude, then the template", plus any writer
+// that is benched (out of credits…) with a button to try it again now.
+const WRITER_NAME = { claude: 'Claude', openai: 'OpenAI', template: 'the template writer' };
+function writerLine(w) {
+  const named = k => (k === 'claude' ? `Claude (${w.model})` : k === 'openai' ? `OpenAI (${w.openaiModel})` : 'Template writer');
+  const chain = w.chain?.length ? w.chain : [w.active];
+  const text = [named(chain[0]), ...chain.slice(1).map(k => WRITER_NAME[k] || k)].join(', then ');
+  return h('div', {}, h('div', {}, text),
+    (w.benched || []).map(b => h('div', { class: 'notice' },
+      `${b.name} is ${b.says} — skipped until ${new Date(b.until).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. `,
+      h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api(`/api/admin/writers/${b.kind}/retry`, { method: 'POST', body: {} }), `${b.name} will be tried on the next script`).then(render) } }, 'Try it again now'))));
+}
 
 function jobsTable(list) {
   if (!list.length) return h('p', { class: 'muted' }, 'Nothing has run yet.');
@@ -479,7 +492,7 @@ async function viewSettings() {
         h('div', {}, h('label', {}, 'Season phase'), sel('phaseOverride', ['', ...st.phases], { '': 'Detect from exports' }),
           h('p', { class: 'muted' }, 'Offseason sub-phases (re-signing, free agency, draft) can only be set here.')),
         h('div', {}, h('label', {}, 'Script writer'), sel('writer', st.writers, { auto: 'Claude if configured, else OpenAI, else template', claude: 'Claude', openai: 'OpenAI (GPT)', template: 'Template only (free)' }),
-          h('p', { class: 'muted' }, 'Claude needs ANTHROPIC_API_KEY and OpenAI needs OPENAI_API_KEY on the server. A writer without its key falls back to the other one, then the template.')),
+          h('p', { class: 'muted' }, 'Claude needs ANTHROPIC_API_KEY and OpenAI needs OPENAI_API_KEY on the server. If the chosen writer has no key, runs out of credits or fails, the other one writes the script instead, then the free template writer. A writer that is out of credits is skipped for six hours (or until you press "Try it again now" on the Dashboard).')),
         h('div', {}, h('label', {}, 'Claude model'), sel('claudeModel', st.claudeModels.map(m => m.id), Object.fromEntries(st.claudeModels.map(m => [m.id, m.label]))),
           h('p', { class: 'muted' }, 'Sonnet 5.5 costs about half as much per script. If it declines a script, Opus 5.5 gets one try.')),
         h('div', {}, h('label', {}, 'OpenAI model'), sel('openaiModel', st.openaiModels.map(m => m.id), Object.fromEntries(st.openaiModels.map(m => [m.id, m.label]))),
@@ -500,7 +513,7 @@ async function viewSettings() {
         h('div', {}, h('label', {}, 'Daily spending cap (US dollars)'), text('dailyCapUsd', 'number', '2'),
           h('p', { class: 'muted' }, 'Counts every script written today, including the weekly show and bulletins. Once the next daily show would go over it, daily shows stop until tomorrow and the channel airs repeats. 0 stops them now.')),
         h('div', {}, h('label', {}, 'Writer for daily shows'), sel('channelWriter', st.writers, { auto: 'Same as the script writer above', claude: 'Claude', openai: 'OpenAI (GPT)', template: 'Template only (free)' }),
-          h('p', { class: 'muted' }, 'The template writer costs nothing and is a safe way to try this out.'))),
+          h('p', { class: 'muted' }, 'Falls back the same way: out of credits on one AI writer, the other takes over, then the template. The template writer costs nothing and is a safe way to try this out.'))),
       h('p', { class: 'muted' }, 'Held during the preseason, like every other automatic show.')),
     h('section', { class: 'panel' }, h('h2', {}, 'Sources & links'),
       h('label', {}, 'Public URL of this site (for Discord links)'), text('publicUrl', 'url', 'https://hfl-nn.up.railway.app'),
