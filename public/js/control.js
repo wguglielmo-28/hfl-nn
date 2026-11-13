@@ -169,7 +169,7 @@ function channelPanel(s, guide) {
       : t.state === 'waiting' && t.startsAt ? `will be made around ${clockAt(t.startsAt)} if there is news`
         : t.reason || '';
     return h('tr', {},
-      h('th', {}, x.title),
+      h('th', {}, x.title, x.minutes ? h('span', { class: 'muted' }, ` · about ${x.minutes} min`) : null),
       h('td', {}, x.slot ? clockAt(x.slot) : '—'),
       h('td', {}, pill(label, kind)),
       h('td', {}, t.episodeId ? h('a', { href: '#', on: { click: e => { e.preventDefault(); openEpisode(t.episodeId); } } }, detail || t.episodeId) : h('span', { class: 'muted' }, detail)));
@@ -181,7 +181,7 @@ function channelPanel(s, guide) {
       row('Daily shows', c.held ? 'held: the league is in the preseason' : c.auto ? `on, written by ${(c.writers || [c.writer]).map(k => WRITER_NAME[k] || k).join(', then ')}${paid ? '' : ' (free)'}` : 'off (Settings → The 24/7 channel)'),
       row('Script spend today', h('span', {}, `${money(c.spent)} of ${money(c.cap)}`, h('span', { class: 'meter', title: `${used}% of today's cap` }, h('span', { style: `width:${used}%`, class: used >= 100 ? 'full' : '' })), h('span', { class: 'muted' }, c.left > 0 ? `${money(c.left)} left` : 'cap reached: daily shows stop until tomorrow'))))),
     h('p', { class: 'muted' }, 'Spend counts every script written today (the weekly show and bulletins too). A daily show is skipped when its estimate would go over the cap.'),
-    h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Daily show'), h('th', {}, 'First airs'), h('th', {}, 'Today'), h('th', {}, ''))),
+    h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Live show'), h('th', {}, 'Airs'), h('th', {}, 'Today'), h('th', {}, ''))),
       h('tbody', {}, c.shows.map(showRow))),
     c.log?.length ? h('details', {}, h('summary', {}, 'What the scheduler decided lately'),
       h('table', {}, h('tbody', {}, c.log.map(l => h('tr', {},
@@ -507,7 +507,7 @@ async function viewSettings() {
       check('autoPublishBreaking', '…and publish bulletins without review'),
       check('fanPolls', 'Attach a fan poll on the night\'s best argument to each Discord post')),
     h('section', { class: 'panel' }, h('h2', {}, 'The 24/7 channel'),
-      h('p', { class: 'muted' }, 'Morning Blitz, Stat Lab and Grimley After Dark can be written, voiced and aired by themselves, about 45 minutes before their first slot each day. A show is only made when there is news it has not covered, it is tried once a day, and it never posts to Discord or uses up stories the weekly show needs. Voices are always the free local ones.'),
+      h('p', { class: 'muted' }, 'The live shows (The Wire three times a day, Morning Blitz, Stat Lab, Top Plays, HFL-NN Tonight on nights without a new weekly show, and Grimley After Dark) are written, voiced and aired by themselves, 45 to 60 minutes before their slots. Between advances they cover the games members have already played that week, with scores and stat lines only; the weekly show still waits for the whole week. Each one runs 5 to 15 minutes, is only made when there is something it has not covered (The Wire waits for a new result), is tried once per slot, and never posts to Discord or uses up stories the weekly show needs. Voices are always the free local ones.'),
       check('channelAuto', 'Make the daily shows for the channel automatically'),
       h('div', { class: 'grid2' },
         h('div', {}, h('label', {}, 'Daily spending cap (US dollars)'), text('dailyCapUsd', 'number', '2'),

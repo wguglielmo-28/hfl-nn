@@ -20,7 +20,7 @@ Published episodes, newest first. The Hub fetches it server-side (a Worker sends
 ```
 
 `type` is `weekly`, `breaking`, `premiere`, `kickoff`, `special` or `custom`. `show` is set
-(`blitz`, `statlab`, `afterdark`, …) on the short daily shows made for the 24/7 channel and
+(`wire`, `blitz`, `statlab`, `plays`, `tonight`, `afterdark`) on the live shows made for the 24/7 channel and
 `null` on everything else; the Hub lists those as dailies and never leads with them. `audioFile` can be
 `null` on very old episodes; fall back to `audio.mp3`. From these the Hub builds:
 

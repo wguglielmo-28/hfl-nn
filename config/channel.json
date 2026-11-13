@@ -5,15 +5,42 @@
   "shows": {
     "tonight": {
       "title": "HFL-NN Tonight",
-      "blurb": "The flagship show: the week's games, the Game of the Week and the desk's picks.",
+      "blurb": "The flagship: the weekly show after each advance, and a nightly edition on the nights in between.",
       "types": ["weekly", "premiere", "kickoff", "special", "custom"],
-      "order": "latest"
+      "order": "latest",
+      "keepDays": 2,
+      "produce": {
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "top_performers", "standings", "transactions", "slate", "hot_takes", "debate", "signoff"],
+        "leadMinutes": 60,
+        "minFresh": 1,
+        "maxStories": 12,
+        "slots": ["20:00"],
+        "minutes": 15,
+        "maxRecaps": 6,
+        "estUsd": 0.25,
+        "skipIfNew": {
+          "types": ["weekly", "premiere", "kickoff"],
+          "hours": 20
+        }
+      }
     },
     "wire": {
       "title": "The Wire",
-      "blurb": "Breaking bulletins from around the league.",
+      "blurb": "Results as they come in, between the advances, plus breaking news.",
       "types": ["breaking"],
-      "order": "latest"
+      "order": "latest",
+      "produce": {
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "transactions", "injuries", "signoff"],
+        "leadMinutes": 45,
+        "minFresh": 1,
+        "maxStories": 12,
+        "slots": ["09:00", "17:00", "21:30"],
+        "needs": ["game"],
+        "minutes": 5,
+        "maxRecaps": 3,
+        "estUsd": 0.08
+      },
+      "keepDays": 1
     },
     "blitz": {
       "title": "Morning Blitz",
@@ -21,7 +48,15 @@
       "types": [],
       "order": "latest",
       "keepDays": 2,
-      "produce": { "kinds": ["cold_open", "standings", "top_performers", "transactions", "injuries", "preview", "signoff"], "leadMinutes": 45, "minFresh": 2, "maxStories": 8, "estUsd": 0.25 }
+      "produce": {
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "standings", "injuries", "transactions", "slate", "signoff"],
+        "leadMinutes": 60,
+        "minFresh": 1,
+        "maxStories": 12,
+        "minutes": 12,
+        "maxRecaps": 4,
+        "estUsd": 0.2
+      }
     },
     "statlab": {
       "title": "Stat Lab",
@@ -29,7 +64,15 @@
       "types": [],
       "order": "latest",
       "keepDays": 4,
-      "produce": { "kinds": ["cold_open", "top_performers", "power_rankings", "playoff_race", "signoff"], "leadMinutes": 45, "minFresh": 2, "maxStories": 8, "estUsd": 0.25 }
+      "produce": {
+        "kinds": ["cold_open", "best_lines", "season_leaders", "power_rankings", "playoff_race", "debate", "signoff"],
+        "leadMinutes": 60,
+        "minFresh": 1,
+        "maxStories": 12,
+        "minutes": 12,
+        "maxRecaps": 0,
+        "estUsd": 0.2
+      }
     },
     "afterdark": {
       "title": "Grimley After Dark",
@@ -37,7 +80,15 @@
       "types": [],
       "order": "latest",
       "keepDays": 4,
-      "produce": { "kinds": ["cold_open", "conspiracy_corner", "hot_takes", "debate", "signoff"], "leadMinutes": 45, "minFresh": 2, "maxStories": 8, "estUsd": 0.25 }
+      "produce": {
+        "kinds": ["cold_open", "conspiracy_corner", "game_recaps", "hot_takes", "debate", "slate", "signoff"],
+        "leadMinutes": 60,
+        "minFresh": 1,
+        "maxStories": 12,
+        "minutes": 12,
+        "maxRecaps": 2,
+        "estUsd": 0.2
+      }
     },
     "rewind": {
       "title": "HFL Rewind",
@@ -47,9 +98,20 @@
     },
     "plays": {
       "title": "Top Plays",
-      "blurb": "The most-watched clips from the last two weeks of league games.",
+      "blurb": "The best clips from members' streams, then the desk counts down the best stat lines from the games played.",
       "kind": "clips",
-      "types": []
+      "types": [],
+      "keepDays": 3,
+      "produce": {
+        "kinds": ["cold_open", "best_lines", "game_recaps", "hot_takes", "signoff"],
+        "leadMinutes": 60,
+        "minFresh": 1,
+        "maxStories": 12,
+        "slots": ["18:00"],
+        "minutes": 8,
+        "maxRecaps": 2,
+        "estUsd": 0.15
+      }
     },
     "vault": {
       "title": "The Vault",
