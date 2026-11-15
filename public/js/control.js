@@ -604,6 +604,27 @@ async function viewDesk() {
       x.details ? h('div', { class: 'muted' }, x.details) : null)))
     : h('p', { class: 'muted' }, 'No extra headlines yet.');
 
+  // Takes and requests members sent through the HFL Hub, already approved
+  // there. Adding one makes it a headline like any other; removing that
+  // headline takes it back out.
+  const addFromMember = (m, kind) => act(async () => {
+    await save();
+    const credit = `${m.name}${m.team ? ` (${m.team})` : ''}`;
+    return api('/api/admin/desk/headlines', { method: 'POST', body: kind === 'take'
+      ? { headline: `Fan take from ${credit}`, details: `${credit} sent this take to the desk, to be read as their opinion and credited to them: "${m.text}"`, category: 'FAN TAKE', teams: m.team, fromMember: m.id }
+      : { headline: `Viewer request from ${credit}`, details: `${credit} asked the show to cover this: "${m.text}"`, category: 'VIEWER REQUEST', teams: m.team, fromMember: m.id } });
+  }, 'Added to the desk').then(reload);
+  const memberList = (list, kind, none) => (list.length
+    ? h('ul', {}, list.map(m => h('li', {},
+      h('strong', {}, `${m.name}${m.team ? ` (${m.team})` : ''}: `), m.text, ' ',
+      m.used ? h('span', { class: 'muted' }, 'On the desk') : h('button', { class: 'btn', type: 'button', on: { click: () => addFromMember(m, kind) } }, 'Add to the desk'))))
+    : h('p', { class: 'muted' }, none));
+  const fm = d.fromMembers || { takes: [], requests: [] };
+  const fromMembers = h('section', { class: 'panel' }, h('h2', {}, 'From members'),
+    h('p', { class: 'muted' }, 'Sent through the HFL Hub and approved there. Nothing here is used unless you add it.'),
+    h('h3', {}, 'Takes'), memberList(fm.takes, 'take', 'No approved takes right now.'),
+    h('h3', {}, 'Segment requests'), memberList(fm.requests, 'request', 'No approved requests right now.'));
+
   const voice = h('input', { type: 'checkbox' });
   const approve = () => {
     if (!confirm(`Approve ${e.label} and write the weekly show now?${voice.checked ? '\n\nIt will be voiced as soon as it is written.' : ''}`)) return;
@@ -628,6 +649,7 @@ async function viewDesk() {
       h('label', {}, 'Details'), details,
       h('label', { class: 'row' }, breaking, 'Breaking: lead the show with it'),
       h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: addHeadline } }, 'Add headline'))),
+    fromMembers,
     h('section', { class: 'panel' }, h('h2', {}, 'Approve'),
       h('label', { class: 'row' }, voice, 'Voice it as soon as it is written (and publish it, if auto-publish is on)'),
       h('div', { class: 'row', style: 'margin-top:8px' },

@@ -95,3 +95,14 @@ for members' game streams. The URL is the Hub feed URL with `hfl-nn-feed` replac
 - Nothing is downloaded. Footage plays in Twitch's and YouTube's own embedded players, so
   HFL-NN's pages allow frames from `player.twitch.tv`, `clips.twitch.tv` and
   `www.youtube-nocookie.com`. Twitch only plays on HTTPS pages (or `localhost`).
+
+## From members: `fanTakes` and `segmentRequests`
+
+Optional. Each is a list of `{ "id", "name", "team", "text", "week" }`: something a member sent through the Hub's
+HFL-NN page and a commissioner approved on the Hub's `/admin/hfl-nn`. `id` is the Hub's own (`nn42`), `team` an
+abbreviation or empty, `text` at most 280 characters.
+
+HFL-NN never airs these by itself. They appear on the Week Desk under **From members**; the commissioner adds the
+ones worth using, and each becomes an ordinary desk headline (category `FAN TAKE` or `VIEWER REQUEST`) credited to
+the member. A take is read as that member's opinion, never as fact.
+

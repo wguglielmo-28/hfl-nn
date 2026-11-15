@@ -128,7 +128,7 @@ function createApp(opts = {}) {
   });
 
   const httpsOnly = env.FORCE_HTTPS === '1' || (env.NODE_ENV === 'production' && env.FORCE_HTTPS !== '0');
-  const auth = createAuth({ store, password: env.ADMIN_PASSWORD, secure: httpsOnly, logger });
+  const auth = createAuth({ store, password: env.ADMIN_PASSWORD, ssoSecret: env.HFL_NN_SSO_SECRET, secure: httpsOnly, logger });
   const extraOrigins = net.parseExtraOrigins(env);
 
   // ── Express ──────────────────────────────────────────────────────────────
@@ -261,6 +261,15 @@ function createApp(opts = {}) {
     const token = auth.login(req.body?.password);
     if (!token) return res.status(401).json({ error: 'Wrong password' });
     res.set('Set-Cookie', auth.cookie(token)).json({ ok: true });
+  });
+  // Arriving from the HFL Hub's "Open the control room" (lib/auth.js). The
+  // cookie is SameSite=Strict, so it is not sent on this redirect itself --
+  // /control is a static page, and its own requests carry it.
+  app.get('/sso', loginLimiter, (req, res) => {
+    const token = auth.loginWithToken(req.query.t);
+    res.set('Cache-Control', 'no-store');
+    if (!token) return res.status(401).type('text').send('That sign-in link is not valid or has expired. Open the control room from the HFL Hub again, or sign in with the password at /control.');
+    res.set('Set-Cookie', auth.cookie(token)).redirect(303, '/control');
   });
   app.post('/api/logout', (req, res) => {
     auth.logout(req);
