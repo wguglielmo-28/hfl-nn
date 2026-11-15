@@ -24,6 +24,9 @@ league snapshots, episodes, audio, the voice model cache and settings. It has th
    - `CHRONICLE_FEED_URL=https://hfl-hub-5kc.pages.dev/chronicle`: optional. You can also set
      it later in the control room.
    - `HUB_PUSH_KEY`: optional, if the Hub pushes its feed.
+   - `HFL_NN_SSO_SECRET`: optional. The same value as the HFL Hub's secret of that name. With it set, a
+     league admin signed in to the Hub can open the control room from Admin without the password
+     (a one-use link, good for a minute). Without it that link is refused; the password still works.
    - `EMBED_ORIGINS`: optional, comma-separated. The sites allowed to frame `/embed/*`. Defaults
      to `https://hfl-hub-5kc.pages.dev,https://*.hfl-hub-5kc.pages.dev` (see
      [`docs/embed.md`](docs/embed.md)).
