@@ -95,3 +95,19 @@ test('guide: game replays and clips in a slot count as new', () => {
   assert.deepEqual(day[2].items, [{ kind: 'clips', title: '2 clips from league games' }]);
   assert.equal(day[0].note, 'Encores');
 });
+
+test("guide: last night's live shows are encores the next morning, not new", () => {
+  const { buildDay } = require('../lib/channel/programme');
+  const config = require('../config/channel.json');
+  const day = DAY;
+  const lastNight = new Date(wallToMs(nextDay(day, -1), '22:45', TZ)).toISOString();
+  const episodes = [
+    { id: 'ad', type: 'custom', channelShow: 'afterdark', duration: 700, publishedAt: lastNight, title: 'Grimley After Dark: Henry on Trial' },
+    { id: 'wk', type: 'weekly', duration: 700, publishedAt: lastNight, title: 'Week 10' },
+  ];
+  const blocks = buildDay({ day, config, episodes });
+  const g = guideDay({ config, day, blocks, now: wallToMs(day, '01:00', TZ) });
+  const vault = g.find(s => s.show === 'vault');
+  assert.deepEqual(vault.items.map(i => i.title), ['Week 10'], 'a weekly approved late still premieres the next morning; After Dark does not');
+  assert.ok(blocks.filter(b => b.episodeId === 'ad').every(b => b.rerun));
+});
