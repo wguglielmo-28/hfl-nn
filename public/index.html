@@ -60,7 +60,13 @@
     </section>
 
     <section class="panel listings" aria-labelledby="listings-h">
-      <h2 id="listings-h">On the Channel Today</h2>
+      <h2 id="listings-h">TV Guide</h2>
+      <div class="guide-tabs" role="group" aria-label="Which day">
+        <button type="button" id="guide-today" aria-pressed="true">Today</button>
+        <button type="button" id="guide-tomorrow" aria-pressed="false">Tomorrow</button>
+        <label class="guide-new"><input type="checkbox" id="guide-new-only"> New only</label>
+      </div>
+      <p class="muted guide-tz" id="guide-tz">Times in your time zone.</p>
       <ol id="listings" class="listings-list"><li class="muted">Loading…</li></ol>
     </section>
 
