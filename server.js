@@ -33,6 +33,8 @@ const { createProducer } = require('./lib/producer');
 const { createChannel } = require('./lib/channel/plan');
 const { validateConfig } = require('./lib/channel/programme');
 const { createScheduler } = require('./lib/channel/scheduler');
+const { guideDay } = require('./lib/channel/guide');
+const { dayKey, nextDay } = require('./lib/channel/clock');
 const { createAuth } = require('./lib/auth');
 const { createSettings } = require('./lib/settings');
 const { postWebhook } = require('./lib/discord');
@@ -240,6 +242,16 @@ function createApp(opts = {}) {
     res.set('Cache-Control', 'no-store').json(await audience.view({ m: n(req.query.m), r: n(req.query.r) }));
   });
   app.get('/api/channel/listings', (req, res) => res.set('Cache-Control', 'no-store').json(channel.listings(atOf(req))));
+  // The TV guide: today and tomorrow, slot by slot, new or repeats (lib/channel/guide.js).
+  app.get('/api/channel/guide', (req, res) => {
+    const t = atOf(req) ?? (opts.now || Date.now)();
+    const tz = channelConfig.timeZone;
+    const days = [dayKey(t, tz), nextDay(dayKey(t, tz))];
+    res.set('Cache-Control', 'public, max-age=60').json({
+      now: t, timeZone: tz, auto: !!settings.get().channelAuto,
+      days: days.map(day => ({ day, slots: guideDay({ config: channelConfig, day, blocks: channel.blocksFor(day), editions: scheduler.plannedEditions(day, t), auto: !!settings.get().channelAuto, now: t }) })),
+    });
+  });
 
   const sendMedia = (req, res, id) => {
     const ep = producer.get(id);

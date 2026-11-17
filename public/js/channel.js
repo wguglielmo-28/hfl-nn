@@ -56,23 +56,62 @@ $('episodes').addEventListener('click', e => {
 });
 
 // ── The live channel ─────────────────────────────────────────────────────
+// The TV guide (GET /api/channel/guide): today or tomorrow, slot by slot,
+// marked new, expected (a live show that airs if there's news) or repeats.
+const guideView = { day: 0, newOnly: readPref('hflnn.guideNew', 'false') === 'true', data: null, fetched: 0 };
+const GUIDE_TAG = { new: 'NEW', expected: 'LIVE SHOW', repeats: 'ENCORES' };
+
 async function renderListings() {
   const ol = $('listings');
   try {
-    const q = tuner.sim ? `?at=${Math.round(tuner.now())}` : '';
-    const { blocks } = await api(`/api/channel/listings${q}`);
+    // The guide changes slowly; ask again at most once a minute.
+    if (!guideView.data || performance.now() - guideView.fetched > 60000) {
+      const q = tuner.sim ? `?at=${Math.round(tuner.now())}` : '';
+      guideView.data = await api(`/api/channel/guide${q}`);
+      guideView.fetched = performance.now();
+    }
     const t = tuner.now();
-    const rows = blocks.filter(b => b.until > t).slice(0, 12);
-    if (!rows.length) { ol.innerHTML = '<li class="muted">Nothing more today. The channel starts again with the next broadcast.</li>'; return; }
-    ol.innerHTML = rows.map(b => `
-      <li class="${b.from <= t ? 'on' : ''}">
-        <span class="when">${b.from <= t ? 'ON NOW' : esc(clockTime(b.from))}</span>
+    const day = guideView.data.days[guideView.day];
+    let rows = (day?.slots || []).filter(s => guideView.day > 0 || s.until > t);
+    if (guideView.newOnly) rows = rows.filter(s => s.status !== 'repeats');
+    if (!rows.length) {
+      ol.innerHTML = `<li class="muted">${guideView.newOnly ? 'No new shows left on this day. Encores fill the rest.' : 'Nothing more today. Check tomorrow.'}</li>`;
+      return;
+    }
+    ol.innerHTML = rows.map(s => {
+      const on = s.from <= t && t < s.until;
+      const what = s.items.length
+        ? s.items.map(i => `<span class="ep-title">${i.kind === 'replay' ? 'Game replay: ' : ''}${esc(i.title)}</span>`).join('')
+        : `<span class="ep-note">${esc(s.note || '')}</span>`;
+      return `
+      <li class="${on ? 'on' : ''} ${esc(s.status)}" title="${esc(s.blurb)}">
+        <span class="when">${on ? 'ON NOW' : esc(clockTime(s.from))}</span>
         <span class="what">
-          <span class="show">${esc(b.showTitle)}<span class="tag">${b.kind === 'replay' ? 'REPLAY' : b.kind === 'clips' ? 'CLIPS' : b.rerun ? 'ENCORE' : 'NEW'}</span></span>
-          <span class="ep-title">${esc(b.title)}</span>
+          <span class="show">${esc(s.title)}<span class="tag tag-${esc(s.status)}">${GUIDE_TAG[s.status] || ''}</span></span>
+          ${what}
         </span>
-      </li>`).join('');
-  } catch { ol.innerHTML = '<li class="muted">The listings are not available right now.</li>'; }
+      </li>`;
+    }).join('');
+  } catch { ol.innerHTML = '<li class="muted">The TV guide is not available right now.</li>'; }
+}
+function setGuideDay(i) {
+  guideView.day = i;
+  $('guide-today').setAttribute('aria-pressed', String(i === 0));
+  $('guide-tomorrow').setAttribute('aria-pressed', String(i === 1));
+  renderListings();
+}
+$('guide-today').addEventListener('click', () => setGuideDay(0));
+$('guide-tomorrow').addEventListener('click', () => setGuideDay(1));
+$('guide-new-only').checked = guideView.newOnly;
+$('guide-new-only').addEventListener('change', e => {
+  guideView.newOnly = e.target.checked;
+  writePref('hflnn.guideNew', String(guideView.newOnly));
+  renderListings();
+});
+{
+  // Say which time zone the times are in.
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (tz) $('guide-tz').textContent = `Times in your time zone (${tz.replace(/_/g, ' ')}).`;
 }
 
 function setSoundButton() {

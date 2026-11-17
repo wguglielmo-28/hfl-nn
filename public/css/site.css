@@ -169,6 +169,17 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
 .control .meter span.full { background: var(--red); }
 .control details summary { cursor: pointer; margin: 10px 0 6px; color: var(--muted); }
 
+/* ── TV guide (the listings panel) ── */
+.guide-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 6px; }
+.guide-tabs button { background: var(--deep); border: 1px solid var(--violet); border-radius: 6px; padding: 4px 10px; font-family: var(--pixel); font-size: 0.7rem; cursor: pointer; }
+.guide-tabs button[aria-pressed="true"] { background: var(--teal); color: var(--ink); border-color: var(--teal); }
+.guide-new { margin-left: auto; font-size: 0.8rem; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.guide-tz { margin: 0 0 6px; font-size: 0.75rem; }
+.listings-list .ep-note { color: var(--muted); font-size: 0.82rem; }
+.listings-list .tag-new { color: var(--ink); background: var(--gold); padding: 0 4px; border-radius: 2px; }
+.listings-list .tag-expected { color: var(--ink); background: var(--teal); padding: 0 4px; border-radius: 2px; }
+.listings-list li.repeats .show { color: var(--muted); }
+
 /* ── The Hub's chat, read-only (public/js/studio/audience.js) ── */
 .aud-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
 .aud-overlay[hidden] { display: none; }
