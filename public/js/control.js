@@ -281,7 +281,42 @@ async function viewEpisodes() {
         h('td', {}, e.type), h('td', {}, statusPill(e.status)), h('td', {}, fmtDur(e.duration)), h('td', {}, e.writer || '—'), h('td', {}, when(e.createdAt))))))
       : h('p', { class: 'muted' }, 'No episodes yet.'));
   if (list.some(e => ['writing', 'voicing'].includes(e.status))) state.poll = setInterval(render, 4000);
-  return h('div', {}, table, create, bulletin);
+  return h('div', {}, table, create, bulletin, importPanel());
+}
+
+// An episode voiced outside HFL-NN (its audio.mp3 + manifest.json). It comes
+// in as "ready": preview it, then publish it like any other episode.
+function importPanel() {
+  const audio = h('input', { type: 'file', accept: '.mp3,audio/mpeg' });
+  const manifest = h('input', { type: 'file', accept: '.json,application/json' });
+  const title = h('input', { type: 'text', placeholder: 'Title (default: the manifest\'s title)' });
+  const source = h('input', { type: 'text', value: 'elevenlabs', placeholder: 'Voiced with (shown in the control room)' });
+  const go = h('button', { class: 'btn primary', type: 'button' }, 'Import');
+  manifest.addEventListener('change', async () => {
+    try { const m = JSON.parse(await manifest.files[0].text()); if (!title.value && m.title) title.value = m.title; } catch { /* checked on import */ }
+  });
+  go.addEventListener('click', async () => {
+    if (!audio.files[0] || !manifest.files[0]) return toast('Choose both the MP3 and the manifest.json.', true);
+    let m;
+    try { m = JSON.parse(await manifest.files[0].text()); } catch { return toast('That manifest is not valid JSON.', true); }
+    go.disabled = true;
+    go.textContent = 'Importing…';
+    const b64 = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1] || '');
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(audio.files[0]);
+    });
+    const ep = await act(() => api('/api/admin/episodes/import', { method: 'POST', body: { manifest: m, audio: b64, title: title.value.trim() || null, source: source.value.trim() || null } }), 'Imported. Preview it, then publish.');
+    go.disabled = false;
+    go.textContent = 'Import';
+    if (ep) openEpisode(ep.id);
+  });
+  return h('section', { class: 'panel' }, h('h2', {}, 'Import a voiced episode'),
+    h('p', { class: 'muted' }, 'For an episode voiced outside HFL-NN, e.g. an ElevenLabs test. Pick its audio.mp3 and manifest.json. It arrives unpublished, and publishing it posts nothing to Discord.'),
+    h('div', { class: 'grid2' }, h('div', {}, h('label', {}, 'Audio (MP3)'), audio), h('div', {}, h('label', {}, 'Manifest (JSON)'), manifest),
+      h('div', {}, h('label', {}, 'Title'), title), h('div', {}, h('label', {}, 'Voiced with'), source)),
+    h('div', { class: 'row' }, go));
 }
 
 async function viewEpisode() {
@@ -307,7 +342,17 @@ async function viewEpisode() {
   const val = ep.validation && (ep.validation.errors.length || ep.validation.warnings.length) ? h('section', { class: 'panel' }, h('h2', {}, 'Checks'),
     h('ul', { class: 'flags' }, ep.validation.errors.map(e => h('li', { class: 'err' }, e)), ep.validation.warnings.map(w => h('li', {}, w)))) : null;
 
+  if (ep.imported) return h('div', {}, header, await importedTranscript(ep, personas));
   return h('div', {}, header, val, ep.script ? scriptEditor(ep, personas, busy) : h('p', { class: 'muted' }, 'The script is being written…'));
+}
+
+// An imported episode has no script here, only what its manifest says is said.
+async function importedTranscript(ep, personas) {
+  const m = await api(`/api/admin/episodes/${ep.id}/manifest`).catch(() => null);
+  const name = id => personas.find(a => a.id === id)?.short || id;
+  return h('section', { class: 'panel' }, h('h2', {}, 'Transcript'),
+    h('p', { class: 'muted' }, `Imported ${when(ep.imported.at)}${ep.imported.fromId ? ` from ${ep.imported.fromId}` : ''}: ${ep.imported.lines} lines. It was voiced outside HFL-NN, so it can't be re-voiced or rewritten here.`),
+    m ? h('ol', {}, m.lines.map(l => h('li', {}, h('strong', {}, `${name(l.speaker)} (${fmtDur(l.t0) === '—' ? '0:00' : fmtDur(l.t0)}): `), l.text))) : null);
 }
 
 // ElevenLabs spend for one voicing, at pay-as-you-go rates (Flash is half).
@@ -340,19 +385,19 @@ function actions(ep, busy) {
   const run = (path, body, ok) => act(() => api(`/api/admin/episodes/${ep.id}/${path}`, { method: 'POST', body }), ok).then(render);
   return h('div', {},
     h('div', { class: 'row' },
-      h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.script || !!ep.validation?.errors.length, on: { click: () => run('voice', {}, 'Voicing started') } }, ep.audio ? 'Re-voice' : 'Voice it'),
+      !ep.imported && h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.script || !!ep.validation?.errors.length, on: { click: () => run('voice', {}, 'Voicing started') } }, ep.audio ? 'Re-voice' : 'Voice it'),
       h('a', { class: 'btn', href: `/?preview=${ep.id}`, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ep.audio) }, 'Preview'),
       ep.status === 'published'
         ? h('button', { class: 'btn', type: 'button', on: { click: () => run('unpublish', {}, 'Unpublished') } }, 'Unpublish')
         : h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.audio || ep.audio?.stale, on: { click: () => run('publish', { discord: discord.checked }, 'Published!') } }, 'Publish'),
-      h('label', { class: 'row' }, discord, 'Announce on Discord'),
+      !ep.imported && h('label', { class: 'row' }, discord, 'Announce on Discord'),
       ep.status === 'published' && h('a', { class: 'btn', href: `/watch/${ep.id}`, target: '_blank', rel: 'noopener' }, 'Watch'),
       h('button', { class: 'btn danger', type: 'button', disabled: busy, on: { click: async () => {
         if (!confirm('Delete this episode and its audio?')) return;
         await act(() => api(`/api/admin/episodes/${ep.id}`, { method: 'DELETE' }), 'Deleted');
         state.episode = null; render();
       } } }, 'Delete')),
-    h('div', { class: 'row', style: 'margin-top:8px' }, notes,
+    !ep.imported && h('div', { class: 'row', style: 'margin-top:8px' }, notes,
       h('button', { class: 'btn', type: 'button', disabled: busy, on: { click: () => run('rewrite', { notes: notes.value || null }, 'Rewriting…') } }, 'Rewrite whole script')));
 }
 
