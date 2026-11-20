@@ -404,14 +404,18 @@ function createApp(opts = {}) {
     return ep;
   }));
   admin.put('/episodes/:id/script', wrap(req => producer.saveScript(req.params.id, req.body)));
+  // An episode voiced elsewhere: { manifest, audio (MP3 as base64), title?, source? }.
+  admin.post('/episodes/import', wrap(req => producer.importEpisode(req.body || {})));
   admin.post('/episodes/:id/rewrite', wrap(req => {
     need(producer.get(req.params.id), 'Episode not found');
+    need(!producer.get(req.params.id).imported, 'An imported episode has no script to rewrite.', 400);
     const { segmentId = null, notes = null, writer = 'auto' } = req.body || {};
     return { job: producer.rewrite(req.params.id, { segmentId, notes, writer }) };
   }));
   admin.post('/episodes/:id/voice', wrap(req => {
     const ep = producer.get(req.params.id);
     need(ep, 'Episode not found');
+    need(!ep.imported, 'An imported episode was voiced elsewhere and has no script to voice.', 400);
     need(!ep.validation?.errors?.length, 'Fix the script errors before voicing.', 400);
     return { job: producer.voice(req.params.id) };
   }));
