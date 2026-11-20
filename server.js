@@ -107,6 +107,8 @@ function createApp(opts = {}) {
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
     tts, claude, openai, chronicle, hub, publicUrl, logger,
     baselineBefore: wk => ingest.baselineBefore(wk),
+    // TTS_PROVIDER=silent says silence is wanted; otherwise production needs real voices.
+    requireRealVoices: env.NODE_ENV === 'production' && (env.TTS_PROVIDER || 'auto') !== 'silent',
   });
   const channelConfig = validateConfig(opts.channel || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'channel.json'), 'utf8')));
   // Writes the channel's daily shows, inside the daily spending cap.
