@@ -1,0 +1,838 @@
+# NFL Pronunciation Guide 2026, transcribed from the commissioner's Google Doc
+# (https://docs.google.com/document/d/1Bxyb8on23IQtjgKFUZC8RZNTxiYpp7L4BE7-pyugAXI).
+# One player or coach per line: team <TAB> name <TAB> pronunciation, exactly as the guide writes it.
+# Rebuild config/pronunciations.json after editing: node tools/import-pronunciations.js
+ARI	Tyler Allgeier	al-JEER
+ARI	Chase Bisontis	bi-SAHN-tiss
+ARI	Kei'Trel Clark	KEY-trell
+ARI	Kitan Crawford	Keaton
+ARI	Ka'ena De Cambra	ka-EH-nah
+ARI	Devin Duvernay	DOO-ver-nay
+ARI	Simi Fehoko	SIM-ee / FAY-ho-ko
+ARI	Hjalte Froholdt	YELL-duh / FRO-holt
+ARI	Corey Kiner	KAI-ner
+ARI	Casey Kreiter	CRY-ter
+ARI	Eku Leota	EK-oo / lee-OH-tuh
+ARI	BJ Ojulari	oh-joo-LARR-ee
+ARI	Owen Pappoe	PAPP-oh
+ARI	Teagan Quitoriano	kwi-TORE-ee-ON-oh
+ARI	Tip Reiman	RY-minn
+ARI	Isaac Seumalo	say-uh-MAH-low
+ARI	Karson Sharar	SHY-er
+ARI	Kedon Slovis	KEY-din
+ARI	Ihmir Smith-Marsette	ah-MEER / smith-MAR-set
+ARI	Dadrion Taylor-Demerson	DAY-dree-in / DEMM-er-son
+ARI	Oli Udoh	OH-lee / OO-doh
+ARI	Damonic Williams	DOM-uh-nick
+ARI	Wydett Williams Jr.	WHY-dett
+ARI	Andrew Wingard	WING-urd
+ARI	Kenny Yeboah	ya-BO-uh
+ARI	Brett Ekkens	ECK-ins
+ARI	Pete Kwiatkowski	quit-COW-ski
+ARI	Wendy Laurent	luh-RENT
+ARI	Michael Ghobrial	GO-bree-uhl
+ARI	Nick Rallis	RAW-liss
+ARI	Sam Sewell	SOO-uhl
+ATL	Natrone Brooks	nay-tron
+ATL	Divine Deablo	dee-ABB-loh
+ATL	Jahan Dotson	juh-HAHN
+ATL	Samson Ebukam	EH-boo-kahm
+ATL	Michael Jerrell	JUH-rell
+ATL	Corey Levin	LEH-vin
+ATL	LaCale London	luh-kale
+ATL	Wanya Morris	WAHN-yay
+ATL	Ryan Neuzil	new-zul
+ATL	Azeez Ojulari	ah-ZEEZ oju-LAHR-ee
+ATL	Bijan Robinson	buh-Xian
+ATL	Jammie Robinson	JAY-mee
+ATL	Keidron Smith	KEY-dron
+ATL	Tua Tagovailoa	TOO-uh TUNG-oh-vai-LOA
+ATL	A.J. Terrell Jr.	teh-REHL
+ATL	Marlon Tuipulotu	TOO-ee-poo-LOE-too
+ATL	Xavier Watts	ex-AY-vee-er
+ATL	Charlie Woerner	WAR-ner
+ATL	Olamide Zaccheaus	Oh-llama-day / zah-KEY-us
+ATL	Michael Pitre	PEA-tree
+ATL	Jeff Ulbrich	ull-BRICK
+BAL	Chidobe Awuzie	SHIH-doe-beh, AH-woo-ZEE-eh
+BAL	Evan Beermtsen	BAIR-ent-sin
+BAL	Cortez Braham Jr.	BRAY-ham
+BAL	Calais Campbell	cuh-LAY-us
+BAL	Josh Cuevas	KWEV-ahs
+BAL	Joe Fagnano	fin-YAN-oh
+BAL	Xavier Guillory	GIL-er-ee
+BAL	Vega Ioane	O-LIE-vuh-VENG-uh yo-WAHN-ay
+BAL	Adisa Isaac	ah-DEE-suh
+BAL	Jamon Johnson	jah-MON
+BAL	Bilhal Kone	bih-LAL, KO-nay
+BAL	Gerad Lichtenhan	JARE-ed, LICK-tin-han
+BAL	Nnamdi Madubuike	NAHM-dee, mad-uh-BEE-kay
+BAL	C.J. Okoye	oh-KOY-yay
+BAL	David Olajiga	oh-la-JIG-ah
+BAL	Amani Oruwariye	OH-roo-WAR-ee-yay
+BAL	Aeneas Peebles	uh-NEE-iss, PEE-bulz
+BAL	Ty Pezza	PEZZ-uh
+BAL	Ethan Pocic	POH-sick
+BAL	Marquise Robinson	mar-KWEES
+BAL	Jahquez Robinson	jah-KWEZ
+BAL	Kaimon Rucker	CAY-min
+BAL	Elijah Sarratt	suh-RAT
+BAL	K'Von Wallace	KAY-von
+BAL	LaJohntay Wester	luh-ZHAHN-tay
+BAL	Stephen J. Bisciotti	bih-SHAH-tee
+BAL	Sashi Brown	sah-SHEE
+BAL	Keary Colbert	CARE-ee, kole-BERT
+BAL	Zack Grossi	GRAH-see
+BAL	Ben Kotwica	cot-WEE-kuh
+BAL	Tony Michalek	mah-HAWL-ick
+BUF	Tommy Akingbesote	ah-KING-buh-soh-tay
+BUF	Dee Alford	All-ford
+BUF	Tyler Bass	BASS (like the fish)
+BUF	Terrel Bernard	tuh-RELL
+BUF	Nick Broeker	rhymes with broker
+BUF	Shane Buechele	BOO-shell
+BUF	Jimmy Ciarlo	CHAR-low
+BUF	Austin Corbett	CORE-bit
+BUF	Mike Danna	DAN-ah
+BUF	Tylan Grable	TIE-lunn GRAY-bull
+BUF	Mecole Hardman Jr.	muh-COLE
+BUF	Michael Hoecht	HOYT
+BUF	Keonta Jenkins	key-ON-tay
+BUF	Keleki Latu	kuh-LECK-ee LAH-too
+BUF	Zion Logue	lowg
+BUF	Phidarian Mathis	fuh-DARE-ee-un
+BUF	Greg Rousseau	roo-SO
+BUF	Khalil Shakir	kuh-LIL shah-KEER
+BUF	Tyrell Shavers	TIE-rell
+BUF	Ben VanSumeren	van-SUE-mer-en
+BUF	Mitch Wishnowsky	wish-NOW-ski
+BUF	Marc Lubick	LOO-bick
+CAR	Kyon Barrs	KEY-on
+CAR	Claudin Cherelus	SHER-uh-lus
+CAR	Dan Chisena	chuh-SEN-uh
+CAR	Jake Curhan	KERR-han
+CAR	Ikem Ekwonu	EE-kem eck-WAHN-oo
+CAR	Trevor Etienne	AY-CHAN
+CAR	Akayleb Evans	ay-KAY-leb
+CAR	Tyrek Funderburk	Tie-REEK
+CAR	Trevis Gipson Sr.	TREV-iss
+CAR	Chuba Hubbard	CHEW-ba
+CAR	Xavier Legette	ex-ZAVE-yerr / lee-GETT
+CAR	Tywone Malone Jr.	TIE-whan
+CAR	Tetairoa McMillan	tet-uh-row-uh
+CAR	Tre'von Moehrig	TRAY-von MAIR-igg
+CAR	Taylor Moton	MOAT-in
+CAR	Maz Mwansa	mazz muh-WAN-sa
+CAR	Maema Njongmeta	moo-MUH jong-METT-uh
+CAR	Robert Rochell	roh-SHELL
+CAR	Nick Samac	SAY-mack
+CAR	Chau Smith-Wade	Shaw
+CAR	Princely Umanmielen	OO-man-me-ellen
+CAR	Turk Wharton	WAR-ton
+CAR	Zakee Wheatley	ZAK-ee
+CAR	Chandler Zavala	zuh-VAWL-uh
+CHI	Salvon Ahmed	suh-VON OCK-med
+CHI	Kiran Amegadjie	KUH-ron AH-muh-GAHD-jee
+CHI	Tyson Bagent	BAY-jint
+CHI	Brittain Brown	brit-IN
+CHI	Gervon Dexter Sr.	JER-vahn
+CHI	Dallis Flowers	DALL-iss
+CHI	Neville Gallimore	NEH-vuhl
+CHI	Qadir Ismail	kah-DEER, ISS-my-el
+CHI	Nikola Kalinic	knee-col-ah CAL-E-nitch
+CHI	Cole Kmet	kuh-MET
+CHI	Jamree Kromah	JAM-ree KRO-muh
+CHI	Kyle Monangai	muh-NUN-guy
+CHI	Dayo Odeyingbo	DYE-oh oh-DANG-boh
+CHI	Rome Odunze	OH-dune-ZAY
+CHI	Gervarrius Owens	ger-VAHR-ee-us
+CHI	Kalif Raymond	CAH-leaf
+CHI	Nephi Sewell	NEE-fy
+CHI	Dillon Thieneman	THEE-nuh-MIN
+CHI	Joe Thuney	TOO-nee
+CHI	Ozzy Trapilo	truh-PILL-oh
+CHI	Shemar Turner	shuh-MAHR
+CHI	Jahdae Walker	JAH-day
+CHI	Xavier Woods	ECK-zay-vee-er
+CHI	Chavis Cook	CHEY-vis
+CHI	Harrison Freid	freed
+CHI	Kevin Koch	cook
+CHI	Trey Koziol	koh-zee-ole
+CHI	Pierre Ngo	NO
+CHI	Eric Studesville	STOO-des-vill
+CIN	Daijahn Anthony	DAY-jahn
+CIN	Joey Boese	bo-ZAY
+CIN	Swayze Bozeman	SWAY-zee
+CIN	Tahj Brooks	pronounced as second syllable of "montage"
+CIN	Kentrel Bullock	KENN-trell
+CIN	Andrew Coker	KO-ker
+CIN	Tacario Davis	tuh-CAR-ee-o
+CIN	Sean Desai	deh-SIGH
+CIN	Kyle Dugger	DUG-er (first syllable pronounced as "Doug")
+CIN	Jack Endries	ENN-drees
+CIN	Joe Flacco	FLACK-o
+CIN	Mike Gesicki	geh (hard "g") -SICK-ee
+CIN	Joe Giles-Harris	jiles-HAIR-iss
+CIN	Cashius Howell	CASH-us
+CIN	Andrei Iosivas	AHN-dray YO-see-vahsh
+CIN	PJ Jules	pronounced as "jewels"
+CIN	Davis Koetter	pronounced as "cutter"
+CIN	Connor Lew	LOO
+CIN	Bralyn Lux	BRAY-linn LUX
+CIN	Boye Mafe	BOY-yay MAH-fay
+CIN	Evan McPherson	mick-FEAR-son
+CIN	Dohnte Meyers	DAHN-tay
+CIN	Amarius Mims	uh-MARR-ee-us
+CIN	Isaiah Nwokobia	wo-KO-bee-uh (the "n" is silent)
+CIN	Samaje Perine	suh-MAH-jay PEE-rhine
+CIN	Justin Rascati	rah-SCOTT-ee
+CIN	Ronnie Regula	reh-GHOUL-uh
+CIN	Ryan Rehkow	REE-ko
+CIN	Dalton Risner	RISE-ner
+CIN	Ja'Sir Taylor	JAH-sear
+CIN	Ke'Shawn Williams	KEY-shawn
+CIN	Ceyair Wright	see-AIR
+CLE	Corey Bojorquez	boh-HOR-kez
+CLE	Davon Booth	DUH-von
+CLE	KC Concepcion	con-SEPP-see-own
+CLE	Nik Constantinou	con-stan-TEE-new
+CLE	Malachi Corley	MAL-uh-kee KOR-lee
+CLE	Kalia Davis	kuh-LEE-uh
+CLE	Kingsley Eguakun	egg-WOK-in
+CLE	Logan Fano	FAH-no
+CLE	Spencer Fano	FAH-no
+CLE	Adin Huntington	AY-din
+CLE	Elgton Jenkins	EL-ton
+CLE	Jerry Jeudy	JUDY
+CLE	Dawand Jones	duh-WAHND
+CLE	Gage Larvadain	LAR-vuh-dan
+CLE	Easton Mascarenas-Arnold	MAH-skuh-RAH-nyuhs
+CLE	Izavion Miller	eye-ZAY-vion
+CLE	Wes Pahl	PAUL
+CLE	Shedeur Sanders	sha-DOOR
+CLE	Carson Schwesinger	SWESS-in-jurr
+CLE	Rex Sunahara	soon-uh-HAR-uh
+CLE	Khordae Sydnor	KOR-day SID-nor
+CLE	Andre Szmyt	sch-MITT
+CLE	Jamari Thrash	juh-MAR-ee
+CLE	Luke Wypler	WHIP-ler
+DAL	Israel Abanikanda	ah-BON-ee-CAHN-duh
+DAL	Jaishawn Barham	JAY-SHAWN BAR-HAM
+DAL	Cooper Beebe	BEE-be
+DAL	Markquese Bell	mar-KEESE
+DAL	DaRon Bland	duh-RON
+DAL	Jaydon Blue	JAY-din
+DAL	Trikweze Bridges	TRY-kwez
+DAL	Caelen Carson	KAY-lin
+DAL	Jashaun Corbin	jay-shaun
+DAL	Ajani Cornelius	ah-JOHNNY
+DAL	Cobie Durant	CO-bee
+DAL	Donovan Ezeiruaku	ezz-AH-rah-koo
+DAL	Ryan Flournoy	fla-NOY
+DAL	Shemar James	shuh-MAR
+DAL	Derion Kendrick	DARE-ee-ON
+DAL	Zack Kuntz	KOONTS
+DAL	Nick Leverett	LEV-rit
+DAL	Marist Liufau	MARE-ist LEE-oo-FOW
+DAL	Hunter Luepke	LIP-key
+DAL	Adedayo Odeleye	AH-deh-DIE-oh, OH-deh-lay
+DAL	Otito Ogbonnia	oh-TEET-oh oh-BONE-yuh
+DAL	DeMarvion Overshown	de-MAR-vee-on over-SHOWN
+DAL	Shiyazh Pete	SHE-ahj
+DAL	Shavon Revel	suh-VONE REV-uhl
+DAL	Luke Schoonmaker	SKOON-maker
+DAL	Trent Sieg	SIG
+DAL	Jay Toia	TOE-eeyah
+DAL	KaVontae Turpin	kuh-VON-tay
+DAL	Marquez Valdes-Scantling	mar-KWEZ
+DAL	Tyrus Wheat	TIE-russ
+DAL	Javonte Williams	JUH-von-TAY
+DAL	Lunda Wells	LOON-duh
+DAL	Ross Wuensche	WIN-she
+DEN	Tyler Badie	bah-DAY
+DEN	Jahdae Barron	zha-DAY
+DEN	Kyre Duplessis	do-PLACE-ee
+DEN	Sam Ehlinger	EL-in-gurr
+DEN	Alex Forsyth	FORE-seith
+DEN	Mitchell Fraboni	fruh-BONE-ee
+DEN	Talanoa Hufanga	tal-uh-NOE-uh who-FAWN-guh
+DEN	Sai'vion Jones	say-VEE-on
+DEN	Ja'Quan McMillian	JAY-quan mac-MILL-in
+DEN	Tyler Onyedim	ahn-YEDD-imm
+DEN	Alex Palczewski	pal-CHESS-key
+DEN	Matt Peart	payrt
+DEN	Karene Reid	cah-REN-nay
+DEN	Kyrese Rowan	kai-REESE
+DEN	Jarrett Stidham	STID-um
+DEN	Justin Strnad	stir-NADD
+DEN	Dondrea Tillman	DON-dre
+DEN	Eyioma Uwazurike	en-YO-muh oo-WOZ-zur-EE-kay
+DEN	Taurean York	TOUR-ee-an
+DET	Joe Bachie	BAH-chee
+DET	Aamaris Brown	ah-MAR-is
+DET	Damone Clark	duh-MONE
+DET	Jahmyr Gibbs	jah-MEER
+DET	Ahmed Hassanein	HAH-sah-NEEN
+DET	Christian Izien	iz-EE-en
+DET	Aidan Keanaaina	kay-aw-nah-EYE-nah
+DET	Alim McNeill	ah-LEEM
+DET	Trevor Nowaske	no-WAH-skee
+DET	A. Ogbongbemiga	AWG-bong-BUH-mee-guh
+DET	Levi Onwuzurike	own-zur-EE-kay
+DET	Kye Robichaux	ROW-bih-show
+DET	Penei Sewell	peh-NAY
+DET	Amon-Ra St. Brown	ahmon-RAH
+DET	Isaac TeSlaa	teh-SLAW
+DET	Sione Vaki	see-OH-nay VAH-key
+DET	Tyre West	tie-REE
+DET	D.J. Wonnum	WAHN-um
+DET	Rock Ya-Sin	yuh-SEEN
+GB	Jager Burton	jagger
+GB	Brandon Cisse	SEE-say
+GB	Jaden Crumedy	CRUM-uh-dee
+GB	Dani Dennis-Sutton	duh-NYE
+GB	Kyron Drones	KYE-run
+GB	Zaire Franklin	ZYE-air
+GB	Kamal Hadden	kuh-MALL
+GB	Javon Hargrave	JAY-von
+GB	Lucas Havrisik	HAVE-ruh-sick
+GB	Domani Jackson	duh-MONN-ee
+GB	Nyjalik Kelly	nye-juh-leek
+GB	Murvin Kenion III	KEN-yin
+GB	Xavier McKinney	ZAY-vier
+GB	Isaiah Neyor	NAY-er
+GB	Nick Niemann	NEE-min
+GB	Keisean Nixon	KEY-shawn
+GB	Kitan Oladapo	kuh-TAWN oh-luh-DAPP-oh
+GB	Matt Orzech	OR-zick
+GB	Barryn Sorrell	BAIR-in sore-ELL
+GB	Benjamin St-Juste	saint-JUICE
+GB	Nazir Stackhouse	NAH-zeer
+GB	Tyrod Taylor	TIE-rod
+GB	Carrington Valentine	CAIR-ing-ton
+GB	Daniel Whelan	WEE-lan
+GB	Josh Whyle	WHY-lee
+GB	Savion Williams	SAY-vee-on
+GB	Cam Achord	AY-cord
+GB	Scott Fuchs	rhymes with "books"
+GB	Rob Grosso	GROW-so
+GB	Jeremiah Kolone	kuh-LOW-nay
+GB	Matt LaFleur	la-flew-er
+GB	Jamael Lett	juh-MALL
+GB	Vince Oghobaase	oh-guh-BAH-see
+GB	Sam Siefkes	SEEF-kiss
+GB	Adam Stenavich	STEN-uh-vitch
+HOU	Azeez Al-Shaair	Uh-ZEEZ Al-SHY-urr
+HOU	Kayshon Boutte	KAY-shawn BOO-tee
+HOU	Calen Bullock	bull-LOCK
+HOU	Jadeveon Clowney	juh-DEV-ee-on
+HOU	Aireontae Ersery	air-E-ahn-TAY
+HOU	Ka'imi Fairbairn	kuh-EE-me FAIR-bairn
+HOU	Danielle Hunter	duh-KNEEL
+HOU	Jawhar Jordan	juh-WAHR
+HOU	Marte Mapu	mar-TAY mah-PU
+HOU	Kaevon Merriweather	kay-vawn
+HOU	Foster Moreau	MORE-oh
+HOU	Jaylin Noel	NOLE
+HOU	Febechi Nwaiwu	feh-BETCH-ee WEE-woo
+HOU	Jalen Pitre	PEE-tree
+HOU	Braden Smith	BRAY-den
+HOU	Tremon Smith	TRAY-mon
+HOU	Henry To'oTo'o	TOE-oh-TOE-oh
+HOU	Tommy Togiai	toe-ghee-EYE
+HOU	Montrell Washington	Mahn-trell
+HOU	Juwann Winfree	juh-WAHN
+HOU	Stephen Adegoke	Add-uh-GO-Kay
+HOU	Tiquan Underwood	TIE-kwahn
+IND	Adetomiwa Adebawore	add-E-TOMMY-wah add-E-BARR-ray
+IND	Austin Ajiake	AH-gee-kay
+IND	Mekhi Blackmon	muh-KYE
+IND	Bryce Boettcher	BETCH-er
+IND	Tanor Bortolini	TANN-er bort-oh-LEE-nee
+IND	Pharaoh Brown	FAIR-oh
+IND	DeForest Buckner	duh-FORE-ist
+IND	Deion Burks	DEE-on
+IND	Jaylon Carlies	KARR-lyze
+IND	Caden Curry	KAY-den
+IND	Akeem Davis-Gaither	GAY-thur
+IND	Ashton Dulin	DOO-linn
+IND	Matt Goncalves	gon-ZALL-vez
+IND	Blake Grupe	GROUP-ee
+IND	Sahmir Hagans	SAH-meer
+IND	A.J. Haulcy	HALL-see
+IND	Josh Kreutz	krew-tz
+IND	Laiatu Latu	lie-AW-too LAW-too
+IND	Bayron Matos	BYE-rone MAH-tose
+IND	Sean McKeon	muh-CUE-in
+IND	Jai'Onte' McMillan	JAY-on-tay
+IND	Durell Nchami	CHA-mee
+IND	Derrick Nnadi	NAH-dee
+IND	Eli Pancol	pan-COLE
+IND	Bernhard Raimann	BERR-nard RY-man
+IND	Nolan Rucci	Rew-chee
+IND	Rigoberto Sanchez	REE-go-BEAR-toe
+IND	Spencer Shrader	Sh-RAID-err
+IND	Luke Tenuta	tuh-NOO-tuh
+IND	Juanyeh Thomas	ONE-yay
+IND	Jaylahn Tuimoloau	TWO-ee-mow-low-ow
+IND	Geno VanDeMark	VAN-duh-mark
+IND	Justin Walley	WALL-ee
+IND	Charvarius Ward Sr.	charr-VEAR-ee-us
+IND	Nick Westbrook-Ikhine	uh-KEEN-a
+IND	Lou Anarumo	ann-ah-ROO-mo
+IND	Cato June	KAIT-oh
+IND	Tony Sparano Jr.	spuh-RAWN-oh
+IND	Shane Steichen	STYKE-in
+JAX	Ameer Abdullah	Uh-meer Ab-dool-uh
+JAX	Yasir Abdullah	YA-seer
+JAX	Joey Aguilar	AG-uh-lar
+JAX	LeQuint Allen Jr.	Luh-KWINT
+JAX	T.J. Bollers	BOH-lerz
+JAX	Montaric Brown	Mahn-TAIR-ik
+JAX	Geron Christian Sr.	JARE-en
+JAX	Chuma Edoga	Chu-MA Ee-doe-GAH
+JAX	Jarrian Jones	JAR-ee-in
+JAX	Tanner Koziol	KOE-zee-ull
+JAX	Rayuan Lane III	Ray-ON
+JAX	Devon Marshall	DUH-von
+JAX	Ross Matiscik	MAT-is-sick
+JAX	Jalen McLeod	Mc-CLOUD
+JAX	Patrick Mekari	Muh-CARE-ee
+JAX	Wyatt Milum	MY-lum
+JAX	Jimto Obidegwu	O-Bid-Deg-Woo
+JAX	Foyesade Oluokun	Foy-eh-SHA-day Oh-LOU-a-kin
+JAX	Ruke Orhorhoro	Oh-row-row-row
+JAX	Keivie Rose	KEE-vee
+JAX	Danny Striggow	STRIG-oh
+JAX	Jahlani Tavai	Ja-LAN-EE TAH-vie
+JAX	J'Mari Taylor	Juh-MAR-ee
+JAX	Austin Trammell	TRAM-uhl
+JAX	Bhayshul Tuten	BAY-shal TOOT-en
+JAX	Travon Walker	TRAY-von
+JAX	Michael Wortham	WUR-thum
+KC	Felix Anudike-Uzomah	ANN-you-DEE-kay ew-ZAH-muh
+KC	Matt Araiza	uh-RIZE-uh
+KC	Jeffrey Bassa	BAH-suh
+KC	Wesley Bissainthe	bih-SAIN-thuh
+KC	Jake Briningstool	BRIN-ing-stool
+KC	Mike Caliendo	cali-en-DOE
+KC	Jadon Canady	CAN-uh-dee
+KC	Jack Cochrane	kok-ruhn
+KC	Chamarri Conner	chuh-MAR-ee
+KC	Jacob De Jesus	DAY-huh-ZOOS
+KC	Mansoor Delane	MAHN-soor duh-LANE
+KC	Emari Demercado	ee-MAR-ee / dee-mer-CAH-doe
+KC	Kaiir Elam	kai-EAR EE-lum
+KC	Ashton Gillotte	Juh-LAH-tee
+KC	Alohi Gilman	uh-LOW-hee
+KC	Kader Kohou	KAY-der KOH-hoo
+KC	Hunter Nourzad	NOR-zad
+KC	Garrett Nussmeier	NUSS-meyer
+KC	Xavier Nwankpa	WAHM-puh
+KC	Pete Nygra	NYE-gruh
+KC	Chris Oladokun	oh-luh-DOE-ken
+KC	D'Arco Perkins-McAllister	DEE-AR-koh
+KC	Esa Pole	eh-SUH POE-lay
+KC	Nikko Remigio	KNEE-co Re-MEE-hee-oh
+KC	Rashee Rice	rah-she
+KC	Brashard Smith	BRUH-shard
+KC	Kingsley Suamataia	SUA-ma-Tah-ee-uh
+KC	Khyiris Tonga	KYE-riss
+KC	Matt Waletzko	WAHL-letz-ko
+KC	Terry Bradden	BRAY-den
+KC	Corey Matthaei	mah-TAY
+LV	Chigozie Anusiem	CHIH-go-zay / uh-NOO-see-um
+LV	Jack Bech	BESH
+LV	Tyler Duzansky	doo-ZAN-skee
+LV	Jahfari Harvey	juh-FAR-ee
+LV	Isaiah Jatta	JAH-tuh
+LV	Taron Johnson	TARE-in (rhymes with Baron)
+LV	Benito Jones	beh-KNEE-toh
+LV	Devin Lafayette	lah-fee-ET
+LV	Dylan Laube	Lao-Bee
+LV	Jonah Laulu	lah-OO-loo
+LV	Treven Ma'ae	mah-EYE
+LV	Atonio Mafi	AH-tonio MA-fee
+LV	Hezekiah Masses	heh-zuh-KY-uh
+LV	Kansei Matsuzawa	KAHN-say maht-soo-ZAH-wah
+LV	Cameron McGrone	muh-GROHN
+LV	Kamar Missouri	kuh-MAR
+LV	Dare Ogunbowale	DARR-ay oh-goon-bo-WALL-aye
+LV	Albert Okwuegbunam Jr.	OH-kwoo-AY-boo-nahm
+LV	Segun Olubi	SHEY-goo uh-LOO-bee
+LV	Kwity Paye	QWIT-tee PAY
+LV	JJ Pegues	puh-GEESE
+LV	Isaiah Pola-Mao	POE-luh-MOW
+LV	Decamerion Richardson	De-cam-ree-ON
+LV	Cian Slone	KEE-uhn
+LV	Xavian Sorey Jr.	x-ZAY-vian
+LV	Deven Thompkins	DEV-in
+LV	Dont'e Thornton Jr.	DON-tay
+LV	Dareke Young	duh-REEK
+LV	Trey Zuhn III	ZOON
+LAC	Noah Avinger	AV-in-jer
+LAC	Kayode Awosika	KY-oh-dee ah-woah-SHE-kah
+LAC	Tyler Biadasz	bee-AH-dish
+LAC	Peter Bowden	BAO-din
+LAC	Jerand Bradley	juh-ROND
+LAC	Sincere Brown	sin-SEAR
+LAC	Dalevon Campbell	DALE-von
+LAC	Gregory Desrosiers	deh-woah-zee-ay
+LAC	Justin Eboigbe	ee-BOYG-bee
+LAC	TeRah Edwards	TEE-rah
+LAC	Oronde Gadsden	uh-RON-day
+LAC	Jacobian Guillory	juh-KOH-bee-in GILL-uhh-ree
+LAC	Omarion Hampton	oh-MARR-ee-on
+LAC	Daiyan Henley	DAY-on
+LAC	JaQuae Jackson	JUH-quay
+LAC	Emany Johnson	EE-mahn-ee
+LAC	Charlie Kolar	KOHL-er
+LAC	Akheem Mesidor	MEH-zih-door
+LAC	Mante' Morrow	mah-ROW
+LAC	David Njoku	nuh-JOE-koo
+LAC	Rashawn Slater	ruh-SHAWN
+LAC	Jacob Spomer	SPOH-muhr
+LAC	Teair Tart	TEE-air
+LAC	Nadame Tucker	NAH-dame
+LAC	Tuli Tuipulotu	TOO-lee TOO-ee-poo-LOW-too
+LAC	DJ Uiagalelei	oo-ee-AHN-guh-luh-lay
+LAC	Laekin Vakalahi	VAH-kuh-LUH-hee
+LAC	Kimani Vidal	VIE-dell
+LAC	Isas Waxter	eye-SAHS
+LAR	AJ Arcuri	r-CURE-e
+LAR	Steve Avila	AH-vee-la
+LAR	Justin Dedich	DEE-ditch
+LAR	Shaun Dolac	DOUGH-lack
+LAR	Tomon Fox	tuh-mon
+LAR	Alaric Jackson	AL-ah-ric
+LAR	Desjuan Johnson	DEZ-juan
+LAR	Kamren Kinchens	Kin-CHINS
+LAR	Beaux Limmer	BO
+LAR	Harrison Mevis	MEE-vis
+LAR	Konata Mumpfield	Kuh-nah-TAY
+LAR	Larrell Murchison	lah-REHL MURCH-eh-sohn
+LAR	Puka Nacua	POO-kah Na-Coo-ah
+LAR	David Quessenberry	KWESS-en-berry
+LAR	Xavier Smith	ZAY-vee-er
+LAR	Omar Speights	Sp-ATES
+LAR	Grant Stuard	STOO-urd
+LAR	Keir Thomas II	KEER
+LAR	Nate Valcarcel	VAL-car-Suhl
+MIA	De'Von Achane	duh-VON A-chan
+MIA	Gottlieb Ayedze	GOT-leeb uh-YED-ze
+MIA	Aaron Brewer	AY-rin
+MIA	Marques Cox	Marcus
+MIA	Tyrel Dodson	TIE-rell
+MIA	Greg Dulcich	dull-sitch
+MIA	Chukwuebuka Godrick	chew-kew-A-buh-kah
+MIA	Cameron Goode	good
+MIA	Clelin Ferrell	CLEE-lin FURL
+MIA	Justin Joly	joe-LEE
+MIA	Will Kacmarek	KAZ-mare-ik
+MIA	David Ojabo	oh-JOBB-oh
+MIA	Jalen Reagor	ree-gr
+MIA	Mason Reiger	RYE-ger
+MIA	Jamaree Salyer	SAL-yur
+MIA	Jonah Savaiinaea	suh-vaiʻi-neye-uh (Like Hawaiʻi)
+MIA	Zach Sieler	SEE-ler
+MIA	Michael Taaffe	TAHF
+MIA	Seydou Traore	Say-doo trey-or-ay
+MIA	Josh Uche	OO-chay
+MIA	Jahmile Addae	juh-MILE uh-day
+MIA	Siriki Diabate	si-RIK-ee DEE-ah-BAH-tay
+MIA	Lemuel Jeanpierre	leh-mew-ELL zhon-pee-AIR
+MIA	Chuka Ndulue	CHOO-kuh en-DOO-loo-way
+MIA	DeShawn Shead	SHED
+MIN	Da'Veawn Armstead	DAY-vee-on
+MIN	Blake Brandel	Bran-duhl
+MIN	Max Brosmer	BROSE-murr
+MIN	Tyreek Chappell	shuh-PELL
+MIN	Terrill Davis	tur-RELL
+MIN	Andrew DePaola	dee-PAUL-uh
+MIN	Tai Felton	Tie
+MIN	Will Fries	FRYS
+MIN	Kahlef Hailassie	kah-LEAF hail-assie
+MIN	Tyrion Ingram-Dawkins	TY-ree-ahn
+MIN	Jauan Jennings	juh-WAHN
+MIN	Jeshaun Jones	JAY-shawn
+MIN	Dwight McGlothern Jr.	mic-GLAWTH-ern
+MIN	Joshua Metellus	MUH-tell-us
+MIN	Will Reichard	RYKE-urd
+MIN	Jahvaree Ritzie	JAH-vuh-ree RIT-zee
+MIN	Taki Taimani	Tawk-ee Tie-mawn-ee
+MIN	Tavierre Thomas	TAV-ee-air
+MIN	Ryan Van Demark	van duh-MARK
+MIN	Ben Yurosek	yer-AWH-sick
+NE	Bryce Baringer	BEAR-ringer
+NE	Andy Borregales	BORE-eh-gah-les
+NE	Mehki Butler	meh-KI
+NE	Kevin Byard III	BY-urd
+NE	Nick DeGennaro	DEE-juh-NAIR-oh
+NE	C.J. Dippre	dih-PREE
+NE	Romeo Doubs	DOBBS
+NE	DeMario Douglas	da-MARIO
+NE	Reggie Gilliam	GILL-ee-um
+NE	TreVeyon Henderson	TRAY-vee-on
+NE	Gabe Jacas	ACK-iss
+NE	Caleb Lomu	LOW-moo
+NE	Jesse Luketa	loo-KET-uh
+NE	Behren Morton	BARE-en
+NE	Chad Muma	MOO-mah
+NE	Namdi Obiazor	NAM-dee oh-bee-EYE-zohr
+NE	Michael Onwenu	oh-WHEN-new
+NE	Tejhaun Palmer	TAY-jahn
+NE	Karon Prunty	kuh-RONN PRUN-tee
+NE	Eli Raridon	RAIR-a-din
+NE	Andrew Rupcich	RUP-sitch
+NE	Robert Spillane	spuh-LANE
+NE	Rhamondre Stevenson	ruh-MON-dray
+NO	Dalys Beanum	Dallas
+NO	Barion Brown	BEAR-ee-on
+NO	Terrell Burgess	BUR-jis
+NO	Fadil Diggs	Fa-DILL
+NO	Travis Etienne Jr.	Ay-Chan
+NO	Taliese Fuaga	Tah-lee-ESS-ay Foo-AWN-gah
+NO	Davon Godchaux	DUH-von GOD-chaw
+NO	Alan Herron	HAIR-un
+NO	Moliki Matavao	Mo-LEAK-ee Mah-tuh-VOW
+NO	Christen Miller	KRIS-ten
+NO	Chris Olave	Oh-LAH-vay
+NO	Zaire Mitchell-Paden	Zigh-AIR Mitchell-PAY-den
+NO	Asim Richards	AH-sum
+NO	Brock Rechsteiner	WRECK-steiner
+NO	Jonas Sanker	YO-nis
+NO	Tyler Shough	Shuck
+NO	Charlie Smyth	Smith
+NO	Alex Wollschlaeger	Wool-SCHLAY-ger
+NO	Rejzohn Wright	Ray-SHAWN
+NO	Isaac Yiadom	YEAH-dum
+NYG	Paulson Adebo	uh-DEE-bow
+NYG	Damon Bankston	duh-MAWN
+NYG	Zaire Barnes	zai-EAR
+NYG	Beau Brade	BRAID
+NYG	Dalen Cambre	cam-BREE
+NYG	Jermaine Eluemunor	eh-LOO-muh-norr
+NYG	Joshua Ezeudu	ee-ZOO-doo
+NYG	Daniel Faalele	FAH-ah-LAY-lay
+NYG	Thomas Fidone II	fih-DOH-nee
+NYG	Leki Fotu	LECK-ee FOH-too
+NYG	Xavier Gipson	ZAY-vee-er
+NYG	Jarrod Gray	jared
+NYG	Jevon Holland	juh-VON
+NYG	Brenden Jaimes	HIGH-miss
+NYG	Khalid Kareem	KAH-lid
+NYG	Jake Kubas	KOO-bus
+NYG	Francis "Sisi" Mauigoa	see-see maui-NO-uh
+NYG	Marcus Mbow	BO
+NYG	Darius Muasau	MOO-uh-sow (like cow)
+NYG	Tyler Nubin	noo-BIN
+NYG	Gunner Olszewski	O-sheh-ski
+NYG	Anfernee Orji	OR-jee
+NYG	Jason Pinnock	pin-nock
+NYG	Arvell Reese	ar-VELL
+NYG	Cam Skattebo	SKAT-eh-boo
+NYG	Kayvon Thibodeaux	ti-buh-dough
+NYG	Josh Tupou	TWO-poh
+NYG	Ar'Darius Washington	ar-DARE-ee-us
+NYG	Dominic Zvada	ZVAH-duh
+NYJ	Mory Bamba	More-ee bom-bah
+NYJ	Jowon Briggs	JOE-whan
+NYJ	Anez Cooper	uh-nez
+NYJ	Andre Cisco	sis-co
+NYJ	Paschal Ekeji	eh-KAY-gee
+NYJ	Kingsley Enagbare	ee-NAG-bar-ee
+NYJ	Olu Fashanu	O-lieu Fashion-EW
+NYJ	Kiko Mauigoa	MAO-ee-no-ah
+NYJ	Armand Membou	MEM-boo
+NYJ	Adonai Mitchell	ADD-an-I
+NYJ	Kene Nwangwu	kuh-NAY WONG-goo
+NYJ	Chukwuma Okorafor	chuck-OO-muh oh-KOR-uh-for
+NYJ	David Onyemata	own-ye-mah-tah
+NYJ	Joseph Ossai	o-SIGH
+NYJ	Dylan Parham	PARR-um
+NYJ	Jamien Sherwood	like "Damien"
+NYJ	Mazi Smith	MAH-zee
+NYJ	Qwan'tez Stiggers	QWAN-tez
+NYJ	Azareye'h Thomas	uh-ZAR-ee-yay
+NYJ	Mykal Walker	Michael
+NYJ	Nahshon Wright	nuh-SHAWN
+PHI	Uar Bernard	OO-ar
+PHI	Jihaad Campbell	JUH-haad
+PHI	Britain Covey	CUH-vee
+PHI	Arnold Ebiketie	eb-uh-KAY-tee
+PHI	A.J. Epenesa	ep-UH-ness-UH
+PHI	Erik Ezukanma	ez-oo-KAH-muh
+PHI	Dallas Goedert	GOD-ert
+PHI	Kapena Gushiken	kuh-PAY-na, gush-EH-kin
+PHI	Jalyx Hunt	JAY-lix
+PHI	Tarron Jackson	TUH-ron
+PHI	Cameron Latu	LAH-too
+PHI	Jordan Mailata	my-LOT-uh
+PHI	Smael Mondon	SMILE
+PHI	Andrew Mukuba	muh-KOO-bah
+PHI	Moro Ojomo	MORE-oh, oh-JOE-moe
+PHI	John Ojukwu	oh-JU-koo
+PHI	Kelee Ringo	KEE-lee
+PHI	Eli Stowers	STOW-ers (rhymes with hours)
+PHI	Samori Toure	suh-MORE-ee, TOO-ray
+PHI	Cole Wisniewski	wiz-NESS-kee
+PHI	Riq Woolen	REEK
+PIT	Drew Allar	AL-lurh
+PIT	Jaheim Bell	juh-HEIM
+PIT	Keeanu Benton	Key-AH-knew
+PIT	Germie Bernard	JURH-mee
+PIT	Yahya Black	WHY-yay
+PIT	Jamin Davis	JAY-min
+PIT	Joaquin Davis	Wah-KEEN
+PIT	Rico Dowdle	DOWD-ill
+PIT	Brandin Echols	eck-ELS
+PIT	Troy Fautanu	fao-TAWN-oo
+PIT	Pat Freiermuth	FRY-ar-mooth
+PIT	Eli Heidenreich	HIGH-den-ryke
+PIT	Max Iheanachor	ee-HAW-nuh-chore
+PIT	Christian Kuntz	KOONCE
+PIT	Israel Mukuamu	MOO-kwah-moo
+PIT	Esezi Otomewo	uh-SAY-zee oh-TOE-may-woh
+PIT	Ben Skowronek	skuh-RAWN-ick
+PIT	Robert Tonyan	TUN-yin
+PIT	Kaden Wetjen	WEE-gin
+PIT	Jacoby Windmon	WIND-min
+SF	Keion White	KEE-on
+SF	Osa Odighizuwa	OH-sah oh-DEE-gih-ZOO-ah
+SF	K.J. Henry	KAY-jay
+SF	Bryson Eason	EE-son
+SF	Gracen Halton	GRAY-son
+SF	Nick Bosa	BOH-sah
+SF	Romello Height	Ruh-MEL-oh
+SF	Quinton Bell	QUIN-tun
+SF	Ogbo Okoronkwo	OHG-bo oh-KOR-onk-wo
+SF	Luke Gifford	GHI-ford
+SF	Dre Greenlaw	dray
+SF	Renardo Green	Ruh-NAR-doe
+SF	Deommodore Lenoir	dee-OM-uh-dor LEN-wahr
+SF	Darrell Luter Jr.	duh-RELL LOO-ter
+SF	Ephesians Prysock	uh-FEE-zee-un PRY-sock
+SF	Upton Stout	UP-ton
+SF	Ji'Ayir Brown	JEE-air
+SF	Siran Neal	SIGH-ran
+SF	Malik Mustapha	muh-LEE-k muh-STAH-fuh
+SF	Corliss Waitman	CORE-lis
+SF	Eddy Piñeiro	puh-NAY-row
+SF	Jack Bouwmeester	BOW-meester
+SF	Enrique Cruz Jr.	en-REE-kay
+SF	Trenton Irwin	TRENT-un
+SF	De'Zhaun Stribling	de-ZHAWN
+SEA	Bryce Cabeldue	KAY-bul-dew
+SEA	Zach Charbonnet	SHAR-buh-nay
+SEA	Nick Emmanwori	EE-man-WOR-ee
+SEA	Montorie Foster Jr.	mon-TOR-ee
+SEA	Jalan Gaines	JAY-lin
+SEA	George Holani	ho-LAH-nee
+SEA	Noah Igbinoghene	ig-bih-nah-guh-knee
+SEA	Shemar Jean-Charles	SHUH-mar zhon CHAR-uhls
+SEA	Velus Jones Jr.	VAY-lus
+SEA	Nick Kallerup	CAL-err-up
+SEA	Tyrice Knight	TY-rees
+SEA	Brock Lampe	LAMP-ee
+SEA	Federico Maranges	muh-RONG-hess
+SEA	Uchenna Nwosu	oo-CHEH-nuh new-OH-soo
+SEA	Ty Okada	oh-KAH-duh
+SEA	Olu Oluwatimi	OH-loo OH-loo-wah-TIMM-ee
+SEA	Robbie Ouzts	OOTS
+SEA	Brandon Pili	PEE-lee
+SEA	Jadarian Price	juh-DAHR-ee-un
+SEA	Jarran Reed	JARE-in
+SEA	Eric Saubert	SAW-bert
+SEA	Uso Seumalo	OOH-so SAY-oh-MAHL-oh
+SEA	Rashid Shaheed	rah-SHEED shuh-HEED
+SEA	Jaxon Smith-Njigba	in-JIGG-buh
+SEA	Chris Stoll	stole
+SEA	Jalen Sundell	sun-DELL
+SEA	Chazz Surratt	sir-ROT
+SEA	Nick Vannett	van-NET
+SEA	Devon Witherspoon	DEV-in
+SEA	Jacardia Wright	juh-CAR-dee-AY
+SEA	Grey Zabel	ZAY-bull
+SEA	Aden Durde	AD-in DUR-tee
+SEA	Quinshon Odom	QWIN-shawn OH-dum
+SEA	Kirk Olivadotti	ah-luh-vuh-DOT-ee
+SEA	Danny van Dijk	dike
+TB	Alex Anzalone	an-zuh-LOW-nee
+TB	Connor Bazelak	BAYZ-lak
+TB	Kadarius Calloway	kuh-DARE-ee-us
+TB	DeMonte Capehart	duh-MON-tay CAPE-hart
+TB	Ben Chukwuma	chuck-WOO-muh
+TB	SirVocea Dennis	sir-VAH-see-ay
+TB	Yaya Diaby	dee-AW-bee
+TB	Emeka Egbuka	eh-MEH-kuh, eh-BOO-kuh
+TB	Marshall Foerner	FUR-nur
+TB	Luke Goedeke	GED-uh-kee
+TB	Yasir Holmes	yuh-SEAR
+TB	Nash Hutmacher	HUT-make-er
+TB	Calijah Kancey	KAN-see
+TB	Ko Kieft	KEEFT
+TB	Cody Mauch	m(OW)k
+TB	Chase McLaughlin	mick-LOFF-lin
+TB	Ifeatu Melifonwu	ee-FAH-too mel-eh-FAWN-woo
+TB	Al-Quadin Muhammad	al kwah-DEEN moo-HAH-mud
+TB	Rakeem Nuñez-Roches	rah-KEEM NOON-yez ROH-ches
+TB	Roman Parodie	puh-ROAD-ee
+TB	Jack Pyburn	PIE-burn
+TB	Paul Rubelt	ROO-belt
+TB	Cade Otton	AWT-in
+TB	Jacob Parrish	PAIR-ish
+TB	Billy Schrauth	like "South"
+TB	Keionte Scott	kee-ON-tay
+TB	Tykee Smith	tie-KEY
+TB	Vita Vea	VEET-uh VAY-uh
+TB	Damarion Williams	duh-MARE-ee-on
+TB	Javin Wright	JAY-vin
+TEN	Elic Ayomanor	EL-ick EYE-oh-man-er
+TEN	Hank Beatty	BAY-dee
+TEN	Keydrain Calligan	KEY-dren
+TEN	Austin Deculus	DECK-you-luss
+TEN	Garrett Dellinger	DELL-ing-er
+TEN	Mohamoud Diabate	mah-MOOD dee-ah-BAH-tay
+TEN	Chimere Dike	CHEEM-eh-ray DEE-kay
+TEN	Keldric Faulk	KELL-drick
+TEN	Cor'Dale Flott	CORE-dell
+TEN	Kylen Granson	KY-lin
+TEN	Jaylen Harrell	HAIR-el
+TEN	Nazeeh Johnson	NAH-zee
+TEN	Jaren Kanak	CAN-ick
+TEN	JC Latham	LAY-thum
+TEN	Dorian Mausi	ma-OOO-see
+TEN	Kalel Mullings	kuh-LEL
+TEN	Oluwafemi Oladejo	OH-loo-WAH-feh-me ole-uh-DAY-jo
+TEN	Wan'Dale Robinson	WAHN-dell
+TEN	Xavier Restrepo	eck-ZAY-vee-er ress-TREH-poe
+TEN	Khalen Saunders	KAH-len
+TEN	Austin Schlottmann	SHLOTE-man
+TEN	Peter Skoronski	skuh-RON-ski
+TEN	Tyjae Spears	TAH-zhay
+TEN	Laki Tasi	LAH-kee TAH-see
+TEN	Alontae Taylor	uh-LAWN-tay
+TEN	Mitchell Trubisky	true-BISS-kee
+TEN	Aamil Wagner	uh-MEAL
+WAS	Trey Amos	Ay-miss
+WAS	Sala Aumavae-Laulu	Ah-moo-VYE Law-oo-loo
+WAS	Treylon Burks	TRAY-lun
+WAS	K'Lavon Chaisson	KAY-luv-vahn chase-ON
+WAS	Leo Chenal	Shuh-nawl
+WAS	Matt Haack	Hawk
+WAS	Ale Kaho	Ah-lay CAH-hoe
+WAS	Athan Kaliakmanis	KAL-ee-ek-MAN-iss
+WAS	Jeffrey M'Ba	EM-bah
+WAS	TJ Maguranyanga	mah-GUHR-ann-yong-AH
+WAS	Terry McLaurin	MICK-law-REN
+WAS	Chig Okonkwo	oh-Konk-WOAH
+WAS	Charles Omenihu	oh-MEN-eh-hoo
+WAS	Odafe Oweh	uh-DAH-fay oh-WAY
+WAS	Daron Payne	du-RON
+WAS	Nicholas Petit-Frere	puh-TEET FRAIR
+WAS	Mike Sainristil	Sane-ris-still
+WAS	Ben Sinnott	SIN-it
+WAS	Tanoa Togiai	TAH-noah tong-EE-eye
+WAS	David Raih	Rye
+WAS	Brian Stoldt	STOHLT
+WAS	Shane Toub	Tohb (rhymes with robe)
