@@ -38,7 +38,8 @@ function loadPlaywright() {
   const out = path.resolve(args.out || `${id}.mp4`);
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hflnn-rec-'));
 
-  const audioPath = path.join(tmp, m.audio);
+  // m.audio carries a "?v=" version for browsers; the file on disk has none.
+  const audioPath = path.join(tmp, m.audio.split('?')[0]);
   fs.writeFileSync(audioPath, Buffer.from(await (await fetch(`${base}/media/${id}/${m.audio}`)).arrayBuffer()));
 
   const browser = await chromium.launch();
