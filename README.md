@@ -277,7 +277,29 @@ the template writer (there's no rescue model).
 28 American and British English voices, about real time on a modern CPU. Voiced lines are
 cached, so editing one line and re-voicing only re-synthesizes that line.
 
-**Settings → Pronunciations** fixes names the voices get wrong (`Ja'Marr = Juh Mar`).
+**The NFL pronunciation guide** is built in: 834 players and coaches from the commissioner's
+guide, kept in `config/pronunciation-guide.tsv` (team, name, respelling as the guide writes it).
+`node tools/import-pronunciations.js` turns it into `config/pronunciations.json`, which
+`lib/tts/lexicon.js` applies to every line before it is voiced:
+
+- **Kokoro** gets exact phonemes for each name. The guide's respellings can't go in as text,
+  because espeak-ng (Kokoro's reader) spells capitalised chunks out as letters ("KEY" → "K E Y")
+  and stresses every syllable. So each syllable is phonemized in lowercase, and primary stress
+  goes only where the guide capitalises. The worker feeds those phonemes to the model
+  (`lib/tts/phonemes.js`); lines without guide names voice exactly as before.
+- **ElevenLabs** reads the respelling as the guide writes it.
+- Full names always match. A last (or first) name said on its own matches only when the guide
+  says it one way and it isn't an everyday word or common name, case-sensitively. So
+  "Allgeier" alone is fixed, "Xavier" alone (seven different Xaviers) and "pole position" are
+  not.
+- A handful of entries aren't respellings ("rhymes with broker", "like South") or can't be read
+  by espeak. They're listed with their reasons in `OVERRIDES` at the top of the importer.
+
+To change one: edit the guide file, rerun the importer, commit both. Captions always show the
+script's own spelling.
+
+**Settings → Pronunciations** fixes names the guide misses or gets wrong (`Ja'Marr = Juh Mar`).
+Your entries are applied first, so they win over the guide.
 
 **ElevenLabs** (optional, paid) runs alongside Kokoro. Set `ELEVENLABS_API_KEY`, then in
 **Settings → Anchors** give any anchor an ElevenLabs voice from your account (premade, cloned or

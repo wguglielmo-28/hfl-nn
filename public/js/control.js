@@ -538,7 +538,7 @@ async function viewSettings() {
         : `Set ELEVENLABS_API_KEY on the server to give anchors ElevenLabs voices.${el.error ? ` (${el.error})` : ''}`),
       h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'Kokoro voice', el.configured && 'ElevenLabs voice', 'Speed', ''].filter(t => t !== false).map(t => h('th', {}, t)))), h('tbody', {}, personaRows.map(r => r.el)))),
     h('section', { class: 'panel' }, h('h2', {}, 'Pronunciations'),
-      h('p', { class: 'muted' }, 'One per line: how a name is written = how the voices should say it.'), pron),
+      h('p', { class: 'muted' }, 'The NFL pronunciation guide (834 players and coaches) is built in. Add a line here only for a name it misses or gets wrong; yours win. One per line: how a name is written = how the voices should say it.'), pron),
     h('div', { class: 'row' }, h('button', { class: 'btn primary', type: 'button', on: { click: save } }, 'Save settings')),
     startOverPanel());
 }
