@@ -465,36 +465,18 @@ test('ElevenLabs voices: per-anchor picks, spend recorded per episode, Kokoro ta
     assert.equal(r.status, 200);
     assert.ok(calls.some(p => p.startsWith(`/v1/text-to-speech/${VOICE}`)), 'the preview used ElevenLabs');
 
-    // The export drafts and voices the weekly show by itself.
+    // ElevenLabs is for the Fifth Quarter only: an HFL-NN show stays on Kokoro
+    // even with the old engine setting on and Ray given an ElevenLabs voice.
     const before = calls.length;
     for (const p of fixturePayloads()) s.ctx.ingest.ingest(p);
     await s.ctx.ingest.flush();
     await s.ctx.producer.idle();
     const id = s.ctx.producer.list()[0].id;
-    let ep = s.ctx.producer.get(id);
-    assert.equal(ep.audio.provider, 'silent + elevenlabs');
-    assert.equal(ep.audio.elevenlabsModel, 'eleven_v4');
-    const rayLines = ep.script.segments.flatMap(x => x.lines).filter(l => l.speaker === 'ray');
-    assert.ok(rayLines.length > 0);
-    assert.ok(calls.length - before >= rayLines.length, 'every Ray line went to ElevenLabs');
-    assert.ok(ep.audio.elevenlabsChars >= rayLines.reduce((n, l) => n + l.text.length, 0) * 0.8, 'and was counted');
-
-    s.ctx.producer.voice(id);
-    await s.ctx.producer.idle();
-    assert.equal(s.ctx.producer.get(id).audio.elevenlabsChars, 0, 'a re-voice of an unchanged script is all cache');
-
-    fail = true;
-    await s.adminReq('PUT', '/api/admin/settings', { body: { elevenModel: 'eleven_flash_v2_5' } });
-    s.ctx.producer.voice(id);
-    await s.ctx.producer.idle();
-    ep = s.ctx.producer.get(id);
-    assert.equal(ep.audio.fallbackFrom, 'elevenlabs');
-    assert.match(ep.audio.fallbackReason, /out of characters/);
+    const ep = s.ctx.producer.get(id);
     assert.equal(ep.audio.provider, 'silent');
-    assert.ok(ep.audio.duration > 0, 'the show still got voiced');
-    r = await s.adminReq('GET', '/api/admin/status');
-    assert.equal(r.json.tts.elevenlabs.status, 'error');
-    assert.equal(r.json.tts.voiceEngine, 'elevenlabs');
+    assert.equal(ep.audio.elevenlabsChars, undefined);
+    assert.ok(ep.script.segments.flatMap(x => x.lines).some(l => l.speaker === 'ray'));
+    assert.equal(calls.slice(before).filter(p => p.startsWith('/v1/text-to-speech')).length, 0, 'no line went to ElevenLabs');
   } finally { await s.close(); }
 });
 
