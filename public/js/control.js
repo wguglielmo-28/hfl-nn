@@ -127,7 +127,9 @@ async function viewDashboard() {
         row('HFL Hub', s.hub.fetchedAt ? `updated ${when(s.hub.fetchedAt)}` : (s.hub.error || 'not configured')),
         row('Storage', `${s.dataDir}${s.persistentVolume ? ' (volume)' : ''}`))),
       h('div', { class: 'row' },
-        h('button', { class: 'btn primary', type: 'button', disabled: empty, on: { click: () => newEpisode({ type: 'weekly' }) } }, 'Produce weekly show'),
+        s.weeklyShow === 'talk'
+          ? h('button', { class: 'btn primary', type: 'button', on: { click: () => { state.tab = 'desk'; render(); } } }, `${s.talkShowName || 'The Fifth Quarter'}: gather this week`)
+          : h('button', { class: 'btn primary', type: 'button', disabled: empty, on: { click: () => newEpisode({ type: 'weekly' }) } }, 'Produce weekly show'),
         h('button', { class: 'btn', type: 'button', on: { click: () => { state.tab = 'episodes'; render(); } } }, 'Breaking bulletin / special'))));
 
   const setup = h('section', { class: 'panel' }, h('h2', {}, 'Madden export URL'),
@@ -142,8 +144,8 @@ async function viewDashboard() {
       h('tbody', {}, s.batches.map(b => h('tr', {}, h('td', {}, when(b.finishedAt)), h('td', {}, b.source), h('td', {}, Object.entries(b.parts).map(([k, v]) => `${k}×${v}`).join(', ')))))) : h('p', { class: 'muted' }, 'No exports yet.'));
 
   if (s.jobs.some(j => ['queued', 'running'].includes(j.status)) || s.ingest.open) state.poll = setInterval(render, 3000);
-  const waiting = s.desk && h('section', { class: 'panel' }, h('h2', {}, `${s.desk.label} is waiting for your approval`),
-    h('p', {}, 'Set the Game of the Week and the Players of the Week, add any headlines the export missed, then approve to have the show written.'),
+  const waiting = s.desk && h('section', { class: 'panel' }, h('h2', {}, s.desk.kind === 'talk' ? `${s.desk.label} is gathered` : `${s.desk.label} is waiting for your approval`),
+    h('p', {}, s.desk.kind === 'talk' ? 'Review what was gathered, add notes or headlines, then write the script. Nothing has been spent.' : 'Set the Game of the Week and the Players of the Week, add any headlines the export missed, then approve to have the show written.'),
     h('button', { class: 'btn primary', type: 'button', on: { click: () => { state.tab = 'desk'; render(); } } }, 'Open the week desk'));
   return h('div', {}, waiting, cards, channelPanel(s, guide), setup, jobs, batches);
 }
@@ -323,8 +325,11 @@ async function viewEpisode() {
   const [ep, settings, jobs] = await Promise.all([api(`/api/admin/episodes/${state.episode}`), api('/api/admin/settings'), api('/api/admin/jobs')]);
   const busy = ['writing', 'voicing'].includes(ep.status);
   if (busy) state.poll = setInterval(render, 3000);
-  const personas = settings.personas;
+  const talk = ep.type === 'talk';
+  const personas = talk ? settings.talkPersonas : settings.personas;
+  lastTalkWriter = settings.talkWriter || 'auto';
   const job = jobs.find(j => j.episodeId === ep.id && ['queued', 'running'].includes(j.status));
+  const credits = talk && ep.script && !ep.audio ? await api('/api/admin/tts/elevenlabs/credits').catch(() => null) : null;
 
   const header = h('section', { class: 'panel' },
     h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', on: { click: () => { state.episode = null; render(); } } }, '← Episodes'), statusPill(ep.status)),
@@ -332,7 +337,9 @@ async function viewEpisode() {
     ep.summary && h('p', {}, ep.summary),
     ep.error && h('p', { class: 'error' }, ep.error),
     job && h('p', { class: 'notice' }, job.progress ? (job.progress.stage === 'voicing' ? `Voicing line ${job.progress.done} of ${job.progress.total}…` : `Writing… ${job.progress.chars || 0} characters so far`) : `${job.kind} ${job.status}…`),
+    ep.blind && blindInfo(ep),
     writerInfo(ep.writer),
+    talk && ep.script && talkCost(ep, settings, credits),
     pollInfo(ep.script?.fanPoll, personas),
     ep.audio && h('p', {}, `Audio: ${fmtDur(ep.audio.duration)} ${ep.audio.format.toUpperCase()} (${Math.round(ep.audio.bytes / 1024)} KB, ${ep.audio.provider} voices)${elevenInfo(ep.audio)}${ep.audio.stale ? ' — script changed since, re-voice it' : ''}`),
     ep.audio?.fallbackFrom && h('p', { class: 'error' }, `ElevenLabs failed, so Kokoro voiced this one: ${ep.audio.fallbackReason}`),
@@ -369,8 +376,31 @@ function pollInfo(poll, personas) {
   return h('p', { class: 'muted' }, `Discord poll: ${poll.question} — ${poll.answers.map(a => (name(a.persona) && !a.text.startsWith(name(a.persona)) ? `${name(a.persona)}: ${a.text}` : a.text)).join(' / ')}`);
 }
 
+// A blind-test script: its writer stays hidden until one of the pair is picked.
+let lastTalkWriter = 'auto';
+const settings_talkWriter = () => lastTalkWriter;
+function blindInfo(ep) {
+  if (ep.blind.revealed) return h('p', { class: 'muted' }, `Blind test Script ${ep.blind.label}: ${ep.blind.winner ? 'your pick' : 'not picked'}.`);
+  return h('div', { class: 'notice' },
+    h('p', {}, `Blind test: this is Script ${ep.blind.label}. The other script of the pair is on the Episodes tab. Read both, then pick the better one. The winner's writer becomes the talk show's writer.`),
+    h('button', { class: 'btn primary', type: 'button', disabled: !ep.script, on: { click: () => {
+      if (!confirm(`Pick Script ${ep.blind.label}?`)) return;
+      act(() => api('/api/admin/desk/blind/pick', { method: 'POST', body: { episodeId: ep.id } }), 'Picked').then(r => { if (r) { toast(`Script ${ep.blind.label} was written by ${r.writer === 'claude' ? 'Claude' : r.writer === 'openai' ? 'OpenAI' : r.writer}. It is now the talk show's writer.`); render(); } });
+    } } }, `Pick Script ${ep.blind.label}`));
+}
+
+// What voicing a talk script costs, against the budget and the account.
+function talkCost(ep, settings, credits) {
+  const n = v => Number(v || 0).toLocaleString();
+  const budget = settings.talkCharBudget || 6000;
+  const chars = ep.voiceChars || 0;
+  const bad = chars > budget * 1.15 || (credits?.ok && chars > credits.left);
+  return h('p', { class: bad ? 'error' : 'muted' }, `Voicing: up to ${n(chars)} ElevenLabs characters (budget ${n(budget)}; lines already voiced are free).${credits?.ok ? ` The account has ${n(credits.left)} of ${n(credits.limit)} left this month.` : credits?.reason ? ` ${credits.reason}` : ''}`);
+}
+
 function writerInfo(w) {
   if (!w) return null;
+  if (w.kind === 'hidden') return h('p', { class: 'muted' }, `Writer hidden for the blind test${w.costUsd != null ? ` • about $${w.costUsd.toFixed(3)}` : ''}`);
   const bits = [w.kind === 'claude' || w.kind === 'openai' ? `Written by ${w.model}` : 'Written by the template writer'];
   if (w.costUsd != null) bits.push(`about $${w.costUsd.toFixed(3)}`);
   if (w.usage) bits.push(`${w.usage.reduce((n, u) => n + u.input + u.cacheRead + u.cacheWrite, 0)} in / ${w.usage.reduce((n, u) => n + u.output, 0)} out tokens${w.usage.some(u => u.cacheRead) ? ' (cache hit)' : ''}`);
@@ -383,6 +413,27 @@ function actions(ep, busy) {
   const discord = h('input', { type: 'checkbox', checked: true });
   const notes = h('input', { type: 'text', placeholder: 'Notes for a rewrite (optional)' });
   const run = (path, body, ok) => act(() => api(`/api/admin/episodes/${ep.id}/${path}`, { method: 'POST', body }), ok).then(render);
+  if (ep.type === 'talk') {
+    const air = () => {
+      if (!confirm(`Voice this script with ElevenLabs (up to ${Number(ep.voiceChars || 0).toLocaleString()} credits) and publish it as soon as it is voiced? Nothing is posted to Discord.`)) return;
+      run('voice', { publish: true }, 'Voicing with ElevenLabs…');
+    };
+    return h('div', {},
+      h('div', { class: 'row' },
+        h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.script || !!ep.validation?.errors.length || (ep.audio && !ep.audio.stale), on: { click: air } }, ep.audio ? 'Re-voice and air' : 'Approve & air'),
+        h('a', { class: 'btn', href: `/?preview=${ep.id}`, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ep.audio) }, 'Preview'),
+        ep.status === 'published'
+          ? h('button', { class: 'btn', type: 'button', on: { click: () => run('unpublish', {}, 'Unpublished') } }, 'Unpublish')
+          : h('button', { class: 'btn', type: 'button', disabled: busy || !ep.audio || ep.audio?.stale, on: { click: () => run('publish', { discord: false }, 'Published!') } }, 'Publish'),
+        ep.status === 'published' && h('a', { class: 'btn', href: `/watch/${ep.id}`, target: '_blank', rel: 'noopener' }, 'Watch'),
+        h('button', { class: 'btn danger', type: 'button', disabled: busy, on: { click: async () => {
+          if (!confirm('Delete this episode and its audio?')) return;
+          await act(() => api(`/api/admin/episodes/${ep.id}`, { method: 'DELETE' }), 'Deleted');
+          state.episode = null; render();
+        } } }, 'Delete')),
+      h('div', { class: 'row', style: 'margin-top:8px' }, notes,
+        h('button', { class: 'btn', type: 'button', disabled: busy, on: { click: () => { if (confirm('Rewrite the whole script? This costs a few cents of writer time, no ElevenLabs credits.')) run('rewrite', { notes: notes.value || null, writer: settings_talkWriter() }, 'Rewriting…'); } } }, 'Rewrite whole script')));
+  }
   return h('div', {},
     h('div', { class: 'row' },
       !ep.imported && h('button', { class: 'btn primary', type: 'button', disabled: busy || !ep.script || !!ep.validation?.errors.length, on: { click: () => run('voice', {}, 'Voicing started') } }, ep.audio ? 'Re-voice' : 'Voice it'),
@@ -516,6 +567,25 @@ async function viewSettings() {
     return { id: p.id, name, voice, speed, eleven, el: h('tr', {}, h('td', {}, p.role), h('td', {}, name), h('td', {}, voice), el.configured && h('td', {}, eleven), h('td', {}, speed), h('td', {}, play)) };
   });
 
+  const talkRows = (st.talkPersonas || []).map(p => {
+    const name = h('input', { type: 'text', value: p.name });
+    const speed = h('input', { type: 'number', min: '0.8', max: '1.25', step: '0.01', value: p.speed || 1 });
+    const elOpts = [...(el.voices.length ? el.voices : st.elevenPremade || [])];
+    if (p.elevenVoice && !elOpts.some(v => v.id === p.elevenVoice)) elOpts.push({ id: p.elevenVoice, label: p.elevenVoice });
+    const eleven = h('select', {}, h('option', { value: '' }, '— none —'), elOpts.map(v => h('option', { value: v.id }, v.label)));
+    eleven.value = p.elevenVoice || '';
+    const play = h('button', { class: 'btn', type: 'button', on: { click: async () => {
+      if (!eleven.value) return toast('Pick an ElevenLabs voice first', true);
+      play.disabled = true;
+      try {
+        const res = await api('/api/admin/tts/preview', { method: 'POST', raw: true, body: { voice: `eleven:${eleven.value}`, speed: Number(speed.value), text: p.sample?.[0] || `I'm ${name.value}.` } });
+        if (!res.ok) throw new Error((await res.json()).error);
+        new Audio(URL.createObjectURL(await res.blob())).play();
+      } catch (e) { toast(`Voice preview failed: ${e.message}`, true); } finally { play.disabled = false; }
+    } } }, '▶ Hear (about 90 credits)');
+    return { id: p.id, name, speed, eleven, el: h('tr', {}, h('td', {}, p.role), h('td', {}, name), h('td', {}, eleven), h('td', {}, speed), h('td', {}, play)) };
+  });
+
   const save = async () => {
     const patch = {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
@@ -524,7 +594,11 @@ async function viewSettings() {
       seasonNumber: f.seasonNumber.value.trim() || null,
       channelAuto: f.channelAuto.checked, chatOnAir: f.chatOnAir.checked, dailyCapUsd: Number(f.dailyCapUsd.value), channelWriter: f.channelWriter.value,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
-      personaOverrides: Object.fromEntries(personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value), elevenVoice: r.eleven.value }])),
+      personaOverrides: Object.fromEntries([
+        ...personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value), elevenVoice: r.eleven.value }]),
+        ...talkRows.map(r => [r.id, { name: r.name.value, speed: Number(r.speed.value), elevenVoice: r.eleven.value }]),
+      ]),
+      weeklyShow: f.weeklyShow.value, talkWriter: f.talkWriter.value, talkModel: f.talkModel.value, talkCharBudget: Number(f.talkCharBudget.value),
     };
     if (webhook.value.trim()) patch.discordWebhook = webhook.value.trim();
     await act(() => api('/api/admin/settings', { method: 'PUT', body: patch }), 'Settings saved');
@@ -551,6 +625,16 @@ async function viewSettings() {
       check('autoBreaking', 'Draft breaking bulletins for big moves and Chronicle "breaking" posts'),
       check('autoPublishBreaking', '…and publish bulletins without review'),
       check('fanPolls', 'Attach a fan poll on the night\'s best argument to each Discord post')),
+    h('section', { class: 'panel' }, h('h2', {}, st.talkShowName || 'The Fifth Quarter'),
+      h('p', { class: 'muted' }, 'The weekly talk show: one show, many styles, an original cast voiced by ElevenLabs. It runs on your timing from the Week Desk: Gather (free), Write (a few cents), then Approve & air on the episode (ElevenLabs credits). It shares the show memory with HFL-NN, so each show hears what the other said.'),
+      h('div', { class: 'grid2' },
+        h('div', {}, h('label', {}, 'Weekly show'), sel('weeklyShow', ['talk', 'hflnn'], { talk: `${st.talkShowName || 'The Fifth Quarter'} (nothing is queued when an HFL week goes final)`, hflnn: 'HFL-NN weekly on the Week Desk (the old flow)' })),
+        h('div', {}, h('label', {}, 'ElevenLabs characters per episode'), text('talkCharBudget', 'number', '6000'),
+          h('p', { class: 'muted' }, 'Starter (30,000 a month): about 6,000. Creator (121,000): about 25,000. Segments that do not fit are left out; voicing refuses a script more than 15% over.')),
+        h('div', {}, h('label', {}, 'Writer'), sel('talkWriter', ['auto', 'claude', 'openai'], { auto: 'Same as the script writer above', claude: 'Claude', openai: 'OpenAI (GPT)' }),
+          h('p', { class: 'muted' }, 'The blind test on the Week Desk sets this for you.')),
+        h('div', {}, h('label', {}, 'ElevenLabs model'), sel('talkModel', st.elevenModels.map(m => m.id), Object.fromEntries(st.elevenModels.map(m => [m.id, m.label]))))),
+      h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'ElevenLabs voice', 'Speed', ''].map(t => h('th', {}, t)))), h('tbody', {}, talkRows.map(r => r.el)))),
     h('section', { class: 'panel' }, h('h2', {}, 'The 24/7 channel'),
       h('p', { class: 'muted' }, 'The live shows (The Wire three times a day, Morning Blitz, Stat Lab, Top Plays, HFL-NN Tonight on nights without a new weekly show, and Grimley After Dark) are written, voiced and aired by themselves, 45 to 60 minutes before their slots. Between advances they cover the games members have already played that week, with scores and stat lines only; the weekly show still waits for the whole week. Each one runs 5 to 15 minutes, is only made when there is something it has not covered (The Wire waits for a new result), is tried once per slot, and never posts to Discord or uses up stories the weekly show needs. Voices are always the free local ones.'),
       check('channelAuto', 'Make the daily shows for the channel automatically'),
@@ -603,12 +687,13 @@ function startOverPanel() {
 async function viewDesk() {
   const d = await api('/api/admin/desk');
   const reload = r => { if (r) render(); };
+  if (d.weeklyShow === 'talk' && d.entry?.kind !== 'talk') return talkGatherPanel(d);
   if (!d.entry) {
     return h('section', { class: 'panel' }, h('h2', {}, 'Week desk'),
       h('p', {}, 'Nothing is waiting. When an export finishes a week, the week lands here for your approval before the weekly show is written.'),
       d.latestWeek && h('button', { class: 'btn', type: 'button', on: { click: () => act(() => api('/api/admin/desk/open', { method: 'POST', body: {} }), 'Desk opened').then(reload) } }, `Open the desk for ${d.latestWeek.label}`));
   }
-  const e = d.entry, c = d.candidates, sug = d.suggested;
+  const e = d.entry, c = d.candidates || { games: [], offense: [], defense: [] }, sug = d.suggested || {};
 
   const gotw = h('select', {}, h('option', { value: '' }, 'None named (the best game airs as the Spotlight Game)'),
     c.games.map(g => h('option', { value: g.id }, `${g.headline}${g.id === c.hubGotw ? ' (Hub pick)' : g.madden ? ' (Madden flag)' : ''}`)));
@@ -631,7 +716,7 @@ async function viewDesk() {
   };
   const off = potwPicker('offense'), def = potwPicker('defense');
   const notes = h('textarea', { value: e.notes || '', placeholder: 'Anything the anchors should know or mention: a correction, a running joke, context the export cannot give.' });
-  const save = () => api('/api/admin/desk', { method: 'PUT', body: { gotwStoryId: gotw.value || null, potw: { offense: off.value(), defense: def.value() }, notes: notes.value } });
+  const save = () => api('/api/admin/desk', { method: 'PUT', body: e.kind === 'talk' ? { notes: notes.value } : { gotwStoryId: gotw.value || null, potw: { offense: off.value(), defense: def.value() }, notes: notes.value } });
 
   const headline = h('input', { type: 'text', maxlength: '140', placeholder: 'Headline, e.g. Packers and Bears agree to a blockbuster trade' });
   const details = h('textarea', { placeholder: 'The details the anchors may report. Only what you write here is stated as fact.' });
@@ -670,6 +755,15 @@ async function viewDesk() {
     h('h3', {}, 'Takes'), memberList(fm.takes, 'take', 'No approved takes right now.'),
     h('h3', {}, 'Segment requests'), memberList(fm.requests, 'request', 'No approved requests right now.'));
 
+  const headlinesPanel = h('section', { class: 'panel' }, h('h2', {}, 'Headlines the export missed'),
+    headlines,
+    h('label', {}, 'Headline'), headline,
+    h('div', { class: 'grid2' }, h('div', {}, h('label', {}, 'Category'), category), h('div', {}, h('label', {}, 'Teams'), teams)),
+    h('label', {}, 'Details'), details,
+    h('label', { class: 'row' }, breaking, 'Breaking: lead the show with it'),
+    h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: addHeadline } }, 'Add headline')));
+  if (e.kind === 'talk') return talkDesk(d, { save, notes, headlinesPanel, fromMembers });
+
   const voice = h('input', { type: 'checkbox' });
   const approve = () => {
     if (!confirm(`Approve ${e.label} and write the weekly show now?${voice.checked ? '\n\nIt will be voiced as soon as it is written.' : ''}`)) return;
@@ -687,19 +781,61 @@ async function viewDesk() {
       h('div', { class: 'grid2' }, h('div', {}, h('label', {}, 'Offensive Player of the Week'), off.el), h('div', {}, h('label', {}, 'Defensive Player of the Week'), def.el)),
       h('label', {}, 'Notes for the writers'), notes,
       h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: () => act(save, 'Desk saved').then(reload) } }, 'Save picks'))),
-    h('section', { class: 'panel' }, h('h2', {}, 'Headlines the export missed'),
-      headlines,
-      h('label', {}, 'Headline'), headline,
-      h('div', { class: 'grid2' }, h('div', {}, h('label', {}, 'Category'), category), h('div', {}, h('label', {}, 'Teams'), teams)),
-      h('label', {}, 'Details'), details,
-      h('label', { class: 'row' }, breaking, 'Breaking: lead the show with it'),
-      h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: addHeadline } }, 'Add headline'))),
+    headlinesPanel,
     fromMembers,
     h('section', { class: 'panel' }, h('h2', {}, 'Approve'),
       h('label', { class: 'row' }, voice, 'Voice it as soon as it is written (and publish it, if auto-publish is on)'),
       h('div', { class: 'row', style: 'margin-top:8px' },
         h('button', { class: 'btn primary', type: 'button', on: { click: approve } }, 'Approve and write the show'),
         h('button', { class: 'btn danger', type: 'button', on: { click: skip } }, 'Skip this week'))));
+}
+
+// ── The Fifth Quarter (the weekly talk show) ─────────────────────────────
+// Three clicks, and only the last two cost anything: Gather (free) → Write
+// (an AI writer, a few cents) → Approve & air on the episode (ElevenLabs).
+function talkGatherPanel(d) {
+  const name = d.talkShowName || 'The Fifth Quarter';
+  return h('section', { class: 'panel' }, h('h2', {}, name),
+    h('p', {}, `${name} is the weekly show. Nothing is written when an HFL week goes final; it runs on your timing. Gather collects everything since the last episode (every Crimson Chronicle article and every export story, across however many HFL weeks finished) and costs nothing.`),
+    h('button', { class: 'btn primary', type: 'button', on: { click: () => act(() => api('/api/admin/desk/open', { method: 'POST', body: {} }), 'Gathered').then(r => { if (r) render(); }) } }, 'Gather this week'));
+}
+
+function talkDesk(d, parts) {
+  const e = d.entry, t = d.talk;
+  const name = d.talkShowName || 'The Fifth Quarter';
+  const n = v => Number(v || 0).toLocaleString();
+  const over = t.estimatedChars > t.charBudget;
+  const empty = !(t.counts.stories + t.counts.articles + t.counts.hub);
+  const write = blind => {
+    const msg = blind
+      ? 'Run the blind test? Claude and OpenAI each write this week (a few cents each, no ElevenLabs credits). You read Script A and Script B, then pick one.'
+      : `Write ${name} now with ${t.writer === 'auto' ? 'the default writer' : t.writer === 'claude' ? 'Claude' : 'OpenAI'}? This costs a few cents and no ElevenLabs credits.`;
+    if (!confirm(msg)) return;
+    act(async () => { await parts.save(); return api('/api/admin/desk/approve', { method: 'POST', body: { blind } }); }, 'The script is being written')
+      .then(r => { if (r?.episode) { state.tab = 'episodes'; state.episode = r.episode.id; render(); } });
+  };
+  const regather = () => act(async () => { await parts.save(); return api('/api/admin/desk/open', { method: 'POST', body: {} }); }, 'Gathered again').then(r => { if (r) render(); });
+  const skip = () => { if (confirm('Clear this gather? Nothing has been written, so nothing is lost or spent.')) act(() => api('/api/admin/desk/dismiss', { method: 'POST', body: {} }), 'Cleared').then(r => { if (r) render(); }); };
+  return h('div', {},
+    h('section', { class: 'panel' }, h('h2', {}, `${name}: week of ${t.window.range}`),
+      h('p', { class: 'muted' }, `Covers ${when(t.window.from)} to ${when(t.window.to)}${t.window.label ? ` (${t.window.label})` : ''}. Gathered ${when(e.gatheredAt || e.openedAt)}: ${t.counts.stories} export stories, ${t.counts.articles} Chronicle articles, ${t.counts.hub} Hub announcements, ${t.counts.chat} chat messages.`),
+      h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Segment'), h('th', {}, 'Cast'), h('th', {}, 'Length'))),
+        h('tbody', {}, t.segments.map(s => h('tr', {}, h('td', {}, s.title), h('td', {}, s.cast.join(', ')), h('td', {}, fmtDur(s.seconds)))))),
+      h('p', { class: over ? 'error' : 'muted' }, `About ${n(t.estimatedChars)} ElevenLabs characters for a ${n(t.charBudget)}-character budget (${t.model}). Segments that don't fit the budget are left out; raise it in Settings when you move up a plan.`),
+      t.articles.length ? h('div', {}, h('h3', {}, 'From the Chronicle'), h('ul', {}, t.articles.map(a => h('li', {}, `${a.title}${a.author ? ` by ${a.author}` : ''}`)))) : h('p', { class: 'muted' }, 'No Chronicle articles in this window.'),
+      t.stories.length ? h('div', {}, h('h3', {}, 'Top stories'), h('ul', {}, t.stories.map(s => h('li', {}, s.headline)))) : h('p', { class: 'muted' }, 'No export stories in this window yet.'),
+      h('label', {}, 'Notes for the writers'), parts.notes,
+      h('div', { class: 'row', style: 'margin-top:8px' },
+        h('button', { class: 'btn', type: 'button', on: { click: () => act(parts.save, 'Saved').then(r => { if (r) render(); }) } }, 'Save notes'),
+        h('button', { class: 'btn', type: 'button', on: { click: regather } }, 'Gather again (picks up anything new)'))),
+    parts.headlinesPanel,
+    parts.fromMembers,
+    h('section', { class: 'panel' }, h('h2', {}, 'Write'),
+      h('p', { class: empty ? 'error' : 'muted' }, empty ? 'Nothing new since the last episode yet: no export stories, Chronicle articles or Hub announcements. Gather again after the next export.' : 'Writing costs a few cents of AI-writer time and no ElevenLabs credits. You review and edit the script before anything is voiced.'),
+      h('div', { class: 'row', style: 'margin-top:8px' },
+        h('button', { class: 'btn primary', type: 'button', disabled: empty, on: { click: () => write(false) } }, 'Write the script'),
+        h('button', { class: 'btn', type: 'button', disabled: empty || !(t.writers.claude && t.writers.openai), title: t.writers.claude && t.writers.openai ? '' : 'Needs both ANTHROPIC_API_KEY and OPENAI_API_KEY', on: { click: () => write(true) } }, 'Blind test: Claude vs OpenAI'),
+        h('button', { class: 'btn danger', type: 'button', on: { click: skip } }, 'Clear'))));
 }
 
 async function viewMemory() {

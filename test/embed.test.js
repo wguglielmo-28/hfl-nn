@@ -14,7 +14,7 @@ const quiet = { log() {}, warn() {}, error() {} };
 
 async function boot(env = {}) {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  approveWeekly: false, autoProduce: false });
   const ctx = createApp({
     dataDir,
     env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', NODE_ENV: 'test', ...env },

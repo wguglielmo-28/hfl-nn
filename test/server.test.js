@@ -19,7 +19,7 @@ const quiet = { log() {}, warn() {}, error() {} };
 // settings.json before the app starts.
 async function boot({ settings = { approveWeekly: false }, ...extra } = {}) {
   const dataDir = tmpDir();
-  if (settings) createStore(dataDir).writeJSON('settings.json', settings);
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn', ...(settings || {}) });
   const ctx = createApp({
     dataDir,
     env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', HUB_PUSH_KEY: 'hub-key', NODE_ENV: 'test' },
@@ -452,7 +452,7 @@ test('ElevenLabs voices: per-anchor picks, spend recorded per episode, Kokoro ta
     assert.deepEqual(r.json, { configured: true, voices: [{ id: VOICE, name: 'George', label: 'George', category: '' }] });
     r = await s.adminReq('GET', '/api/admin/settings');
     assert.equal(r.json.voiceEngine, 'kokoro', 'Kokoro stays the default');
-    assert.deepEqual(r.json.elevenModels.map(m => m.id), ['eleven_multilingual_v2', 'eleven_v4', 'eleven_flash_v2_5']);
+    assert.deepEqual(r.json.elevenModels.map(m => m.id), ['eleven_multilingual_v2', 'eleven_v4', 'eleven_flash_v2_5', 'eleven_v3']);
 
     r = await s.adminReq('PUT', '/api/admin/settings', { body: { voiceEngine: 'elevenlabs', elevenModel: 'eleven_v4', personaOverrides: { ray: { elevenVoice: VOICE }, nate: { elevenVoice: '../bad' } } } });
     assert.equal(r.status, 200);

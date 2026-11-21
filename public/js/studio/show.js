@@ -8,6 +8,7 @@ import { drawAnchor, ANCHOR_W, DESK_Y } from './anchors.js';
 import { drawStudio, drawDesk, drawClose, drawFullBg, drawBreakingBg, drawCorkboard, drawChair, DESK_TOP } from './sets.js';
 import { renderCard, FULL_TYPES } from './cards.js';
 import { drawBug, drawLowerThird, drawTicker, drawTransition, drawOpen, drawEndSlate, drawBreakingBanner } from './overlays.js';
+import { setBrand } from './brand.js';
 
 const KIND_ORDER = ['analyst', 'insider', 'host', 'analyst2', 'wildcard'];
 const OTS = { x: 150, y: 16, w: 318, h: 176 };
@@ -140,6 +141,7 @@ function drawCardIn(g, card, since, box) {
 }
 
 export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } = {}) {
+  setBrand(d.m.brand);
   const scene = d.sceneAt(t);
   g.imageSmoothingEnabled = false;
   if (scene.kind === 'open') {
@@ -162,8 +164,17 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
   g.save();
   g.translate(shake, Math.abs(shake) > 0 ? 1 : 0);
 
+  // Five seats at the desk. A bigger cast (the Fifth Quarter's eight) seats
+  // only this segment's speakers, spread evenly.
   const seatX = {};
-  d.seating.forEach((a, i) => { seatX[a.id] = 48 + i * 96; });
+  let seated = d.seating;
+  if (d.seating.length > 5) {
+    const here = new Set(d.lines.filter(x => x.seg === ln.seg).map(x => x.speaker));
+    seated = d.seating.filter(a => here.has(a.id)).slice(0, 5);
+    seated.forEach((a, i) => { seatX[a.id] = Math.round((W / seated.length) * (i + 0.5)); });
+  } else {
+    d.seating.forEach((a, i) => { seatX[a.id] = 48 + i * 96; });
+  }
   const shot = plan.shot;
   const card = plan.card;
   const cardSince = t - plan.cardSince;
@@ -171,7 +182,7 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
   switch (shot) {
     case 'wide': {
       drawStudio(g, t, { segmentTitle: seg.title || '' });
-      for (const a of d.seating) {
+      for (const a of seated) {
         if (seg.set === 'corkboard' && a.kind === 'wildcard') { drawChair(g, seatX[a.id] - ANCHOR_W / 2, DESK_TOP - DESK_Y); continue; }
         drawAnchor(g, a.look, seatX[a.id] - ANCHOR_W / 2, DESK_TOP - DESK_Y, 1, anchorState(d, a, scene, seatX));
       }
@@ -235,6 +246,7 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
 // Off-air: empty desk, dim lights, ticker still running.
 export function renderOffAir(g, t, { ticker = [], message = 'OFF AIR', lineup = [], bug = 'OFF AIR' } = {}) {
   g.imageSmoothingEnabled = false;
+  setBrand(null);
   drawStudio(g, t, { segmentTitle: message, dim: false });
   const n = Math.max(lineup.length, 5);
   for (let i = 0; i < n; i++) drawChair(g, 48 + i * 96 - ANCHOR_W / 2, DESK_TOP - DESK_Y);

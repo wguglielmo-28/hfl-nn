@@ -2,11 +2,12 @@
 // the open/close slates.
 import { W, H, PAL, rect, panel, spiral, drawText, textWidth, shade } from './gfx.js';
 import { wrap, fold } from './font.js';
+import { brand, fitScale } from './brand.js';
 
 export function drawBug(g, t, label) {
-  panel(g, 6, 6, 74, 15, 'rgba(13,8,32,0.85)', PAL.lilac);
+  panel(g, 6, 6, Math.max(74, textWidth(brand.name) + 30), 15, 'rgba(13,8,32,0.85)', PAL.lilac);
   spiral(g, 9, 9, 1);
-  drawText(g, 'HFL-NN', 22, 10, { color: PAL.white });
+  drawText(g, brand.name, 22, 10, { color: PAL.white });
   if (label) {
     const w = textWidth(label) + 8;
     panel(g, 6, 23, w, 11, PAL.teal);
@@ -33,7 +34,7 @@ export function drawLowerThird(g, { title, subtitle, accent = PAL.teal, since = 
 const easeOut = p => 1 - Math.pow(1 - p, 3);
 
 // Bottom ticker: a label box and the crawl.
-export function drawTicker(g, t, items, { label = 'HFL-NN', color = PAL.red } = {}) {
+export function drawTicker(g, t, items, { label = brand.name, color = PAL.red } = {}) {
   const y = H - 16;
   rect(g, 0, y, W, 16, PAL.night);
   rect(g, 0, y, W, 1, PAL.lilac);
@@ -92,13 +93,13 @@ export function drawOpen(g, t, title, breaking = false) {
   const s = Math.max(1, Math.round(6 * p));
   spiral(g, W / 2 - 4.5 * s, 40 + (6 - s) * 4, s);
   if (p >= 1) {
-    drawText(g, 'HFL-NN', W / 2, 150, { color: PAL.white, scale: 5, align: 'center', shadow: PAL.ink });
+    drawText(g, brand.name, W / 2, 150, { color: PAL.white, scale: fitScale(brand.name, W - 40, 5), align: 'center', shadow: PAL.ink });
     const lines = wrap(title, W - 40, 1, 2);
     lines.forEach((ln, i) => drawText(g, ln, W / 2, 196 + i * 10, { color: PAL.gold, align: 'center' }));
   }
 }
 
-export function drawEndSlate(g, t, { title, tagline = 'STAY HYPNOTIC.' } = {}) {
+export function drawEndSlate(g, t, { title, tagline = brand.tagline || 'STAY HYPNOTIC.' } = {}) {
   rect(g, 0, 0, W, H, PAL.night);
   spiral(g, W / 2 - 18, 50, 4);
   drawText(g, 'THANKS FOR WATCHING', W / 2, 110, { color: PAL.white, scale: 2, align: 'center' });

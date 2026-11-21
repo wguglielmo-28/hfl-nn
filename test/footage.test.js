@@ -193,7 +193,7 @@ test('guide: replays and clips are listed, and live games are offered only for t
 
 test('server: the page may frame Twitch and YouTube players, and /api/channel carries live games from the Hub', async () => {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false, hubFeedUrl: 'https://hub.example/api/hfl-nn-feed' });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  approveWeekly: false, autoProduce: false, hubFeedUrl: 'https://hub.example/api/hfl-nn-feed' });
   const asked = [];
   const ctx = createApp({
     dataDir, env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', NODE_ENV: 'test' },

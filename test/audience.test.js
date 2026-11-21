@@ -103,7 +103,7 @@ test("server: /api/audience serves the Hub chat from the Hub feed URL's site", a
   const hub = fakeHub();
   hub.messages = [{ id: 1, name: 'Anna', body: 'on air!', at: '2026-11-13 18:00:00' }];
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { hubFeedUrl: `${HUB}/api/hfl-nn-feed` });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  hubFeedUrl: `${HUB}/api/hfl-nn-feed` });
   const ctx = createApp({ dataDir, env: { ADMIN_PASSWORD: 'x', NODE_ENV: 'test' }, tts: createTTS({ provider: 'silent' }), logger: quiet, fetchImpl: hub.fetch });
   const server = http.createServer(ctx.app);
   await new Promise(r => server.listen(0, r));

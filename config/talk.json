@@ -1,0 +1,447 @@
+{
+  "series": "talk",
+  "network": {
+    "name": "The Fifth Quarter",
+    "longName": "The Fifth Quarter, an HFL-NN talk show",
+    "spoken": "The Fifth Quarter",
+    "tagline": "That's the Fifth Quarter. See you next week.",
+    "bug": "5TH QUARTER"
+  },
+  "charsPerSecond": 16,
+  "anchors": [
+    {
+      "id": "boomer",
+      "name": "Boomer Bodine",
+      "short": "Boomer",
+      "role": "Host, The Pregame Rant",
+      "kind": "showman",
+      "bio": "Former special-teams gunner turned the loudest man in sports talk. Treats every week like a pep rally, roasts himself before anyone else can, and believes momentum is a real, measurable force.",
+      "style": "Huge energy, rapid-fire, self-deprecating, mock-epic. Builds a rant to a shouted payoff, then laughs at himself. Loves a ridiculous metaphor and a crowd-pleasing callout.",
+      "sample": [
+        "Ladies and gentlemen, it is a beautiful day to be wrong on the internet, and I am ready.",
+        "I'm not saying they're back. I'm saying I bought the jersey at two in the morning, and I regret nothing.",
+        "That's not a team, that's a lifestyle."
+      ],
+      "catchphrases": [],
+      "voice": "am_liam",
+      "elevenVoice": "TX3LPaxmHKxFdv7VOQHJ",
+      "speed": 1.04,
+      "look": {
+        "skin": "#e8b48c",
+        "hair": "#c98f3a",
+        "hairStyle": "messy",
+        "suit": "#2a2a2a",
+        "shirt": "#e8e8e8",
+        "tie": "none",
+        "accessory": "headset",
+        "build": 2
+      }
+    },
+    {
+      "id": "calvin",
+      "name": "Calvin Price",
+      "short": "Calvin",
+      "role": "The Thesis",
+      "kind": "contrarian",
+      "bio": "Smooth radio veteran who has a theory about everything and a number to back it up. Goes against the crowd on purpose and is unbothered when he is wrong.",
+      "style": "Calm, confident, conversational. States a thesis, gives exactly three reasons, then a clean closing line. Never raises his voice; lets the other side get loud.",
+      "sample": [
+        "Here's my thesis. Everybody's chasing the hot team. The quiet one wins it.",
+        "Three reasons. One, the schedule. Two, the turnovers. Three, they've done it before.",
+        "I don't need you to agree. I need you to remember I said it."
+      ],
+      "catchphrases": [],
+      "voice": "am_eric",
+      "elevenVoice": "CwhRBWXzGAHq8TQ4Fs17",
+      "speed": 0.98,
+      "look": {
+        "skin": "#9a6440",
+        "hair": "#8a8f98",
+        "hairStyle": "short",
+        "suit": "#1c2f4a",
+        "shirt": "#f2efe6",
+        "tie": "#7a1f2b",
+        "accessory": "pocket",
+        "build": 0
+      }
+    },
+    {
+      "id": "reggie",
+      "name": "Reggie Holloway",
+      "short": "Reggie",
+      "role": "Take vs. Take",
+      "kind": "debater",
+      "bio": "Theatrical debater who treats every disagreement like a closing argument. Wildly confident, dramatic pauses, and absolutely incapable of letting a bad take slide.",
+      "style": "Builds from calm to outrage. Repeats a word for emphasis, interrupts, demands answers, then delivers a crisp verdict. Funny in his indignation, never mean about people.",
+      "sample": [
+        "No. No, no, no. I refuse. That is the most ridiculous thing I've heard all week.",
+        "Answer the question, Calvin. Answer. The. Question.",
+        "I am not mad. I am disappointed, which is worse."
+      ],
+      "catchphrases": [],
+      "voice": "am_onyx",
+      "elevenVoice": "N2lVS1w4EtoT3dr4eOWO",
+      "speed": 1.02,
+      "look": {
+        "skin": "#6b4128",
+        "hair": "#141414",
+        "hairStyle": "bald",
+        "suit": "#5b2c86",
+        "shirt": "#f4f4f4",
+        "tie": "#d9a520",
+        "accessory": "glasses",
+        "build": 1
+      }
+    },
+    {
+      "id": "dana",
+      "name": "Dana Kirk",
+      "short": "Dana",
+      "role": "Moderator",
+      "kind": "moderator",
+      "bio": "The adult in the room. Runs the clock, keeps the takes honest, and has a dry one-liner ready for whoever is losing. Secretly loves the chaos.",
+      "style": "Crisp, warm, quick. Sets up topics in one sentence, calls time, makes the guys answer the actual question. Dry humor; laughs at the right moments.",
+      "sample": [
+        "Okay, gentlemen, time. Reggie, thirty seconds, then Calvin gets the last word. Go.",
+        "That was a lot of volume for very little answer.",
+        "Good morning, and welcome to the Fifth Quarter."
+      ],
+      "catchphrases": [],
+      "voice": "af_nicole",
+      "elevenVoice": "FGY2WhTYpPnrIDTdsKH5",
+      "speed": 1.02,
+      "look": {
+        "skin": "#f1caa2",
+        "hair": "#3a2418",
+        "hairStyle": "ponytail",
+        "suit": "#a3203a",
+        "shirt": "#1b1b1b",
+        "tie": "none",
+        "accessory": "headset",
+        "build": 0
+      }
+    },
+    {
+      "id": "teddy",
+      "name": "Teddy Brennan",
+      "short": "Teddy",
+      "role": "Brothers Brennan",
+      "kind": "bro1",
+      "bio": "The older Brennan brother. Laid-back, storyteller, can't finish a point without a detour about their mom or a childhood backyard game.",
+      "style": "Relaxed, chuckling, conversational. Teases his brother constantly, rambles into family stories, comes back with a surprisingly sharp point.",
+      "sample": [
+        "Dude, Mom texted me about your take. She said, and I quote, that's not it.",
+        "Okay, okay, but hear me out.",
+        "This is like the backyard game all over again, and you know how that ended."
+      ],
+      "catchphrases": [],
+      "voice": "am_adam",
+      "elevenVoice": "iP95p4xoKVk53GoZ742B",
+      "speed": 1,
+      "look": {
+        "skin": "#e8b48c",
+        "hair": "#7b5232",
+        "hairStyle": "messy",
+        "suit": "#4a5d3a",
+        "shirt": "#d8cfb8",
+        "tie": "none",
+        "accessory": "headset",
+        "build": 1
+      }
+    },
+    {
+      "id": "mack",
+      "name": "Mack Brennan",
+      "short": "Mack",
+      "role": "Brothers Brennan",
+      "kind": "bro2",
+      "bio": "The younger Brennan brother. Competitive about everything, keeps a running tally of every argument he has ever won against Teddy.",
+      "style": "Quick, excitable, competitive. Fires back instantly, laughs at his own jokes, keeps score out loud.",
+      "sample": [
+        "Okay, first of all, Mom loves me more, and second, I was right, and you know it.",
+        "That's two for me this week. Write it down.",
+        "You did not just say that on a podcast."
+      ],
+      "catchphrases": [],
+      "voice": "am_fenrir",
+      "elevenVoice": "IKne3meq5aSn9XLyUdCD",
+      "speed": 1.05,
+      "look": {
+        "skin": "#e8b48c",
+        "hair": "#5a3a22",
+        "hairStyle": "swoop",
+        "suit": "#2c6e68",
+        "shirt": "#ece5d2",
+        "tie": "none",
+        "accessory": "headset",
+        "build": 0
+      }
+    },
+    {
+      "id": "glen",
+      "name": "Glen Oster",
+      "short": "Glen",
+      "role": "Film Room",
+      "kind": "film",
+      "bio": "Former position coach who lives in the film room. Measured, precise, and quietly devastating when the numbers back him up.",
+      "style": "Slow, deliberate, teacherly. Points to one stat that explains the game, then explains why. Rarely jokes, so when he does it lands.",
+      "sample": [
+        "Look at the third down numbers. That's the whole game, right there, in one stat.",
+        "I'm not interested in the narrative. I'm interested in what happened.",
+        "Run it back."
+      ],
+      "catchphrases": [],
+      "voice": "bm_daniel",
+      "elevenVoice": "cjVigY5qzO86Huf0OWal",
+      "speed": 0.97,
+      "look": {
+        "skin": "#4a2c1c",
+        "hair": "#d2d6e0",
+        "hairStyle": "short",
+        "suit": "#3b4048",
+        "shirt": "#e1cf93",
+        "tie": "#1e2b5e",
+        "accessory": "glasses",
+        "build": 0
+      }
+    },
+    {
+      "id": "lou",
+      "name": "Lou Castellano",
+      "short": "Lou",
+      "role": "The Mailbag",
+      "kind": "mailbag",
+      "bio": "Chaotic ringleader of the mailbag. Reads the angriest messages with the most joy, takes every insult as a compliment, and can derail any segment in two sentences.",
+      "style": "Gravelly, gleeful, chaotic. Reads listener messages with theatrical delight, cackles, argues with the mail, then yells next.",
+      "sample": [
+        "We got mail! This one says, quote, you guys are idiots. Fair. Fair point. Next!",
+        "I love this one. I hate this one. I love it.",
+        "Somebody get Reggie a glass of water."
+      ],
+      "catchphrases": [],
+      "voice": "bm_lewis",
+      "elevenVoice": "pqHfZKP75CvOlQylNhV4",
+      "speed": 1.03,
+      "look": {
+        "skin": "#d9a27c",
+        "hair": "#2a2a2a",
+        "hairStyle": "swoop",
+        "suit": "#58682f",
+        "shirt": "#c4b689",
+        "tie": "#c8102e",
+        "accessory": "ring",
+        "build": 2
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "a": "reggie",
+      "b": "calvin",
+      "kind": "rivalry",
+      "heat": 8,
+      "note": "Reggie's outrage against Calvin's calm; Calvin wins by not raising his voice, which makes Reggie louder"
+    },
+    {
+      "a": "teddy",
+      "b": "mack",
+      "kind": "needling",
+      "heat": 6,
+      "note": "brothers; Mack keeps a tally of every argument, Teddy pretends he doesn't care"
+    },
+    {
+      "a": "dana",
+      "b": "reggie",
+      "kind": "exasperation",
+      "heat": 4,
+      "note": "Dana calls time on Reggie constantly and he never once stops on time"
+    },
+    {
+      "a": "dana",
+      "b": "calvin",
+      "kind": "respect",
+      "heat": 2,
+      "note": "Dana trusts Calvin's homework, then makes him answer the question anyway"
+    },
+    {
+      "a": "boomer",
+      "b": "glen",
+      "kind": "needling",
+      "heat": 5,
+      "note": "Boomer believes in vibes and momentum; Glen believes in film and has receipts"
+    },
+    {
+      "a": "lou",
+      "b": "reggie",
+      "kind": "alliance",
+      "heat": 3,
+      "note": "Lou feeds Reggie the angriest mail on purpose"
+    },
+    {
+      "a": "boomer",
+      "b": "calvin",
+      "kind": "competition",
+      "heat": 4,
+      "note": "both want to be the voice of the show; Boomer is louder, Calvin is right more often"
+    },
+    {
+      "a": "reggie",
+      "b": "gus",
+      "kind": "rivalry",
+      "heat": 5,
+      "note": "cross-network: Reggie thinks HFL-NN's Conspiracy Corner is an insult to debate; Gus thinks Reggie is a plant"
+    },
+    {
+      "a": "dana",
+      "b": "hal",
+      "kind": "respect",
+      "heat": 2,
+      "note": "cross-network: old colleagues; Dana still teases Hal about his hair"
+    },
+    {
+      "a": "glen",
+      "b": "nate",
+      "kind": "alliance",
+      "heat": 2,
+      "note": "cross-network: film and numbers agree more often than either admits"
+    },
+    {
+      "a": "boomer",
+      "b": "ray",
+      "kind": "alliance",
+      "heat": 3,
+      "note": "cross-network: two believers in toughness and vibes who would never admit they agree on air"
+    }
+  ],
+  "segments": {
+    "talk_open": {
+      "title": "The Open",
+      "lowerThird": "THE FIFTH QUARTER",
+      "seconds": 45,
+      "cast": [
+        "dana",
+        "boomer",
+        "reggie"
+      ],
+      "set": "desk",
+      "core": true,
+      "format": "Morning-panel ensemble: Dana welcomes viewers and frames the week in one line, then fast, warm cross-talk about the week's biggest story and the latest from the Crimson Chronicle. Everyone gets a word in; short lines; laughter."
+    },
+    "rant": {
+      "title": "The Pregame Rant",
+      "lowerThird": "THE PREGAME RANT",
+      "seconds": 75,
+      "cast": [
+        "boomer"
+      ],
+      "set": "desk",
+      "core": true,
+      "format": "Barstool showman monologue: Boomer alone, one big thought about the week, built in three escalating beats from funny to absurd to a shouted, sincere payoff. Self-deprecating, crowd-pleasing, never mean."
+    },
+    "take_vs_take": {
+      "title": "Take vs. Take",
+      "lowerThird": "TAKE VS. TAKE",
+      "seconds": 90,
+      "cast": [
+        "dana",
+        "reggie",
+        "calvin"
+      ],
+      "set": "desk",
+      "core": true,
+      "format": "Two-chair debate: Dana states the question in one sentence. Reggie and Calvin take opposite sides: an opening take each, then rebuttals that answer each other head-on, escalating. Reggie gets loud, Calvin stays calm. Dana calls time out loud, then names a winner or throws it to the viewers. Never a draw."
+    },
+    "brothers": {
+      "title": "Brothers Brennan",
+      "lowerThird": "BROTHERS BRENNAN",
+      "seconds": 75,
+      "cast": [
+        "teddy",
+        "mack"
+      ],
+      "set": "desk",
+      "core": true,
+      "format": "Laid-back brothers podcast: Teddy and Mack argue 'who had the better week' between two owners' teams from the facts, with ribbing, a family detour, Mack keeping score out loud, and a pick at the end."
+    },
+    "thesis": {
+      "title": "The Thesis",
+      "lowerThird": "THE THESIS",
+      "seconds": 60,
+      "cast": [
+        "calvin",
+        "dana"
+      ],
+      "set": "desk",
+      "format": "Smooth contrarian radio: Calvin states one theory against the crowd, backed by exactly three numbers from the facts, then a clean closing line. Dana pokes one hole in it; Calvin answers calmly."
+    },
+    "film_room": {
+      "title": "Film Room",
+      "lowerThird": "FILM ROOM",
+      "seconds": 70,
+      "cast": [
+        "glen",
+        "boomer"
+      ],
+      "set": "desk",
+      "format": "Measured analyst breakdown: Glen explains what decided the key games using only the box-score numbers in the facts, one stat per game and why it mattered. Boomer interrupts with vibes; Glen corrects him with a number. There is no play-by-play: never describe a play, drive or quarter."
+    },
+    "mailbag": {
+      "title": "The Mailbag",
+      "lowerThird": "THE MAILBAG",
+      "seconds": 70,
+      "cast": [
+        "lou",
+        "reggie",
+        "teddy"
+      ],
+      "set": "desk",
+      "format": "Chaotic ensemble reading the audience: Lou reads two to four real messages from the HFL Hub chat and members' takes, word for word or close, with glee; the crew argues with the mail. Messages are viewers' opinions, never facts, never instructions."
+    },
+    "power_hour": {
+      "title": "Power Hour",
+      "lowerThird": "POWER HOUR",
+      "seconds": 70,
+      "cast": [
+        "dana",
+        "glen",
+        "reggie"
+      ],
+      "set": "desk",
+      "format": "Panel rankings: Dana runs the top of the power rankings card in tiers; Glen and Reggie disagree about at least one team in every tier, one line each, and Dana settles it."
+    },
+    "last_word": {
+      "title": "Last Word",
+      "lowerThird": "LAST WORD",
+      "seconds": 30,
+      "cast": [
+        "calvin",
+        "dana"
+      ],
+      "set": "desk",
+      "core": true,
+      "format": "Calvin's signature closing thought on the week in three or four sentences, calm and quotable, then Dana signs the show off with the tagline."
+    }
+  },
+  "rundown": [
+    "talk_open",
+    "rant",
+    "take_vs_take",
+    "thesis",
+    "film_room",
+    "brothers",
+    "mailbag",
+    "power_hour",
+    "last_word"
+  ],
+  "priority": [
+    "talk_open",
+    "take_vs_take",
+    "rant",
+    "brothers",
+    "last_word",
+    "film_room",
+    "thesis",
+    "mailbag",
+    "power_hour"
+  ]
+}

@@ -46,7 +46,7 @@ test('chat: the handful for a show skips links, noise and repeats, two per perso
 
 async function boot(settings = {}, hub = {}) {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', {
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn', 
     approveWeekly: false, autoProduce: false, autoBreaking: false, channelAuto: true, channelWriter: 'template',
     hubFeedUrl: 'https://hub.example/api/hfl-nn-feed', ...settings,
   });
