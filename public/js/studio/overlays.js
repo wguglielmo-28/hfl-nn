@@ -10,13 +10,13 @@ export function drawBug(g, t, label) {
   drawText(g, brand.name, 22, 10, { color: PAL.white });
   if (label) {
     const w = textWidth(label) + 8;
-    panel(g, 6, 23, w, 11, PAL.teal);
+    panel(g, 6, 23, w, 11, brand.accent);
     drawText(g, label, 10, 25, { color: PAL.ink });
   }
 }
 
 // Lower third. `since` = seconds since it appeared (slides in over 0.25 s).
-export function drawLowerThird(g, { title, subtitle, accent = PAL.teal, since = 1 }) {
+export function drawLowerThird(g, { title, subtitle, accent = brand.accent, since = 1 }) {
   const slide = Math.min(1, since / 0.25);
   const tw = Math.max(textWidth(title, 2) + 16, textWidth(subtitle || '', 1) + 16, 120);
   const x = Math.round(-tw + (tw + 12) * easeOut(slide));
@@ -34,7 +34,7 @@ export function drawLowerThird(g, { title, subtitle, accent = PAL.teal, since = 
 const easeOut = p => 1 - Math.pow(1 - p, 3);
 
 // Bottom ticker: a label box and the crawl.
-export function drawTicker(g, t, items, { label = brand.name, color = PAL.red } = {}) {
+export function drawTicker(g, t, items, { label = brand.name, color = brand.ticker } = {}) {
   const y = H - 16;
   rect(g, 0, y, W, 16, PAL.night);
   rect(g, 0, y, W, 1, PAL.lilac);
@@ -86,7 +86,7 @@ export function drawOpen(g, t, title, breaking = false) {
   rect(g, 0, 0, W, H, PAL.night);
   for (let i = 0; i < 14; i++) {
     const r = 10 + i * 14 + ((t * 40) % 14);
-    g.strokeStyle = i % 2 ? PAL.violet : PAL.deep;
+    g.strokeStyle = i % 2 ? brand.ring : brand.ring2;
     g.lineWidth = 6;
     g.beginPath(); g.arc(W / 2, H / 2 - 10, r, 0, Math.PI * 2); g.stroke();
   }

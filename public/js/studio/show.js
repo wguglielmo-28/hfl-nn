@@ -9,6 +9,7 @@ import { drawStudio, drawDesk, drawClose, drawFullBg, drawBreakingBg, drawCorkbo
 import { renderCard, FULL_TYPES } from './cards.js';
 import { drawBug, drawLowerThird, drawTicker, drawTransition, drawOpen, drawEndSlate, drawBreakingBanner } from './overlays.js';
 import { setBrand } from './brand.js';
+import { TALK_SETS, drawTalkWide, drawTalkClose, drawTalkFront } from './talksets.js';
 
 const KIND_ORDER = ['analyst', 'insider', 'host', 'analyst2', 'wildcard'];
 const OTS = { x: 150, y: 16, w: 318, h: 176 };
@@ -179,9 +180,12 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
   // only this segment's speakers, spread evenly.
   const seatX = {};
   let seated = d.seating;
-  if (d.seating.length > 5) {
-    const here = new Set(d.lines.filter(x => x.seg === ln.seg).map(x => x.speaker));
-    seated = d.seating.filter(a => here.has(a.id)).slice(0, 5);
+  const talkSet = TALK_SETS.has(seg.set) ? seg.set : null;
+  if (d.seating.length > 5 || talkSet) {
+    // This segment's speakers in the order they first speak, the lead in the
+    // middle of three (the moderator between the podiums).
+    const order = [...new Set(d.lines.filter(x => x.seg === ln.seg).map(x => x.speaker))].map(id => d.byId[id]).filter(Boolean).slice(0, 5);
+    seated = order.length === 3 ? [order[1], order[0], order[2]] : order;
     seated.forEach((a, i) => { seatX[a.id] = Math.round((W / seated.length) * (i + 0.5)); });
   } else {
     d.seating.forEach((a, i) => { seatX[a.id] = 48 + i * 96; });
@@ -192,29 +196,29 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
 
   switch (shot) {
     case 'wide': {
-      drawStudio(g, t, { segmentTitle: seg.title || '' });
+      if (talkSet) drawTalkWide(g, t, talkSet); else drawStudio(g, t, { segmentTitle: seg.title || '' });
       for (const a of seated) {
         if (seg.set === 'corkboard' && a.kind === 'wildcard') { drawChair(g, seatX[a.id] - ANCHOR_W / 2, DESK_TOP - DESK_Y); continue; }
         drawAnchor(g, a.look, seatX[a.id] - ANCHOR_W / 2, DESK_TOP - DESK_Y, 1, anchorState(d, a, scene, seatX));
       }
-      drawDesk(g, DESK_TOP);
+      if (talkSet) drawTalkFront(g, talkSet, seated.map(a => ({ id: a.id, x: seatX[a.id] })), 1); else drawDesk(g, DESK_TOP);
       break;
     }
     case 'two_shot': {
-      drawClose(g, t);
+      if (talkSet) drawTalkClose(g, t, talkSet); else drawClose(g, t);
       const segLines = d.lines.filter(x => x.seg === ln.seg);
       const partnerId = [...segLines].reverse().find(x => x.t0 < ln.t0 && x.speaker !== ln.speaker)?.speaker
         || segLines.find(x => x.speaker !== ln.speaker)?.speaker;
       const pair = [speaker, d.byId[partnerId]].filter(Boolean);
       const sx = { [pair[0]?.id]: 100, [pair[1]?.id]: 330 };
       pair.forEach(a => drawAnchor(g, a.look, sx[a.id] - ANCHOR_W, 200 - DESK_Y * 2, 2, anchorState(d, a, scene, sx)));
-      drawDesk(g, 200, { scale: 2, logo: false });
+      if (talkSet) drawTalkFront(g, talkSet, [], 2); else drawDesk(g, 200, { scale: 2, logo: false });
       break;
     }
     case 'graphic': case 'breaking_graphic': case 'breaking': {
-      if (shot === 'graphic') drawClose(g, t); else drawBreakingBg(g, t);
+      if (shot === 'graphic') { if (talkSet) drawTalkClose(g, t, talkSet); else drawClose(g, t); } else drawBreakingBg(g, t);
       if (speaker) drawAnchor(g, speaker.look, 18, 200 - DESK_Y * 2, 2, anchorState(d, speaker, scene, { [speaker.id]: 0 }));
-      drawDesk(g, 200, { scale: 2, logo: false });
+      if (talkSet && shot === 'graphic') drawTalkFront(g, talkSet, [], 2); else drawDesk(g, 200, { scale: 2, logo: false });
       if (card) drawCardIn(g, card, cardSince, OTS);
       if (shot !== 'graphic') drawBreakingBanner(g, t);
       break;
@@ -232,9 +236,9 @@ export function renderFrame(g, d, t, { ticker = [], bugLabel = '', title = '' } 
     }
     case 'single':
     default: {
-      drawClose(g, t);
+      if (talkSet) drawTalkClose(g, t, talkSet); else drawClose(g, t);
       if (speaker) drawAnchor(g, speaker.look, 40, 214 - DESK_Y * 3, 3, anchorState(d, speaker, scene, { [speaker.id]: 0 }));
-      drawDesk(g, 214, { scale: 2, logo: false });
+      if (talkSet) drawTalkFront(g, talkSet, [], 3); else drawDesk(g, 214, { scale: 2, logo: false });
     }
   }
   g.restore();
