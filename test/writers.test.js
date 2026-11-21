@@ -36,7 +36,7 @@ function fakeWriter(name, ctx) {
 
 async function boot(settings = {}) {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false, autoBreaking: false, ...settings });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  approveWeekly: false, autoProduce: false, autoBreaking: false, ...settings });
   const shared = { current: () => null };
   const openai = fakeWriter('openai', shared);
   const claude = fakeWriter('claude', shared);

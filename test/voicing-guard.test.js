@@ -13,7 +13,7 @@ const quiet = { log() {}, warn() {}, error() {} };
 
 async function app(env) {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  approveWeekly: false });
   const ctx = createApp({
     dataDir,
     env: { ADMIN_PASSWORD: 'x', INGEST_KEY: 'k', FORCE_HTTPS: '0', ...env },

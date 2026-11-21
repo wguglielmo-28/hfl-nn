@@ -71,7 +71,9 @@ function createApp(opts = {}) {
 
   const basePersonas = opts.personas || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'personas.json'), 'utf8'));
   const show = opts.show || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'show.json'), 'utf8'));
-  const settings = createSettings({ store, basePersonas, env });
+  // The Fifth Quarter, the weekly talk show (config/talk.json); opts.talk = false leaves it out.
+  const talk = opts.talk === false ? null : opts.talk || JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'talk.json'), 'utf8'));
+  const settings = createSettings({ store, basePersonas, talk, env });
 
   // ── League state ─────────────────────────────────────────────────────────
   let league = L.officialTeamNames(store.readJSON('league/current.json', null) || L.emptyLeague());
@@ -106,6 +108,8 @@ function createApp(opts = {}) {
   producer = createProducer({
     store, show, getPersonas: settings.personas, getLeague: () => league, getSettings: settings.get,
     tts, claude, openai, chronicle, hub, publicUrl, logger,
+    talk, getTalkPersonas: settings.talkPersonas, getNetworkPersonas: settings.networkPersonas,
+    getChat: (since, anchors) => chatDigest.forShow(since, anchors),
     baselineBefore: wk => ingest.baselineBefore(wk),
     // TTS_PROVIDER=silent says silence is wanted; otherwise production needs real voices.
     requireRealVoices: env.NODE_ENV === 'production' && (env.TTS_PROVIDER || 'auto') !== 'silent',
@@ -332,7 +336,8 @@ function createApp(opts = {}) {
       audience: audience.status(),
       chatDigest: chatDigest.status(),
       channel: scheduler.status(),
-      desk: (d => (d ? { key: d.key, label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
+      desk: (d => (d ? { key: d.key, kind: d.kind || 'weekly', label: d.label, openedAt: d.openedAt } : null))(producer.desk.current()),
+      weeklyShow: settings.get().weeklyShow || 'talk', talkShowName: talk?.network?.name || null,
       writer: {
         claude: claude.available(), openai: openai.available(), mode: settings.get().writer, active: producer.pickWriter(),
         chain: producer.writerChain(), benched: producer.benchedWriters(),
@@ -396,12 +401,20 @@ function createApp(opts = {}) {
   admin.delete('/desk/headlines/:id', wrap(req => { producer.desk.removeHeadline(req.params.id); return producer.deskView(); }));
   // A benched writer (out of credits, refused key…) is tried again on the next script.
   admin.post('/writers/:kind/retry', wrap(req => ({ ok: producer.unbenchWriter(req.params.kind) })));
-  admin.post('/desk/approve', wrap(req => ({ episode: producer.approveDesk({ voice: !!req.body?.voice }) })));
+  admin.post('/desk/approve', wrap(req => ({ episode: producer.view(producer.approveDesk({ voice: !!req.body?.voice, blind: !!req.body?.blind })) })));
+  // The talk show's blind test: the commissioner picks Script A or B; the
+  // winner's writer becomes Settings → talk show writer.
+  admin.post('/desk/blind/pick', wrap(req => {
+    const out = producer.pickBlind(String(req.body?.episodeId || ''));
+    if (out.writer === 'claude' || out.writer === 'openai') settings.update({ talkWriter: out.writer });
+    return { writer: out.writer, episode: out.episode, others: out.others };
+  }));
   admin.post('/desk/dismiss', wrap(() => { producer.desk.dismiss(); return producer.deskView(); }));
   admin.get('/episodes/:id', wrap(req => {
     const ep = producer.get(req.params.id);
     need(ep, 'Episode not found');
-    return ep;
+    // A talk script shows what voicing it would cost at most.
+    return producer.view(ep.type === 'talk' && ep.script ? { ...ep, voiceChars: producer.talkChars(ep.id) } : ep);
   }));
   admin.put('/episodes/:id/script', wrap(req => producer.saveScript(req.params.id, req.body)));
   // An episode voiced elsewhere: { manifest, audio (MP3 as base64), title?, source? }.
@@ -417,7 +430,7 @@ function createApp(opts = {}) {
     need(ep, 'Episode not found');
     need(!ep.imported, 'An imported episode was voiced elsewhere and has no script to voice.', 400);
     need(!ep.validation?.errors?.length, 'Fix the script errors before voicing.', 400);
-    return { job: producer.voice(req.params.id) };
+    return { job: producer.voice(req.params.id, { publish: !!req.body?.publish }) };
   }));
   admin.post('/episodes/:id/publish', wrap(req => producer.publish(req.params.id, { discord: req.body?.discord !== false, baseUrl: baseUrlOf(req) })));
   admin.post('/episodes/:id/unpublish', wrap(req => producer.unpublish(req.params.id)));
@@ -446,15 +459,17 @@ function createApp(opts = {}) {
     const out = await tts.speak(text, { voice, speed: Number(req.body?.speed) || 1, elevenModel: settings.get().elevenModel });
     res.set('Content-Type', 'audio/wav').send(encodeWav(out.samples, out.sampleRate));
   }));
+  // Credits left on the ElevenLabs account (needs the key's "User: read" permission).
+  admin.get('/tts/elevenlabs/credits', wrap(async () => (tts.elevenlabs?.subscription ? tts.elevenlabs.subscription() : { ok: false, reason: 'ElevenLabs is not configured.' })));
   // The ElevenLabs account's voices, for the anchor voice pickers.
   admin.get('/tts/elevenlabs/voices', wrap(async req => {
     const el = tts.elevenlabs;
     if (!el?.configured()) return { configured: false, voices: [] };
     return { configured: true, voices: await el.listVoices({ fresh: req.query.fresh === '1' }) };
   }));
-  admin.get('/memory', wrap(() => M.loadMemory(store, settings.personas())));
+  admin.get('/memory', wrap(() => M.loadMemory(store, settings.networkPersonas())));
   admin.post('/memory/prediction', wrap(req => {
-    const mem = M.loadMemory(store, settings.personas());
+    const mem = M.loadMemory(store, settings.networkPersonas());
     const p = M.resolvePrediction(mem, req.body?.id, req.body?.status);
     need(p, 'Prediction not found');
     store.writeJSON('memory.json', mem);

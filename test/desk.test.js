@@ -16,7 +16,7 @@ const wk = week => ({ seasonIndex: 8, stage: 'reg', week });
 // Approval is on by default: no settings are seeded.
 async function boot({ settings = null } = {}) {
   const dataDir = tmpDir();
-  if (settings) createStore(dataDir).writeJSON('settings.json', settings);
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn', ...(settings || {}) });
   const ctx = createApp({
     dataDir,
     env: { ADMIN_PASSWORD: 'letmein', INGEST_KEY: 'secret-key-123', NODE_ENV: 'test' },

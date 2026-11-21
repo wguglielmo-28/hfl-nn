@@ -21,7 +21,7 @@ const at = (hhmm, day = DAY) => wallToMs(day, hhmm, TZ);
 // claudeOn: whether the stand-in Claude counts as configured (its calls always fail).
 async function boot(settings = {}, { claudeOn = false } = {}) {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false, autoBreaking: false, ...settings });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  approveWeekly: false, autoProduce: false, autoBreaking: false, ...settings });
   const clock = { t: at('05:00') };
   let claudeCalls = 0;
   const ctx = createApp({

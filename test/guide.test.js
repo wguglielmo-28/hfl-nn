@@ -18,7 +18,7 @@ const at = (hhmm, day = DAY) => wallToMs(day, hhmm, TZ);
 
 async function boot(settings = {}) {
   const dataDir = tmpDir();
-  createStore(dataDir).writeJSON('settings.json', { approveWeekly: false, autoProduce: false, autoBreaking: false, channelAuto: true, channelWriter: 'template', ...settings });
+  createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn',  approveWeekly: false, autoProduce: false, autoBreaking: false, channelAuto: true, channelWriter: 'template', ...settings });
   const clock = { t: at('05:00') };
   const ctx = createApp({
     dataDir, env: { ADMIN_PASSWORD: 'x', NODE_ENV: 'test' }, tts: createTTS({ provider: 'silent' }), logger: quiet,

@@ -3,6 +3,7 @@
 // rendered once into offscreen canvases; animated bits are drawn per frame.
 import { W, H, PAL, rect, panel, dither, bands, spiral, shade, badge, drawText, textWidth } from './gfx.js';
 import { wrap } from './font.js';
+import { brand, fitScale } from './brand.js';
 
 export const DESK_TOP = 168;           // desk top line in the wide shot
 const cache = {};
@@ -61,8 +62,8 @@ export function drawDesk(g, top = DESK_TOP, { scale = 1, logo = true } = {}) {
   if (logo && scale === 1) {
     rect(g, W / 2 - 60, top + 18, 120, 26, PAL.deep);
     spiral(g, W / 2 - 54, top + 22, 2);
-    drawText(g, 'HFL-NN', W / 2 + 10, top + 24, { color: PAL.white, scale: 2, align: 'center' });
-    drawText(g, 'NEWS NETWORK', W / 2 + 10, top + 40 - 1, { color: PAL.teal, align: 'center' });
+    drawText(g, brand.name, W / 2 + 10, top + 24, { color: PAL.white, scale: fitScale(brand.name, 100, 2), align: 'center' });
+    drawText(g, brand.sub, W / 2 + 10, top + 40 - 1, { color: PAL.teal, align: 'center' });
   }
 }
 
@@ -78,13 +79,13 @@ export function drawStudio(g, t, { segmentTitle = '', dim = false } = {}) {
   rect(g, 171, 25, 138, 80, PAL.deep);
   const flip = Math.floor(t * 2) % 2;
   spiral(g, 182, 38, 4, flip ? PAL.teal : PAL.gold, flip ? PAL.gold : PAL.teal);
-  drawText(g, 'HFL-NN', 268, 46, { color: PAL.white, scale: 3, align: 'center' });
-  drawText(g, dim ? 'OFF AIR' : 'TONIGHT', 268, 74, { color: dim ? PAL.red : PAL.teal, scale: 1, align: 'center' });
+  drawText(g, brand.name, 268, 46, { color: PAL.white, scale: fitScale(brand.name, 76, 3), align: 'center' });
+  drawText(g, dim ? 'OFF AIR' : brand.screen, 268, 74, { color: dim ? PAL.red : PAL.teal, scale: 1, align: 'center' });
   // Right video wall: segment title
   rect(g, 331, 27, 134, 106, '#0f0b28');
   for (let y = 27; y < 133; y += 3) rect(g, 331, y, 134, 1, '#140f33');
   spiral(g, 388, 40, 2);
-  const lines = wrap(segmentTitle || 'HFL-NN', 120, 1, 4);
+  const lines = wrap(segmentTitle || brand.name, 120, 1, 4);
   lines.forEach((ln, i) => drawText(g, ln, 398, 72 + i * 10, { color: PAL.white, align: 'center' }));
   if (dim) { g.fillStyle = 'rgba(5,3,15,0.55)'; g.fillRect(0, 0, W, H); }
 }
@@ -97,10 +98,10 @@ function closeStatic(g) {
   panel(g, 250, 30, 210, 120, PAL.gray1, PAL.gray3);
   rect(g, 254, 34, 202, 112, PAL.deep);
   spiral(g, 268, 52, 8);
-  drawText(g, 'HFL-NN', 410, 70, { color: shade(PAL.white, 0.7), scale: 3, align: 'center' });
+  drawText(g, brand.name, 410, 70, { color: shade(PAL.white, 0.7), scale: fitScale(brand.name, 90, 3), align: 'center' });
 }
 export function drawClose(g, t) {
-  g.drawImage(layer('close', closeStatic), 0, 0);
+  g.drawImage(layer(`close:${brand.key}`, closeStatic), 0, 0);
   const flip = Math.floor(t * 1.5) % 2;
   rect(g, 268 + 8 * 4, 52 + 8 * 4, 8, 8, flip ? PAL.gold : PAL.teal);
 }
