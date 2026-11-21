@@ -310,3 +310,32 @@ test('every talk segment uses a set the studio can draw, and every look an acces
   }
   assert.ok(talkCfg.network.colors.accent);
 });
+
+test('on the channel: the newest Fifth Quarter premieres in its next slot and re-airs mornings and evenings until the next one', () => {
+  const { buildDay } = require('../lib/channel/programme');
+  const { wallToMs } = require('../lib/channel/clock');
+  const config = require('../config/channel.json');
+  const TZ = config.timeZone;
+  const ep = (id, type, duration, publishedAt) => ({ id, type, duration, publishedAt, title: `Show ${id}`, status: 'published' });
+  const older = ep('wk-old', 'weekly', 900, '2026-11-01T01:00:00Z');
+  const t1 = ep('talk-1', 'talk', 360, new Date(wallToMs('2026-11-16', '14:00', TZ)).toISOString());
+  const slot = (blocks, day, at) => blocks.find(b => b.from === wallToMs(day, at, TZ));
+
+  const before = buildDay({ day: '2026-11-15', config, episodes: [older, t1] });
+  assert.ok(!before.some(b => b.episodeId === 'talk-1'), 'nothing airs before it is published');
+
+  const d1 = buildDay({ day: '2026-11-16', config, episodes: [older, t1] });
+  const eve = slot(d1, '2026-11-16', '19:30');
+  assert.equal(eve.episodeId, 'talk-1');
+  assert.equal(eve.showTitle, 'The Fifth Quarter');
+  assert.equal(eve.rerun, false, 'the evening it is published is its premiere');
+  assert.equal(slot(d1, '2026-11-16', '20:00').episodeId !== 'talk-1', true, 'HFL-NN Tonight keeps its own slot');
+
+  const d3 = buildDay({ day: '2026-11-18', config, episodes: [older, t1] });
+  assert.equal(slot(d3, '2026-11-18', '10:00').episodeId, 'talk-1', 'still the newest: it re-airs');
+  assert.equal(slot(d3, '2026-11-18', '10:00').rerun, true);
+
+  const t2 = ep('talk-2', 'talk', 380, new Date(wallToMs('2026-11-22', '09:00', TZ)).toISOString());
+  const d7 = buildDay({ day: '2026-11-22', config, episodes: [older, t1, t2] });
+  assert.equal(slot(d7, '2026-11-22', '10:00').episodeId, 'talk-2', 'the next episode takes over');
+});

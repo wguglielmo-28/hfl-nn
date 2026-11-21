@@ -113,6 +113,13 @@
         "estUsd": 0.15
       }
     },
+    "fifthq": {
+      "title": "The Fifth Quarter",
+      "blurb": "The weekly talk show: rants, debates, the Brennan brothers and the mailbag. The newest episode airs every morning and evening until the next one.",
+      "types": ["talk"],
+      "order": "latest",
+      "holdPremiere": true
+    },
     "vault": {
       "title": "The Vault",
       "blurb": "Past broadcasts, back on the air.",
@@ -126,7 +133,8 @@
     { "at": "07:30", "show": "tonight" },
     { "at": "09:00", "show": "wire" },
     { "at": "09:30", "show": "blitz" },
-    { "at": "10:00", "show": "vault" },
+    { "at": "10:00", "show": "fifthq" },
+    { "at": "10:30", "show": "vault" },
     { "at": "12:00", "show": "tonight" },
     { "at": "13:00", "show": "statlab" },
     { "at": "13:30", "show": "vault" },
@@ -134,6 +142,7 @@
     { "at": "17:00", "show": "wire" },
     { "at": "18:00", "show": "plays" },
     { "at": "18:30", "show": "vault" },
+    { "at": "19:30", "show": "fifthq" },
     { "at": "20:00", "show": "tonight" },
     { "at": "21:30", "show": "wire" },
     { "at": "22:00", "show": "rewind" },

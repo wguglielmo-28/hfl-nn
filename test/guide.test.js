@@ -40,7 +40,7 @@ test('guide: before the day starts, live shows are expected and the rest is enco
     assert.equal(g.timeZone, TZ);
     assert.deepEqual(g.days.map(d => d.day), [DAY, nextDay(DAY)]);
     const today = g.days[0];
-    assert.equal(today.slots.length, 17, 'one entry per slot of the grid');
+    assert.equal(today.slots.length, 19, 'one entry per slot of the grid');
     assert.deepEqual([slot(today, 'blitz', '07:00').status, slot(today, 'blitz', '07:00').note], ['expected', 'New, about 12 minutes, if there is news']);
     assert.match(slot(today, 'wire', '17:00').note, /if new results have come in/);
     assert.equal(slot(today, 'blitz', '09:30').status, 'repeats', 'only the edition the show is made for is new');
