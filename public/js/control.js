@@ -120,7 +120,7 @@ async function viewDashboard() {
     h('section', { class: 'panel' }, h('h2', {}, 'Newsroom'),
       h('table', {}, h('tbody', {},
         row('Script writer', writerLine(s.writer)),
-        row('Voices', `${s.tts.provider}${s.tts.status ? ` — ${s.tts.status}` : ''}${s.tts.error ? ` (${s.tts.error})` : ''}${s.tts.elevenlabs?.configured ? ` • ElevenLabs ${s.tts.voiceEngine === 'elevenlabs' ? 'on' : 'off'} (${s.tts.elevenlabs.model})${s.tts.elevenlabs.error ? ` — ${s.tts.elevenlabs.error}` : ''}` : ''}`),
+        row('Voices', `${s.tts.provider}${s.tts.status ? ` — ${s.tts.status}` : ''}${s.tts.error ? ` (${s.tts.error})` : ''}${s.tts.elevenlabs?.configured ? ` • ElevenLabs for The Fifth Quarter only (${s.tts.elevenlabs.model})${s.tts.elevenlabs.error ? ` — ${s.tts.elevenlabs.error}` : ''}` : ''}`),
         row('Audio', s.tts.ffmpeg ? 'MP3 (ffmpeg)' : 'WAV (no ffmpeg found)'),
         row('News wire', `${s.wire.unused} unused of ${s.wire.total} stories`),
         row('Chronicle', s.chronicle.fetchedAt ? `${s.chronicle.unused} new of ${s.chronicle.count}` : (s.chronicle.error || 'not configured')),
@@ -559,7 +559,7 @@ async function viewSettings() {
     const play = h('button', { class: 'btn', type: 'button', on: { click: async () => {
       play.disabled = true;
       try {
-        const res = await api('/api/admin/tts/preview', { method: 'POST', raw: true, body: { voice: f.voiceEngine?.value === 'elevenlabs' && eleven.value ? `eleven:${eleven.value}` : voice.value, speed: Number(speed.value), text: `${p.catchphrases?.[0] || 'Hello'} I'm ${name.value}, and this is HFL-NN.` } });
+        const res = await api('/api/admin/tts/preview', { method: 'POST', raw: true, body: { voice: voice.value, speed: Number(speed.value), text: `${p.catchphrases?.[0] || 'Hello'} I'm ${name.value}, and this is HFL-NN.` } });
         if (!res.ok) throw new Error((await res.json()).error);
         new Audio(URL.createObjectURL(await res.blob())).play();
       } catch (e) { toast(`Voice preview failed: ${e.message}`, true); } finally { play.disabled = false; }
@@ -589,7 +589,7 @@ async function viewSettings() {
   const save = async () => {
     const patch = {
       phaseOverride: f.phaseOverride.value || null, writer: f.writer.value, claudeModel: f.claudeModel.value, openaiModel: f.openaiModel.value, spice: f.spice.value,
-      approveWeekly: f.approveWeekly.checked, autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, voiceEngine: f.voiceEngine.value, elevenModel: f.elevenModel.value,
+      approveWeekly: f.approveWeekly.checked, autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, elevenModel: f.elevenModel.value,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
       channelAuto: f.channelAuto.checked, chatOnAir: f.chatOnAir.checked, dailyCapUsd: Number(f.dailyCapUsd.value), channelWriter: f.channelWriter.value,
@@ -659,11 +659,11 @@ async function viewSettings() {
     h('section', { class: 'panel' }, h('h2', {}, 'Anchors'),
       h('p', { class: 'muted' }, 'Names and voices. Looks, bios and personalities live in config/personas.json.'),
       h('div', { class: 'grid2' },
-        h('div', {}, h('label', {}, 'Voice engine'), sel('voiceEngine', ['kokoro', 'elevenlabs'], { kokoro: 'Kokoro (free, on the server)', elevenlabs: 'ElevenLabs for anchors with an ElevenLabs voice' })),
+        h('div', {}, h('label', {}, 'Voice engine'), h('p', { class: 'muted' }, 'Kokoro (free, on the server) for every HFL-NN show on the 24/7 channel. ElevenLabs only for The Fifth Quarter.')),
         h('div', {}, check('voiceEmotion', 'Emotion in the voices: shouts louder, whispers quieter, heated exchanges faster, and ElevenLabs delivery per line (v4 also reads emotion tags)')),
         h('div', {}, h('label', {}, 'ElevenLabs model'), sel('elevenModel', st.elevenModels.map(m => m.id), Object.fromEntries(st.elevenModels.map(m => [m.id, m.label]))))),
       h('p', { class: 'muted' }, el.configured
-        ? `ElevenLabs bills per character: a weekly show is roughly 6,000 to 7,000 characters, about 50 cents on Multilingual v2. Re-voicing only pays for changed lines. Anchors left on "Kokoro voice" stay free. If ElevenLabs fails (out of characters, bad key), the episode is voiced with Kokoro instead.${el.voices.length ? '' : ' No voices found on the account yet.'}`
+        ? `ElevenLabs bills per character: a weekly show is roughly 6,000 to 7,000 characters, about 50 cents on Multilingual v2. Re-voicing only pays for changed lines. HFL-NN anchors always use their Kokoro voice; ElevenLabs voices here are only used by The Fifth Quarter.${el.voices.length ? '' : ' No voices found on the account yet.'}`
         : `Set ELEVENLABS_API_KEY on the server to give anchors ElevenLabs voices.${el.error ? ` (${el.error})` : ''}`),
       h('table', {}, h('thead', {}, h('tr', {}, ['Role', 'Name', 'Kokoro voice', el.configured && 'ElevenLabs voice', 'Speed', ''].filter(t => t !== false).map(t => h('th', {}, t)))), h('tbody', {}, personaRows.map(r => r.el)))),
     h('section', { class: 'panel' }, h('h2', {}, 'Pronunciations'),

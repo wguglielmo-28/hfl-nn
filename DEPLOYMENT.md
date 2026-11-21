@@ -39,10 +39,11 @@ The first voiced episode downloads the Kokoro model (~90 MB) into `/data/models`
 load it from disk.
 
 ### Install size
-`kokoro-js` pulls in ONNX Runtime, so `node_modules` is about 850 MB. Both `kokoro-js` and
-`ffmpeg-static` are *optional* dependencies. If either fails to install, HFL-NN still runs: it
-falls back to silent placeholder audio or WAV output, and the control room dashboard says which
-it is using.
+`kokoro-js` pulls in ONNX Runtime, so `node_modules` is about 850 MB. `kokoro-js` is a required
+dependency: if it fails to install, the build fails and Railway keeps the previous deploy. (It used
+to be optional, and on 2026-11-21 a clean rebuild dropped it without an error, so every 24/7 show
+refused to voice.) `ffmpeg-static` is still optional: without it, audio is written as WAV.
+Run locally with `TTS_PROVIDER=silent` to skip Kokoro.
 
 ### `npm audit`
 `npm audit` reports `sharp` (libvips/libheif advisories). It comes in through
