@@ -24,6 +24,8 @@ export class Director {
     this.byId = Object.fromEntries(this.anchors.map(a => [a.id, a]));
     this.mouth = m.mouth?.data || '';
     this.fps = m.mouth?.fps || 30;
+    // Crosstalk episodes carry a track per anchor, so two mouths can move at once.
+    this.mouthBy = m.mouthBySpeaker || null;
     // Desk seating: host in the middle, analysts either side, Gus on the end.
     const analysts = this.anchors.filter(a => a.kind === 'analyst');
     const slotOf = a => KIND_ORDER.indexOf(a.kind === 'analyst' ? (analysts.indexOf(a) === 0 ? 'analyst' : 'analyst2') : a.kind);
@@ -59,6 +61,8 @@ export class Director {
     const want = ln.shot && ln.shot !== 'auto' ? ln.shot : null;
     if (want === 'graphic' || want === 'full_graphic') return card ? (FULL_TYPES.has(card.type) ? 'full_graphic' : want) : 'single';
     if (want) return want;
+    // Crosstalk: both voices on screen.
+    if (ln.enter && !(card && sinceCue <= 1)) return 'two_shot';
     const reacting = ['shocked', 'laughing', 'angry'].includes(ln.emotion);
     if (card && FULL_TYPES.has(card.type) && !reacting) return 'full_graphic';
     if (card && sinceCue <= 1) return 'graphic';
@@ -82,8 +86,9 @@ export class Director {
     return s;
   }
 
-  mouthAt(t) {
-    const c = this.mouth.charCodeAt(Math.floor(t * this.fps));
+  mouthAt(t, id = null) {
+    const track = id && this.mouthBy ? this.mouthBy[id] || '' : this.mouth;
+    const c = track.charCodeAt(Math.floor(t * this.fps));
     return c >= 48 && c <= 51 ? c - 48 : 0;
   }
 
@@ -100,7 +105,10 @@ export class Director {
     const talking = t >= ln.t0 && t <= ln.t1;
     const segStart = seg.t0 ?? 0;
     const transition = seg !== this.segs[0] && t - segStart < TRANSITION ? (t - segStart) / TRANSITION : 0;
-    return { kind: 'show', t, ln, plan, seg, talking, transition, lineIdx: i };
+    // The line this one came in over, while it is still being said.
+    const before = i > 0 ? this.lines[i - 1] : null;
+    const over = ln.enter && before && before.seg === ln.seg && before.speaker !== ln.speaker && t <= before.t1 ? before : null;
+    return { kind: 'show', t, ln, plan, seg, talking, transition, lineIdx: i, over };
   }
 }
 
@@ -111,12 +119,15 @@ function anchorState(d, a, scene, seatX) {
   const seed = [...a.id].reduce((n, c) => n + c.charCodeAt(0), 0) % 17;
   const blink = (t + seed * 1.7) % (3.1 + (seed % 5) * 0.37) < 0.12;
   const bob = (t + seed * 0.4) % 2.6 < 1.3 ? 0 : 1;
-  const ln = scene.ln;
+  const own = scene.ln;
+  // In crosstalk the anchor being talked over is still talking.
+  const ln = scene.over && scene.over.speaker === a.id ? scene.over : own;
   const speaking = ln && ln.speaker === a.id;
   const st = { blink, bob, mouth: 0, emotion: 'neutral', gesture: 'none', gestureT: 1, look: 0 };
   if (speaking) {
     st.emotion = ln.emotion || 'neutral';
-    if (scene.talking) st.mouth = d.mouthAt(t);
+    if (d.mouthBy) st.mouth = t >= ln.t0 && t <= ln.t1 ? d.mouthAt(t, a.id) : 0;
+    else if (scene.talking) st.mouth = d.mouthAt(t);
     const since = t - ln.t0;
     const hold = ln.gesture === 'facepalm' || ln.gesture === 'arms_crossed' ? 2.2 : 1.3;
     if (ln.gesture && ln.gesture !== 'none' && since >= 0 && since < hold) {

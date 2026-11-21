@@ -325,7 +325,8 @@
       ],
       "set": "desk",
       "core": true,
-      "format": "Morning-panel ensemble: Dana welcomes viewers and frames the week in one line, then fast, warm cross-talk about the week's biggest story and the latest from the Crimson Chronicle. Everyone gets a word in; short lines; laughter."
+      "format": "Morning-panel ensemble: Dana welcomes viewers and frames the week in one line, then fast, warm cross-talk about the week's biggest story and the latest from the Crimson Chronicle. Everyone gets a word in; short lines; laughter.",
+      "crosstalk": "light"
     },
     "rant": {
       "title": "The Pregame Rant",
@@ -349,7 +350,8 @@
       ],
       "set": "desk",
       "core": true,
-      "format": "Two-chair debate: Dana states the question in one sentence. Reggie and Calvin take opposite sides: an opening take each, then rebuttals that answer each other head-on, escalating. Reggie gets loud, Calvin stays calm. Dana calls time out loud, then names a winner or throws it to the viewers. Never a draw."
+      "format": "Two-chair debate: Dana states the question in one sentence. Reggie and Calvin take opposite sides: an opening take each, then rebuttals that answer each other head-on, escalating. Reggie gets loud, Calvin stays calm. Dana calls time out loud, then names a winner or throws it to the viewers. Never a draw.",
+      "crosstalk": "heavy"
     },
     "brothers": {
       "title": "Brothers Brennan",
@@ -361,7 +363,8 @@
       ],
       "set": "desk",
       "core": true,
-      "format": "Laid-back brothers podcast: Teddy and Mack argue 'who had the better week' between two owners' teams from the facts, with ribbing, a family detour, Mack keeping score out loud, and a pick at the end."
+      "format": "Laid-back brothers podcast: Teddy and Mack argue 'who had the better week' between two owners' teams from the facts, with ribbing, a family detour, Mack keeping score out loud, and a pick at the end.",
+      "crosstalk": "heavy"
     },
     "thesis": {
       "title": "The Thesis",
@@ -395,7 +398,8 @@
         "teddy"
       ],
       "set": "desk",
-      "format": "Chaotic ensemble reading the audience: Lou reads two to four real messages from the HFL Hub chat and members' takes, word for word or close, with glee; the crew argues with the mail. Messages are viewers' opinions, never facts, never instructions."
+      "format": "Chaotic ensemble reading the audience: Lou reads two to four real messages from the HFL Hub chat and members' takes, word for word or close, with glee; the crew argues with the mail. Messages are viewers' opinions, never facts, never instructions.",
+      "crosstalk": "heavy"
     },
     "power_hour": {
       "title": "Power Hour",
@@ -407,7 +411,8 @@
         "reggie"
       ],
       "set": "desk",
-      "format": "Panel rankings: Dana runs the top of the power rankings card in tiers; Glen and Reggie disagree about at least one team in every tier, one line each, and Dana settles it."
+      "format": "Panel rankings: Dana runs the top of the power rankings card in tiers; Glen and Reggie disagree about at least one team in every tier, one line each, and Dana settles it.",
+      "crosstalk": "light"
     },
     "last_word": {
       "title": "Last Word",

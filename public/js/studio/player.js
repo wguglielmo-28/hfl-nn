@@ -18,7 +18,7 @@ export class Player extends EventTarget {
     this.manualTime = null;     // set by renderAt() for screenshots
     this.clock = null;          // () => seconds into the episode, set by the live channel
     this.bugLabel = null;       // overrides the manifest's corner label (e.g. ENCORE)
-    this.lastLine = -1;
+    this.lastLine = -1; this.lastLineKey = null;
     this.lastSeg = null;
     this.audio.addEventListener('ended', () => this.emit('ended'));
     this.audio.addEventListener('play', () => this.emit('state'));
@@ -38,7 +38,7 @@ export class Player extends EventTarget {
     this.director = new Director(m);
     this.audio.src = `${audioBase}/${m.audio}`;
     this.audio.load();
-    this.lastLine = -1;
+    this.lastLine = -1; this.lastLineKey = null;
     this.lastSeg = null;
     this.emit('loaded', { manifest: m });
     return m;
@@ -98,10 +98,13 @@ export class Player extends EventTarget {
     const m = this.manifest;
     const scene = renderFrame(this.g, this.director, t, { ticker: m.ticker, bugLabel: this.bugLabel ?? (m.bugLabel || ''), title: m.title });
     if (scene.kind === 'show') {
-      if (scene.lineIdx !== this.lastLine) { this.lastLine = scene.lineIdx; this.emit('line', { line: scene.ln, talking: scene.talking }); }
+      // A caption change: a new line, or a talked-over line ending under it.
+      const key = `${scene.lineIdx}:${scene.over ? 1 : 0}`;
+      if (key !== this.lastLineKey) { this.lastLine = scene.lineIdx; this.lastLineKey = key; this.emit('line', { line: scene.ln, over: scene.over || null, talking: scene.talking }); }
       if (scene.seg?.id !== this.lastSeg) { this.lastSeg = scene.seg?.id; this.emit('segment', { segment: scene.seg }); }
     } else if (this.lastLine !== -1) {
       this.lastLine = -1;
+      this.lastLineKey = null;
       this.emit('line', { line: null });
     }
   }
