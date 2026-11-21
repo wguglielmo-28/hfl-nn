@@ -27,7 +27,10 @@ player.addEventListener('line', e => {
   const box = $('captions');
   if (!state.cc || !ln) { box.hidden = true; return; }
   const who = player.manifest?.lineup?.find(a => a.id === ln.speaker);
-  box.innerHTML = `<b>${esc(who?.short || ln.speaker)}</b>${esc(ln.text)}`;
+  // Crosstalk: the interrupter on top, the anchor talked over beneath.
+  const over = e.detail.over;
+  const overWho = over && player.manifest?.lineup?.find(a => a.id === over.speaker);
+  box.innerHTML = `<b>${esc(who?.short || ln.speaker)}</b>${esc(ln.text)}${over ? `<br><span style="opacity:.7"><b>${esc(overWho?.short || over.speaker)}</b>${esc(over.text)}</span>` : ''}`;
   box.hidden = false;
 });
 player.addEventListener('error', e => showError(e.detail.message));
