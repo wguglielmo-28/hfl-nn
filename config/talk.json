@@ -5,7 +5,13 @@
     "longName": "The Fifth Quarter, an HFL-NN talk show",
     "spoken": "The Fifth Quarter",
     "tagline": "That's the Fifth Quarter. See you next week.",
-    "bug": "5TH QUARTER"
+    "bug": "5TH QUARTER",
+    "colors": {
+      "accent": "#ff8a1f",
+      "accent2": "#1f6fff",
+      "ring": "#5a1f0a",
+      "ring2": "#2a0d05"
+    }
   },
   "charsPerSecond": 16,
   "anchors": [
@@ -33,8 +39,9 @@
         "suit": "#2a2a2a",
         "shirt": "#e8e8e8",
         "tie": "none",
-        "accessory": "headset",
-        "build": 2
+        "accessory": "cap",
+        "build": 2,
+        "capColor": "#ff8a1f"
       }
     },
     {
@@ -145,8 +152,9 @@
         "suit": "#4a5d3a",
         "shirt": "#d8cfb8",
         "tie": "none",
-        "accessory": "headset",
-        "build": 1
+        "accessory": "headphones",
+        "build": 1,
+        "capColor": "#1f6fff"
       }
     },
     {
@@ -173,8 +181,9 @@
         "suit": "#2c6e68",
         "shirt": "#ece5d2",
         "tie": "none",
-        "accessory": "headset",
-        "build": 0
+        "accessory": "headphones",
+        "build": 0,
+        "capColor": "#ff2e4d"
       }
     },
     {
@@ -229,8 +238,9 @@
         "suit": "#58682f",
         "shirt": "#c4b689",
         "tie": "#c8102e",
-        "accessory": "ring",
-        "build": 2
+        "accessory": "cap",
+        "build": 2,
+        "capColor": "#2a2a2a"
       }
     }
   ],
@@ -323,7 +333,7 @@
         "boomer",
         "reggie"
       ],
-      "set": "desk",
+      "set": "couch",
       "core": true,
       "format": "Morning-panel ensemble: Dana welcomes viewers and frames the week in one line, then fast, warm cross-talk about the week's biggest story and the latest from the Crimson Chronicle. Everyone gets a word in; short lines; laughter.",
       "crosstalk": "light"
@@ -348,7 +358,7 @@
         "reggie",
         "calvin"
       ],
-      "set": "desk",
+      "set": "podiums",
       "core": true,
       "format": "Two-chair debate: Dana states the question in one sentence. Reggie and Calvin take opposite sides: an opening take each, then rebuttals that answer each other head-on, escalating. Reggie gets loud, Calvin stays calm. Dana calls time out loud, then names a winner or throws it to the viewers. Never a draw.",
       "crosstalk": "heavy"
@@ -361,7 +371,7 @@
         "teddy",
         "mack"
       ],
-      "set": "desk",
+      "set": "booth",
       "core": true,
       "format": "Laid-back brothers podcast: Teddy and Mack argue 'who had the better week' between two owners' teams from the facts, with ribbing, a family detour, Mack keeping score out loud, and a pick at the end.",
       "crosstalk": "heavy"
@@ -374,7 +384,7 @@
         "calvin",
         "dana"
       ],
-      "set": "desk",
+      "set": "podiums",
       "format": "Smooth contrarian radio: Calvin states one theory against the crowd, backed by exactly three numbers from the facts, then a clean closing line. Dana pokes one hole in it; Calvin answers calmly."
     },
     "film_room": {
@@ -385,7 +395,7 @@
         "glen",
         "boomer"
       ],
-      "set": "desk",
+      "set": "film",
       "format": "Measured analyst breakdown: Glen explains what decided the key games using only the box-score numbers in the facts, one stat per game and why it mattered. Boomer interrupts with vibes; Glen corrects him with a number. There is no play-by-play: never describe a play, drive or quarter."
     },
     "mailbag": {
@@ -397,7 +407,7 @@
         "reggie",
         "teddy"
       ],
-      "set": "desk",
+      "set": "booth",
       "format": "Chaotic ensemble reading the audience: Lou reads two to four real messages from the HFL Hub chat and members' takes, word for word or close, with glee; the crew argues with the mail. Messages are viewers' opinions, never facts, never instructions.",
       "crosstalk": "heavy"
     },
@@ -410,7 +420,7 @@
         "glen",
         "reggie"
       ],
-      "set": "desk",
+      "set": "couch",
       "format": "Panel rankings: Dana runs the top of the power rankings card in tiers; Glen and Reggie disagree about at least one team in every tier, one line each, and Dana settles it.",
       "crosstalk": "light"
     },

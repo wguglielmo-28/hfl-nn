@@ -296,3 +296,17 @@ test('shared memory: each show hears what the other said; HFL-NN episodes keep t
   assert.match(P.showBible(talkP), /writers' room for The Fifth Quarter/);
   assert.match(P.showBible(basePersonas), /writers' room for HFL-NN/, 'HFL-NN keeps its own bible');
 });
+
+test('every talk segment uses a set the studio can draw, and every look an accessory it knows', () => {
+  const fs = require('fs');
+  const sets = fs.readFileSync(require.resolve('../public/js/studio/talksets.js'), 'utf8').match(/TALK_SETS = new Set\(\[([^\]]+)\]\)/)[1].match(/'([a-z]+)'/g).map(s => s.slice(1, -1));
+  const known = new Set(['desk', 'corkboard', 'breaking', ...sets]);
+  for (const [k, s] of Object.entries(talkCfg.segments)) assert.ok(known.has(s.set), `${k}: set "${s.set}"`);
+  assert.deepEqual(sets.sort(), ['booth', 'couch', 'film', 'podiums']);
+  const anchorsJs = fs.readFileSync(require.resolve('../public/js/studio/anchors.js'), 'utf8');
+  for (const a of talkCfg.anchors) {
+    const acc = a.look.accessory;
+    assert.ok(!acc || acc === 'none' || anchorsJs.includes(`L.accessory === '${acc}'`), `${a.id}: accessory "${acc}"`);
+  }
+  assert.ok(talkCfg.network.colors.accent);
+});

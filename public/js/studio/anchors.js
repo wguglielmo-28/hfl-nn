@@ -113,6 +113,23 @@ export function drawAnchor(ctx, appearance, X, Y, s, state = {}) {
     p(cx - 11, 18 + hy, 3, 6, hc); p(cx + 8, 18 + hy, 3, 6, hc);
     p(cx - 10, 24 + hy, 1, 5, hc); p(cx - 9, 28 + hy, 4, 1, hc); p(cx - 5, 27 + hy, 2, 2, '#55556a');
   }
+  if (L.accessory === 'cap') {
+    // A cap worn backwards: the dome, a band, and the strap opening in front.
+    const cc = L.capColor || '#c8102e', ccD = shade(cc, 0.7), ccL = shade(cc, 1.2);
+    for (let i = 0; i < 7; i++) { const w = 13 + Math.min(6, i * 2); p(cx - Math.floor(w / 2), 5 + i + hy, w, 1, i === 0 ? ccL : cc); }
+    p(cx - 10, 12 + hy, 21, 2, ccD);
+    p(cx - 2, 10 + hy, 5, 2, hair); p(cx - 1, 9 + hy, 3, 1, hair);
+    p(cx - 3, 12 + hy, 7, 1, '#d8d8d8');
+    p(cx - 10, 10 + hy, 1, 3, ccD); p(cx + 10, 10 + hy, 1, 3, ccD);
+  }
+  if (L.accessory === 'headphones') {
+    // Over-ear podcast headphones.
+    const hc = L.capColor || '#1e1e28', hl = shade(hc, 1.6);
+    p(cx - 8, 3 + hy, 17, 2, hc); p(cx - 10, 4 + hy, 2, 4, hc); p(cx + 9, 4 + hy, 2, 4, hc);
+    p(cx - 11, 8 + hy, 2, 9, hc); p(cx + 10, 8 + hy, 2, 9, hc);
+    p(cx - 13, 16 + hy, 5, 10, hc); p(cx + 9, 16 + hy, 5, 10, hc);
+    p(cx - 12, 17 + hy, 1, 8, hl); p(cx + 12, 17 + hy, 1, 8, hl);
+  }
   if (L.accessory === 'foilhat') {
     for (let i = 0; i < 14; i++) {
       const w = 3 + Math.round(i * 1.25);
