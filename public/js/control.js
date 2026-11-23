@@ -815,13 +815,33 @@ function talkDesk(d, parts) {
       .then(r => { if (r?.episode) { state.tab = 'episodes'; state.episode = r.episode.id; render(); } });
   };
   const regather = () => act(async () => { await parts.save(); return api('/api/admin/desk/open', { method: 'POST', body: {} }); }, 'Gathered again').then(r => { if (r) render(); });
+  // Cover one HFL week, and segments to run whatever the budget says.
+  const sameWk = (x, y) => x && y && x.seasonIndex === y.seasonIndex && x.stage === y.stage && x.week === y.week;
+  const cover = h('select', {}, h('option', { value: '' }, 'Everything since the last episode'),
+    (t.weeks || []).map((wk, i) => h('option', { value: String(i) }, `Only HFL ${wk.label}`)));
+  const focusAt = (t.weeks || []).findIndex(wk => sameWk(wk, t.focusWeek));
+  cover.value = focusAt < 0 ? '' : String(focusAt);
+  const extras = (t.optional || []).map(o => {
+    const box = h('input', { type: 'checkbox' });
+    box.checked = (t.include || []).includes(o.kind);
+    return { kind: o.kind, box, el: h('label', { style: 'display:inline-flex;gap:6px;margin-right:14px' }, box, o.title) };
+  });
+  const applyFocus = () => act(() => api('/api/admin/desk', { method: 'PUT', body: {
+    focusWeek: cover.value === '' ? null : t.weeks[Number(cover.value)],
+    include: extras.filter(x => x.box.checked).map(x => x.kind),
+  } }), 'Updated').then(r => { if (r) render(); });
   const skip = () => { if (confirm('Clear this gather? Nothing has been written, so nothing is lost or spent.')) act(() => api('/api/admin/desk/dismiss', { method: 'POST', body: {} }), 'Cleared').then(r => { if (r) render(); }); };
   return h('div', {},
-    h('section', { class: 'panel' }, h('h2', {}, `${name}: week of ${t.window.range}`),
+    h('section', { class: 'panel' }, h('h2', {}, t.focusWeek ? `${name}: ${t.window.label}` : `${name}: week of ${t.window.range}`),
       h('p', { class: 'muted' }, `Covers ${when(t.window.from)} to ${when(t.window.to)}${t.window.label ? ` (${t.window.label})` : ''}. Gathered ${when(e.gatheredAt || e.openedAt)}: ${t.counts.stories} export stories, ${t.counts.articles} Chronicle articles, ${t.counts.hub} Hub announcements, ${t.counts.chat} chat messages.`),
       h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Segment'), h('th', {}, 'Cast'), h('th', {}, 'Length'))),
         h('tbody', {}, t.segments.map(s => h('tr', {}, h('td', {}, s.title), h('td', {}, s.cast.join(', ')), h('td', {}, fmtDur(s.seconds)))))),
       h('p', { class: over ? 'error' : 'muted' }, `About ${n(t.estimatedChars)} ElevenLabs characters for a ${n(t.charBudget)}-character budget (${t.model}). Segments that don't fit the budget are left out; raise it in Settings when you move up a plan.`),
+      t.charBudget > (t.settingsBudget || 0) ? h('p', { class: 'muted' }, `The segments you added raise this episode's budget from ${n(t.settingsBudget)} to ${n(t.charBudget)} characters. Settings stays at ${n(t.settingsBudget)}.`) : null,
+      h('div', { class: 'grid2', style: 'margin-top:8px' },
+        h('div', {}, h('label', {}, 'Cover'), cover),
+        h('div', {}, h('label', {}, 'Always include'), h('div', {}, extras.map(x => x.el)))),
+      h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', on: { click: applyFocus } }, 'Apply (free)')),
       t.articles.length ? h('div', {}, h('h3', {}, 'From the Chronicle'), h('ul', {}, t.articles.map(a => h('li', {}, `${a.title}${a.author ? ` by ${a.author}` : ''}`)))) : h('p', { class: 'muted' }, 'No Chronicle articles in this window.'),
       t.stories.length ? h('div', {}, h('h3', {}, 'Top stories'), h('ul', {}, t.stories.map(s => h('li', {}, s.headline)))) : h('p', { class: 'muted' }, 'No export stories in this window yet.'),
       h('label', {}, 'Notes for the writers'), parts.notes,

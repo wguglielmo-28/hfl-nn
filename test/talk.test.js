@@ -137,6 +137,23 @@ test('the character budget decides the rundown: Starter keeps the core, Creator 
   assert.equal(creator.aStory.payoff, creator.segments.find(s => s.kind === 'take_vs_take').id);
 });
 
+test('segments the desk asks for always run, and the episode budget grows to fit them', () => {
+  const personas = T.talkPersonas(basePersonas, talkCfg);
+  const mk = (id, type) => ({ id, type, headline: `${id} headline`, teams: [1, 2], score: 50, facts: {}, card: { type: 'headline', data: { tag: 'X', text: id } } });
+  const stories = [mk('g1', 'game'), mk('g2', 'game'), mk('g3', 'game'), mk('st', 'streak'), mk('pf', 'performance')];
+  const league = { teams: { 1: { owner: 'a' }, 2: { owner: 'b' } } };
+  const context = { powerRankings: { type: 'power_rankings', data: { title: 'PR', rows: [] } } };
+  const audience = { messages: [{ name: 'Sam', body: 'you guys are wrong' }] };
+  const w = { from: '2026-11-16T00:00:00Z', to: '2026-11-22T00:00:00Z', label: 'HFL Week 13' };
+  const include = ['thesis', 'film_room', 'mailbag', 'power_hour'];
+  const r = T.buildTalkRundown({ talk: talkCfg, personas, league, context, stories, audience, window: w, charBudget: 6000, include, title: 'The Fifth Quarter: HFL Week 13' });
+  assert.deepEqual(r.segments.map(s => s.kind), talkCfg.rundown, 'core plus all four extras, in show order');
+  assert.ok(r.charBudget > 6000 && r.estimatedChars <= r.charBudget, `${r.estimatedChars} fits ${r.charBudget}`);
+  assert.equal(r.title, 'The Fifth Quarter: HFL Week 13');
+  const noMail = T.buildTalkRundown({ talk: talkCfg, personas, league, context, stories, audience: null, window: w, charBudget: 6000, include });
+  assert.ok(!noMail.segments.some(s => s.kind === 'mailbag'), 'an extra with nothing to say is still left out');
+});
+
 test('eleven_v3 reads the tags the test used; a key without "Voices: read" still gets the stock voices', async () => {
   assert.equal(delivery('angry', 'eleven_v3').tag, '[frustrated]');
   assert.equal(delivery('suspicious', 'eleven_v3').tag, '[conspiratorial]');
@@ -218,6 +235,34 @@ test('gather is free, write runs once per click, approve & air voices with Eleve
     assert.equal(again.status, 400);
     assert.match(again.json.error, /Nothing to talk about/);
     assert.equal(s.ctx.producer.jobs().filter(j => j.kind === 'write').length, 1);
+  } finally { await s.close(); }
+});
+
+test('the desk can cover one HFL week and add segments, for free; the preflight uses the episode budget', async () => {
+  const s = await boot();
+  try {
+    await s.exportWeek();
+    let r = await s.req('POST', '/api/admin/desk/open', {});
+    const wk = r.json.talk.weeks[0];
+    assert.ok(wk && wk.label, 'the desk lists the weeks it can cover');
+    assert.deepEqual(r.json.talk.optional.map(o => o.kind).sort(), ['film_room', 'mailbag', 'power_hour', 'thesis']);
+    r = await s.req('PUT', '/api/admin/desk', { focusWeek: wk, include: ['thesis', 'film_room', 'power_hour', '../x'] });
+    assert.equal(r.status, 200);
+    assert.deepEqual(r.json.talk.focusWeek, { seasonIndex: wk.seasonIndex, stage: wk.stage, week: wk.week });
+    assert.equal(r.json.talk.window.label, `HFL ${wk.label}`);
+    assert.ok(r.json.talk.counts.stories > 0, "that week's stories");
+    assert.deepEqual(r.json.talk.include, ['thesis', 'film_room', 'power_hour']);
+    assert.ok(r.json.talk.segments.some(x => x.title === talkCfg.segments.film_room.title), 'Film Room runs (the week has games)');
+    assert.ok(!r.json.talk.include.includes('../x'));
+    assert.ok(r.json.talk.estimatedChars <= r.json.talk.charBudget);
+    assert.equal(s.ctx.producer.jobs().length, 0, 'nothing written');
+    r = await s.req('POST', '/api/admin/desk/approve', {});
+    await s.ctx.producer.idle();
+    const ep = s.ctx.producer.get(r.json.episode.id);
+    assert.equal(ep.title.includes(wk.label) || ep.rundown.title.includes(wk.label), true);
+    assert.equal(ep.rundown.weekLabel, `HFL ${wk.label}`);
+    r = await s.req('PUT', '/api/admin/desk', { focusWeek: null });
+    assert.equal(r.status, 400, 'the entry was approved; nothing is waiting');
   } finally { await s.close(); }
 });
 
