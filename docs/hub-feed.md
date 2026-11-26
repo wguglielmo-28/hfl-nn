@@ -106,6 +106,17 @@ HFL-NN never airs these by itself. They appear on the Week Desk under **From mem
 ones worth using, and each becomes an ordinary desk headline (category `FAN TAKE` or `VIEWER REQUEST`) credited to
 the member. A take is read as that member's opinion, never as fact.
 
+## Ask the desk: `questions`
+
+Optional, the same shape. A member's question for the anchors, approved on the Hub's `/admin/hfl-nn`. Unlike takes,
+approved questions air by themselves (the Hub review is the gate): one or two at a time in the **Ask the Desk**
+segment of Morning Blitz and HFL-NN Tonight, and in The Fifth Quarter's Mailbag. Each airs once; aired ids are kept
+in `sources/hub-used.json` as `q:<id>`, marked when the episode publishes.
+
+On air, members (for questions and takes alike) are credited only by their team's HFL coach name from
+`config/coaches.json` ("Hank Nottick of the Packers"), or "a viewer" for a CPU team or no team. The feed's `name`
+(a Hub handle) is never read out. The same file fills in `owners[].coach` when the Hub leaves it blank.
+
 
 ## The channel chat: Chat Check, Chat Check-Ins and "Read on HFL-NN"
 
