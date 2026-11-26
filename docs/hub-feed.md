@@ -137,6 +137,14 @@ it), `upset` (an underdog that won outright by the closing line), `bettor` (the 
 `book_leader` (the season's top profit), credited by HFL coach name or "a bettor". Everything is HFL Bucks, play money;
 the anchors never give betting advice.
 
+## Drafts: `draft`
+
+Optional; `null` unless a rookie or fantasy draft was imported on the Hub in the last 21 days. `{ id, kind, name,
+importedAt, picks, rounds, firstRound: [pick], steals: [pick] }`, each pick `{ overall, round, pick, team, via, player,
+position, ovr, age, dev }` (`via`: the team whose slot it was, when traded). HFL-NN makes three stories per draft, once:
+`draft_pick` (the first overall pick), `draft_round` (round 1 pick by pick) and `draft_steal` (the best player taken
+after round 1). The Draft Desk segment leads with them; GMs are named by HFL coach name.
+
 ## The channel chat: Chat Check, Chat Check-Ins and "Read on HFL-NN"
 
 HFL-NN reads the Hub's channel chat every minute from `GET <hub>/api/hfl-nn/chat-digest?since=` (messages at least
