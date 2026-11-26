@@ -50,10 +50,10 @@ plan is a charter decree the owner decides, never a side effect of a release.
 |---|---|---|---|
 | N0 Roadmap | — | done | $0 |
 | B1 Today on HFL-NN | Sources & replays | done (PR #41, 2026-11-26) | $0 |
-| B2 Segment replays | Sources & replays | built (claude/replays) | $0 |
-| A1 Ask the desk (Hub) | Ask the desk | next | $0 |
-| A2 Ask the desk (on air) | Ask the desk | planned | within the $2/day cap |
-| C1 Player stats | More sources in | planned | $0 |
+| B2 Segment replays | Sources & replays | done (PR #42, 2026-11-26) | $0 |
+| A1 Ask the desk (Hub) | Ask the desk | done (Hub 05d743b, 2026-11-26) | $0 |
+| A2 Ask the desk (on air) | Ask the desk | built (claude/ask-desk) | within the $2/day cap |
+| C1 Player stats | More sources in | next | $0 |
 | C2 Sportsbook | More sources in | planned | $0 |
 | C3 Drafts | More sources in | planned | $0 (special: within cap) |
 | C4 Hub polls | More sources in | planned | $0 |
@@ -85,7 +85,9 @@ audio at the segment's start (`t0` from the manifest). No new audio.
 ## Pillar A: Ask the desk
 
 ### A1. Hub side (hfl-hub)
-Signed-in members send a question (and an optional longer letter). A moderation
+Built as a third kind of desk submission (`question`) on the Hub's existing
+take/request system: the chat box's "Ask the desk" mode and the desk form.
+The longer "letter" was left out (backlog). Signed-in members send a question. A moderation
 queue in Hub admin approves or rejects. Approved questions go out on
 `/api/hfl-nn-feed` as `questions: [{ id, coach, team, text, letter, at }]`, the
 same pattern as `fanTakes`.
@@ -94,7 +96,8 @@ same pattern as `fanTakes`.
 
 ### A2. On air (hfl-nn)
 - `lib/ingest/hub.js` reads `questions`; the Week Desk and the channel desk list
-  them.
+  them. Credit by the team's HFL coach name (hfl-data/ledger/coaches.json), never
+  the feed's `name` (a Hub handle).
 - New "Ask the Desk" segment (1–2 questions) in Morning Blitz and HFL-NN
   Tonight; The Fifth Quarter's Mailbag uses them too (`lib/talk.js`).
 - Each question airs once (the `hubUsed()` tracking). The answer is opinion;
@@ -134,4 +137,5 @@ Ideas waiting for a review. Format: `- idea — why`.
 - Fire TV / TV app — watch on the couch.
 - Clips to socials (TikTok, YouTube Shorts) — growth outside the league.
 - Anchor bio pages — the cast is the brand.
+- Letters to the desk — PNN takes long letters as well as questions; A1 shipped questions only (280 characters).
 - Weather-style "Standings Center" live map — PNN's Weather Center equivalent for the playoff race.

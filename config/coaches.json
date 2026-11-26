@@ -1,0 +1,114 @@
+{
+  "note": "HFL coach names by team abbreviation, from hfl-data/ledger/coaches.json (2026-11-25). On air, a coach is called ONLY by this name, never by a Discord, Twitch or Hub handle. Teams not listed are CPU teams. Update this file when the ledger changes.",
+  "updated": "2026-11-25",
+  "aliases": {
+    "AZ": "ARI",
+    "LA": "LAR",
+    "WSH": "WAS",
+    "JAC": "JAX",
+    "LVR": "LV",
+    "OAK": "LV"
+  },
+  "coaches": {
+    "CIN": {
+      "team": "Bengals",
+      "coach": "Toa Mata'afa"
+    },
+    "CLE": {
+      "team": "Browns",
+      "coach": "RJ Atkins"
+    },
+    "PIT": {
+      "team": "Steelers",
+      "coach": "Morgan Lander"
+    },
+    "IND": {
+      "team": "Colts",
+      "coach": "Patrick Olaughlin"
+    },
+    "JAX": {
+      "team": "Jaguars",
+      "coach": "Jim Halpert"
+    },
+    "TEN": {
+      "team": "Titans",
+      "coach": "Jack Cross"
+    },
+    "MIA": {
+      "team": "Dolphins",
+      "coach": "Bobby Billings"
+    },
+    "NYJ": {
+      "team": "Jets",
+      "coach": "Shawn Waters"
+    },
+    "NE": {
+      "team": "Patriots",
+      "coach": "Roy Patriarca"
+    },
+    "DEN": {
+      "team": "Broncos",
+      "coach": "Bob Skeeter"
+    },
+    "LAC": {
+      "team": "Chargers",
+      "coach": "Terence Fletcher"
+    },
+    "LV": {
+      "team": "Raiders",
+      "coach": "Tom Wick"
+    },
+    "CHI": {
+      "team": "Bears",
+      "coach": "Ferm Manator"
+    },
+    "DET": {
+      "team": "Lions",
+      "coach": "Joshua Press"
+    },
+    "GB": {
+      "team": "Packers",
+      "coach": "Hank Nottick"
+    },
+    "TB": {
+      "team": "Buccaneers",
+      "coach": "Jenn Wick"
+    },
+    "ATL": {
+      "team": "Falcons",
+      "coach": "Bobby Potter"
+    },
+    "CAR": {
+      "team": "Panthers",
+      "coach": "Leroy Lionsmane"
+    },
+    "NO": {
+      "team": "Saints",
+      "coach": "Steve Hamdi"
+    },
+    "WAS": {
+      "team": "Commanders",
+      "coach": "Jack Del Rio"
+    },
+    "DAL": {
+      "team": "Cowboys",
+      "coach": "Mike Bugatti"
+    },
+    "PHI": {
+      "team": "Eagles",
+      "coach": "Stacey Smith"
+    },
+    "NYG": {
+      "team": "Giants",
+      "coach": "Holdyn Tudix"
+    },
+    "ARI": {
+      "team": "Cardinals",
+      "coach": "Mr Chow"
+    },
+    "LAR": {
+      "team": "Rams",
+      "coach": "Roland Deschain"
+    }
+  }
+}

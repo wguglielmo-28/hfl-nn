@@ -764,7 +764,12 @@ async function viewDesk() {
   const fromMembers = h('section', { class: 'panel' }, h('h2', {}, 'From members'),
     h('p', { class: 'muted' }, 'Sent through the HFL Hub and approved there. Nothing here is used unless you add it.'),
     h('h3', {}, 'Takes'), memberList(fm.takes, 'take', 'No approved takes right now.'),
-    h('h3', {}, 'Segment requests'), memberList(fm.requests, 'request', 'No approved requests right now.'));
+    h('h3', {}, 'Segment requests'), memberList(fm.requests, 'request', 'No approved requests right now.'),
+    h('h3', {}, 'Ask the desk'),
+    h('p', { class: 'muted' }, 'Questions approved on the Hub air by themselves, one or two at a time, in Ask the Desk on Morning Blitz and HFL-NN Tonight (and the Fifth Quarter Mailbag), each once. Credited by HFL coach name.'),
+    (fm.questions || []).length
+      ? h('ul', {}, fm.questions.map(q => h('li', {}, h('strong', {}, `From ${q.credit}: `), q.text)))
+      : h('p', { class: 'muted' }, 'No questions waiting to air.'));
 
   const headlinesPanel = h('section', { class: 'panel' }, h('h2', {}, 'Headlines the export missed'),
     headlines,

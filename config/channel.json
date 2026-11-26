@@ -10,7 +10,7 @@
       "order": "latest",
       "keepDays": 2,
       "produce": {
-        "kinds": ["cold_open", "scoreboard", "game_recaps", "top_performers", "standings", "transactions", "slate", "hot_takes", "debate", "chat_check", "signoff"],
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "top_performers", "standings", "transactions", "slate", "hot_takes", "debate", "chat_check", "ask_the_desk", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
@@ -49,7 +49,7 @@
       "order": "latest",
       "keepDays": 2,
       "produce": {
-        "kinds": ["cold_open", "scoreboard", "game_recaps", "standings", "injuries", "transactions", "slate", "chat_check", "signoff"],
+        "kinds": ["cold_open", "scoreboard", "game_recaps", "standings", "injuries", "transactions", "slate", "chat_check", "ask_the_desk", "signoff"],
         "leadMinutes": 60,
         "minFresh": 1,
         "maxStories": 12,
