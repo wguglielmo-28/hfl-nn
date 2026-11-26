@@ -60,7 +60,7 @@ test('record chases become stories: one per level, naming the book, Arizona matc
   ];
   const [broken, close, watch] = S.recordStories(chases, cur, wk(6));
   assert.equal(broken.type, 'record');
-  assert.equal(broken.headline, 'New Back breaks the HFL Hub all-time single-game Rushing Yards record (150, Old Back, Season VIII)');
+  assert.equal(broken.headline, 'New Back breaks the HFL Hub all-time single-game Rushing Yards record with 160 (old mark 150, Old Back, Season VIII)');
   assert.deepEqual(broken.teams, [1]);
   assert.equal(close.type, 'record_chase');
   assert.equal(close.headline, 'Air Mail is 100 short of the NeonSportz-era single-season Receiving Yards record (2,000, Neon WR, S2)');
@@ -68,6 +68,12 @@ test('record chases become stories: one per level, naming the book, Arizona matc
   assert.equal(watch.headline, 'Pace Man is on pace to break the HFL Hub all-time single-season Sacks record (22)');
   assert.ok(broken.score > close.score && close.score > watch.score);
   assert.notEqual(close.id, S.recordStories([{ ...chases[1], level: 'broken' }], cur, wk(7))[0].id, 'a new level is a new story');
+});
+
+test('when several games beat the same old record, only the best one is the new record', () => {
+  const mk = (player, value) => ({ player, team: 'GB', label: 'Total Tackles', scope: 'game', level: 'broken', value, mark: { book: 'HFL Hub', value: 11, holder: 'E.Cooper', when: 'Season VIII' } });
+  const got = S.recordStories([mk('A', 12), mk('B', 13), mk('C', 12)], league({}), wk(6));
+  assert.deepEqual(got.map(s => s.facts.player), ['B']);
 });
 
 test('the feed carries record chases, and junk is dropped', () => {
