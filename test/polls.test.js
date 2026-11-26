@@ -15,7 +15,7 @@ const { fixturePayloads, tmpDir } = require('./helpers');
 const quiet = { log() {}, warn() {}, error() {} };
 const POLLS = [
   { id: 'chronicle:72', source: 'chronicle', question: 'Most fun Week 13 performance?', options: [{ label: 'Daniels', votes: 2 }, { label: 'Golden', votes: 4 }], total: 6, final: false, issue: { slug: 'v3-issue-13', volume: 3, number: 13 } },
-  { id: 'chronicle:71', source: 'chronicle', question: 'Most fun Week 12 performance?', options: [{ label: 'Rolle', votes: 2 }, { label: 'Lutz', votes: 1 }, { label: 'Allen', votes: 0 }], total: 3, final: true, issue: { slug: 'v3-issue-12', volume: 3, number: 12 } },
+  { id: 'chronicle:71', source: 'chronicle', question: 'Most fun Week 12 performance?', options: [{ label: 'Rolle: 2 records in one game', votes: 2 }, { label: 'Lutz', votes: 1 }, { label: 'Allen', votes: 0 }], total: 3, final: true, issue: { slug: 'v3-issue-12', volume: 3, number: 12 } },
   { id: 'channel:5', source: 'channel', question: 'Best uniform?', options: [{ label: 'Home', votes: 2 }, { label: 'Away', votes: 2 }], total: 4, final: true, issue: null },
   { id: 'channel:4', source: 'channel', question: 'Too few votes?', options: [{ label: 'Yes', votes: 1 }, { label: 'No', votes: 1 }], total: 2, final: true, issue: null },
 ];
@@ -33,7 +33,8 @@ test('only final polls with at least 3 votes become stories, said as what the fa
   assert.equal(got[0].facts.where, 'Crimson Chronicle Vol. 3 Issue 12');
   assert.equal(got[1].headline, '"Best uniform?" The HFL-NN chat split between Home and Away');
   assert.deepEqual(got[1].facts.tie, ['Home', 'Away']);
-  assert.match(got[0].card.data.text, /ROLLE 67%/);
+  assert.match(got[0].card.data.text, /ROLLE: 2 RECORDS IN ONE GAME 67%/);
+  assert.equal(got[0].facts.results[0], 'Rolle: 2 records in one game: 2');
 });
 
 test('a Hub push puts each final poll on the wire once', async () => {
