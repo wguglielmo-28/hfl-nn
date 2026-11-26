@@ -218,3 +218,21 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
 .aud-when { font-size: 0.7rem; color: var(--muted); margin-right: 6px; }
 .aud-note { margin: 0; font-size: 0.8rem; }
 @media (prefers-reduced-motion: reduce) { .aud-meter-fill, .aud-pc-bar, .aud-pb-bar { transition: none; } }
+
+/* ── Today on HFL-NN (/today) ── */
+.today-main { display: block; max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; }
+.today-days { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.today-days a { font-family: var(--pixel); font-size: 0.8rem; padding: 6px 10px; border: 1px solid var(--violet); border-radius: 6px; text-decoration: none; color: var(--white); }
+.today-days a[aria-current="page"] { background: var(--violet); border-color: var(--lilac); color: var(--gold); }
+.today-ep { margin-top: 14px; }
+.today-ep h2 a { color: var(--gold); text-decoration: none; }
+.today-ep h2 a:hover { text-decoration: underline; }
+.today-segs { margin: 8px 0 0; padding-left: 1.2rem; }
+.today-segs > li { margin: 10px 0; }
+.today-segs h3 { font-size: 0.85rem; margin: 0 0 4px; color: var(--white); }
+.today-segs ul { margin: 0; padding-left: 0; list-style: none; }
+.today-segs ul li { margin: 3px 0; overflow-wrap: anywhere; }
+.src { display: inline-block; font-size: 0.72rem; padding: 1px 6px; border-radius: 4px; margin-right: 6px; background: var(--purple); color: var(--muted); }
+.src-chronicle { background: #4a1020; color: #ffd6dd; }
+.src-hub { background: #0f3a36; color: var(--teal); }
+.src-office { background: #4a3a08; color: var(--gold); }

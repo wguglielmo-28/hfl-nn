@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Today on HFL-NN</title>
+  <meta name="description" content="Every story HFL-NN covered today, and where it came from.">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body class="today">
+  <header class="masthead">
+    <a class="logo" href="/" aria-label="HFL-NN home"><span class="spiral" aria-hidden="true"></span>HFL-NN</a>
+    <p class="tagline">Today on HFL-NN: every story we covered, and where it came from</p>
+  </header>
+
+  <main class="today-main">
+    <nav class="today-days" id="days" aria-label="Pick a day"></nav>
+    <p class="muted" id="summary" aria-live="polite">Loading…</p>
+    <div id="episodes"></div>
+  </main>
+
+  <footer>
+    <p>The facts come from the league: the Madden exports, the HFL Hub and the Crimson Chronicle. The anchors' opinions and jokes are theirs, written by AI, so check the source before you trash-talk. <a href="/">Back to the channel</a></p>
+  </footer>
+
+  <script type="module" src="/js/today.js"></script>
+</body>
+</html>
