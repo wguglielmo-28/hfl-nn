@@ -35,6 +35,7 @@ const { validateConfig } = require('./lib/channel/programme');
 const { createScheduler } = require('./lib/channel/scheduler');
 const { guideDay } = require('./lib/channel/guide');
 const { dayKey, nextDay } = require('./lib/channel/clock');
+const { todayReport } = require('./lib/today');
 const { createAuth } = require('./lib/auth');
 const { createSettings } = require('./lib/settings');
 const { postWebhook } = require('./lib/discord');
@@ -235,6 +236,14 @@ function createApp(opts = {}) {
     res.set('Cache-Control', 'public, max-age=60').json(m);
   });
   app.get('/api/ticker', (req, res) => res.json(producer.ticker()));
+  // Today on HFL-NN (lib/today.js): what aired on a day and where each story came from.
+  app.get('/api/today', (req, res) => {
+    const showTitles = Object.fromEntries(Object.entries(channelConfig.shows || {}).map(([k, v]) => [k, v.title]));
+    res.set('Cache-Control', 'public, max-age=60').json(todayReport({
+      episodes: producer.published(), manifest: producer.manifest, day: String(req.query.day || ''),
+      now: (opts.now || Date.now)(), timeZone: channelConfig.timeZone, showTitles,
+    }));
+  });
 
   // The 24/7 channel: what is on now and next (lib/channel). ?at=<epoch ms>
   // looks at another instant, for checking the schedule.
@@ -515,6 +524,7 @@ function createApp(opts = {}) {
     if (!sum) return res.status(404).type('text').send('Episode not found');
     res.sendFile(embedFile);
   });
+  app.get('/today', (req, res) => res.sendFile(path.join(PUBLIC, 'today.html')));
   app.get('/control', (req, res) => res.sendFile(path.join(PUBLIC, 'control.html')));
   // Scripts and styles import each other by plain path, so a browser holding
   // an hour-old copy of one beside a new copy of another breaks the page
