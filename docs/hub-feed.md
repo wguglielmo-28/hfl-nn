@@ -145,6 +145,14 @@ position, ovr, age, dev }` (`via`: the team whose slot it was, when traded). HFL
 `draft_pick` (the first overall pick), `draft_round` (round 1 pick by pick) and `draft_steal` (the best player taken
 after round 1). The Draft Desk segment leads with them; GMs are named by HFL coach name.
 
+## Poll results: `polls`
+
+Optional. Up to 10 `{ id, source: 'chronicle'|'channel', question, options: [{ label, votes }], total, final, issue }`:
+the last three published Crimson Chronicle issue polls and the last three channel chat polls. A Chronicle poll never
+closes, so it is `final` once the next issue's poll replaces it; a chat poll once it closes. HFL-NN turns a final poll
+with at least 3 votes into one `poll_result` story ("Crimson Chronicle readers picked Rolle, 2 of 3 votes"), always
+as what the fans picked, never as who lost.
+
 ## The channel chat: Chat Check, Chat Check-Ins and "Read on HFL-NN"
 
 HFL-NN reads the Hub's channel chat every minute from `GET <hub>/api/hfl-nn/chat-digest?since=` (messages at least

@@ -55,8 +55,8 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | A2 Ask the desk (on air) | Ask the desk | done (PR #43, 2026-11-26) | within the $2/day cap |
 | C1 Records and pace | More sources in | done (PR #44 + Hub 58c9c69, 2026-11-26) | $0 |
 | C2 Sportsbook | More sources in | done (PR #45 + Hub, 2026-11-26) | $0 |
-| C3 Drafts | More sources in | built (claude/drafts + Hub) | $0 (special: within cap) |
-| C4 Hub polls | More sources in | next | $0 |
+| C3 Drafts | More sources in | done (PR #46 + Hub, 2026-11-26) | $0 (special: within cap) |
+| C4 Hub polls | More sources in | built (claude/polls + Hub) | $0 |
 | C5 Discord | More sources in | decree first | $0 |
 | D Live wire | — | parked | needs a bigger budget |
 
