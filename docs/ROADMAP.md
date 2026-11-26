@@ -52,9 +52,9 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | B1 Today on HFL-NN | Sources & replays | done (PR #41, 2026-11-26) | $0 |
 | B2 Segment replays | Sources & replays | done (PR #42, 2026-11-26) | $0 |
 | A1 Ask the desk (Hub) | Ask the desk | done (Hub 05d743b, 2026-11-26) | $0 |
-| A2 Ask the desk (on air) | Ask the desk | built (claude/ask-desk) | within the $2/day cap |
-| C1 Player stats | More sources in | next | $0 |
-| C2 Sportsbook | More sources in | planned | $0 |
+| A2 Ask the desk (on air) | Ask the desk | done (PR #43, 2026-11-26) | within the $2/day cap |
+| C1 Records and pace | More sources in | built (claude/records-pace + Hub) | $0 |
+| C2 Sportsbook | More sources in | next | $0 |
 | C3 Drafts | More sources in | planned | $0 (special: within cap) |
 | C4 Hub polls | More sources in | planned | $0 |
 | C5 Discord | More sources in | decree first | $0 |
@@ -109,10 +109,12 @@ same pattern as `fanTakes`.
 
 New story types in `lib/stories.js`, each with tests.
 
-- **C1. Player stats.** Per-game passing, rushing, receiving and defensive lines
-  from the ea-exporter's stats capture → richer `performance` / `milestone`
-  stories and Stat Lab material. Files: ea-exporter delivery,
-  `lib/ingest/madden.js`, `lib/stories.js`.
+- **C1. Records and pace.** Player stats were already in (every export brings passing, rushing, receiving,
+  defense, kicking and punting lines → `performance` / `milestone` stories). C1 added what was missing: the Hub's
+  record-chase board in the feed (`recordChases`) → `record` / `record_chase` stories naming the record book;
+  `pace` stories (a 17-game projection past a round number, from week 4, once per mark); and big-game stories for
+  tackles (13+), forced fumbles (2+), long punts (65+) and yards from scrimmage (200+). Files: hfl-hub
+  `db/hflNnFeed.ts`; hfl-nn `lib/stories.js`, `lib/ingest/hub.js`, `lib/producer.js` (onHub), `lib/rundown.js`.
 - **C2. Sportsbook.** Hub feed `sportsbook`: the week's lines, upsets against
   the spread, biggest play-money wins → `odds`, `upset`, `bettor` stories.
   Upbeat, play-money only, never advice.
