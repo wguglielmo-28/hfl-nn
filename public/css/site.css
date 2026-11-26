@@ -236,3 +236,13 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
 .src-chronicle { background: #4a1020; color: #ffd6dd; }
 .src-hub { background: #0f3a36; color: var(--teal); }
 .src-office { background: #4a3a08; color: var(--gold); }
+
+/* ── Replays (/replays) ── */
+.replay-find { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; max-width: 420px; }
+.replay-find input { padding: 8px 10px; border-radius: 6px; border: 1px solid var(--violet); background: var(--deep); }
+.replay-ep { font-size: 0.85rem; margin: 14px 0 6px; }
+.replay-ep a { color: var(--gold); text-decoration: none; }
+.replay-segs { list-style: none; margin: 0; padding: 0; }
+.replay-segs li { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-top: 1px solid rgba(106, 79, 196, 0.25); }
+.replay-play { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--violet); color: var(--gold); text-decoration: none; font-size: 0.75rem; }
+.replay-src { font-size: 0.78rem; overflow-wrap: anywhere; }
