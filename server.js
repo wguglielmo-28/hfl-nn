@@ -119,6 +119,7 @@ function createApp(opts = {}) {
   const scheduler = createScheduler({
     store, config: channelConfig, producer, getSettings: settings.get, now: opts.now || Date.now, logger,
     getChat: since => chatDigest.forShow(since, settings.personas().anchors),
+    isLive: () => streams.live((opts.now || Date.now)()).length > 0,
   });
   const channel = createChannel({
     store, logger, now: opts.now || Date.now,
@@ -247,7 +248,13 @@ function createApp(opts = {}) {
     const n = v => (v === undefined ? null : Number.isInteger(Number(v)) && Number(v) >= 0 ? Number(v) : null);
     res.set('Cache-Control', 'no-store').json(await audience.view({ m: n(req.query.m), r: n(req.query.r) }));
   });
-  app.get('/api/channel/listings', (req, res) => res.set('Cache-Control', 'no-store').json(channel.listings(atOf(req))));
+  // The Hub chat messages read on air in the last three days, for the Hub's
+  // "Read on HFL-NN" marks. Public: it holds only what was already broadcast.
+  app.get('/api/chat/aired', (req, res) => {
+    const since = (opts.now || Date.now)() - 3 * 86400e3;
+    res.set('Cache-Control', 'public, max-age=60').json({ episodes: producer.chatAired(since) });
+  });
+  app.get('/api/channel/listings',(req, res) => res.set('Cache-Control', 'no-store').json(channel.listings(atOf(req))));
   // The TV guide: today and tomorrow, slot by slot, new or repeats (lib/channel/guide.js).
   app.get('/api/channel/guide', (req, res) => {
     const t = atOf(req) ?? (opts.now || Date.now)();

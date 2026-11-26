@@ -106,3 +106,22 @@ HFL-NN never airs these by itself. They appear on the Week Desk under **From mem
 ones worth using, and each becomes an ordinary desk headline (category `FAN TAKE` or `VIEWER REQUEST`) credited to
 the member. A take is read as that member's opinion, never as fact.
 
+
+## The channel chat: Chat Check, Chat Check-Ins and "Read on HFL-NN"
+
+HFL-NN reads the Hub's channel chat every minute from `GET <hub>/api/hfl-nn/chat-digest?since=` (messages at least
+three minutes old; never hidden, word-filtered or muted ones). The live shows' **Chat Check** segment reads what
+was said since any show last read it, so a message goes on air once.
+
+When the chat gets busy between shows (at least 3 new messages from 2 or more people in the last half hour), the
+scheduler makes a **Chat Check-In**: a 2–3 minute bulletin (`config/channel.json` → `shows.checkin.cutIn`). It airs
+a minute after it is published, over whatever is on, and the block it interrupts carries on where it would have been
+(`start` in `/api/channel` keeps that block's clock). It waits out a new episode's premiere, never airs as vault
+filler, and is only made with the daily shows, **chat on air** and **Chat Check-Ins** switched on, inside the daily
+cap, at most once an hour and 6 times a day, never while a league game is live and never when a live show that reads
+the chat is due within 75 minutes.
+
+`GET /api/chat/aired` (public, cached for a minute) lists the episodes of the last three days that read the chat:
+`{ episodes: [{ episodeId, title, publishedAt, show, ids, quotes: [{ name, body }] }] }`. `ids` are the Hub message
+ids put on screen; `quotes` are the quote cards themselves, for episodes made before ids were kept. The Hub turns this
+into the "Read on HFL-NN" marks in its chat.

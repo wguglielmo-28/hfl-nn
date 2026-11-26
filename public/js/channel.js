@@ -5,7 +5,7 @@
 // on air, and the anchor lineup.
 import { Player } from './studio/player.js';
 import { drawAnchor, ANCHOR_W, ANCHOR_H } from './studio/anchors.js';
-import { Tuner, tunerOptions, clockTime, nowText } from './studio/channelPlayer.js';
+import { Tuner, tunerOptions, clockTime, nowText, origin } from './studio/channelPlayer.js';
 import { Footage } from './studio/footage.js';
 import { Audience } from './studio/audience.js';
 
@@ -329,8 +329,8 @@ setInterval(() => {
     // How far through the block on air, and when it ends.
     const b = tuner.cur;
     const open = !b || !Number.isFinite(b.until);   // a live game ends when it ends
-    d = open ? 0 : (b.until - b.from) / 1000;
-    t = open ? 0 : Math.min(d, (tuner.now() - b.from) / 1000);
+    d = open ? 0 : (b.until - origin(b)) / 1000;
+    t = open ? 0 : Math.min(d, (tuner.now() - origin(b)) / 1000);
     $('time').textContent = open ? 'LIVE' : `ends ${clockTime(b.until)}`;
   } else $('time').textContent = `${fmt(t)} / ${fmt(d)}`;
   $('bar').style.width = d ? `${(100 * t) / d}%` : '0';

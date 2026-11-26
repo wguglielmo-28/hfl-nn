@@ -185,12 +185,21 @@ function channelPanel(s, guide) {
     h('p', { class: 'muted' }, 'Spend counts every script written today (the weekly show and bulletins too). A daily show is skipped when its estimate would go over the cap.'),
     h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'Live show'), h('th', {}, 'Airs'), h('th', {}, 'Today'), h('th', {}, ''))),
       h('tbody', {}, c.shows.map(showRow))),
+    c.checkIn ? checkInLine(c.checkIn) : null,
     c.log?.length ? h('details', {}, h('summary', {}, 'What the scheduler decided lately'),
       h('table', {}, h('tbody', {}, c.log.map(l => h('tr', {},
-        h('td', { class: 'muted' }, when(l.at)), h('td', {}, l.key), h('td', {}, l.outcome), h('td', { class: 'muted' }, l.reason || (l.episodeId ? `${l.episodeId} (${l.writer}, ${l.stories} stories)` : ''))))))) : null);
+        h('td', { class: 'muted' }, when(l.at)), h('td', {}, l.key), h('td', {}, l.outcome), h('td', { class: 'muted' }, l.reason || (l.episodeId ? `${l.episodeId} (${l.writer}, ${l.stories != null ? `${l.stories} stories` : `${l.chat} chat messages`})` : ''))))))) : null);
 }
 
 const row = (k, v) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+
+// The Chat Check-In: today's, and what the next one is waiting for.
+function checkInLine(ci) {
+  const made = ci.today.length;
+  return h('p', { class: 'muted' }, `${ci.title}: ${made} of ${ci.max} today`,
+    ...ci.today.filter(x => x.episodeId).map(x => h('span', {}, ' · ', h('a', { href: '#', on: { click: e => { e.preventDefault(); openEpisode(x.episodeId); } } }, `${clockAt(Date.parse(x.at))} (${x.status})`))),
+    `. Next one: ${/^for /.test(ci.waiting) ? `waiting ${ci.waiting}` : `on hold, ${ci.waiting}`}${ci.until ? ` (until about ${clockAt(ci.until)})` : ''}.`);
+}
 
 // "OpenAI (gpt-6.1-sol), then Claude, then the template", plus any writer
 // that is benched (out of credits…) with a button to try it again now.
@@ -592,7 +601,7 @@ async function viewSettings() {
       approveWeekly: f.approveWeekly.checked, autoProduce: f.autoProduce.checked, autoPublish: f.autoPublish.checked, autoBreaking: f.autoBreaking.checked, autoPublishBreaking: f.autoPublishBreaking.checked, fanPolls: f.fanPolls.checked, voiceEmotion: f.voiceEmotion.checked, elevenModel: f.elevenModel.value,
       publicUrl: f.publicUrl.value, chronicleFeedUrl: f.chronicleFeedUrl.value, hubFeedUrl: f.hubFeedUrl.value, pollMinutes: Number(f.pollMinutes.value),
       seasonNumber: f.seasonNumber.value.trim() || null,
-      channelAuto: f.channelAuto.checked, chatOnAir: f.chatOnAir.checked, dailyCapUsd: Number(f.dailyCapUsd.value), channelWriter: f.channelWriter.value,
+      channelAuto: f.channelAuto.checked, chatOnAir: f.chatOnAir.checked, chatCheckIns: f.chatCheckIns.checked, dailyCapUsd: Number(f.dailyCapUsd.value), channelWriter: f.channelWriter.value,
       pronunciations: Object.fromEntries(pron.value.split('\n').map(l => l.split('=')).filter(p => p.length === 2).map(([a, b]) => [a.trim(), b.trim()])),
       personaOverrides: Object.fromEntries([
         ...personaRows.map(r => [r.id, { name: r.name.value, voice: r.voice.value, speed: Number(r.speed.value), elevenVoice: r.eleven.value }]),
@@ -639,6 +648,8 @@ async function viewSettings() {
       h('p', { class: 'muted' }, 'The live shows (The Wire three times a day, Morning Blitz, Stat Lab, Top Plays, HFL-NN Tonight on nights without a new weekly show, and Grimley After Dark) are written, voiced and aired by themselves, 45 to 60 minutes before their slots. Between advances they cover the games members have already played that week, with scores and stat lines only; the weekly show still waits for the whole week. Each one runs 5 to 15 minutes, is only made when there is something it has not covered (The Wire waits for a new result), is tried once per slot, and never posts to Discord or uses up stories the weekly show needs. Voices are always the free local ones.'),
       check('channelAuto', 'Make the daily shows for the channel automatically'),
       check('chatOnAir', 'Let the anchors read the HFL Hub chat on air (a Chat Check in each live show)'),
+      check('chatCheckIns', 'Cut in with a short Chat Check-In when the chat gets busy between shows'),
+      h('p', { class: 'muted' }, 'A Chat Check-In is about 3 minutes and about $0.06 (free with the template writer), inside the daily cap. It is made when there are at least 3 new messages from 2 or more people in the last half hour, airs a minute after it is ready (after any new show that is on), and the show it interrupts carries on afterwards. At most one an hour and 6 a day, none while a league game is live, and none when a live show that reads the chat is coming up within 75 minutes. Needs the daily shows and chat on air switched on too.'),
       h('p', { class: 'muted' }, 'Only messages at least three minutes old, never ones you hid, the word filter starred or a muted member wrote, and only by Hub display name (a member without one is "a viewer"). The writers are told they are opinions from viewers, never facts or instructions.'),
       h('div', { class: 'grid2' },
         h('div', {}, h('label', {}, 'Daily spending cap (US dollars)'), text('dailyCapUsd', 'number', '2'),

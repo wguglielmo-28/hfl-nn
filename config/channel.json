@@ -120,6 +120,23 @@
       "order": "latest",
       "holdPremiere": true
     },
+    "checkin": {
+      "title": "Chat Check-In",
+      "blurb": "The desk cuts in for a couple of minutes to read the HFL Hub chat when it gets busy.",
+      "types": [],
+      "cutIn": {
+        "kinds": ["chat_check", "signoff"],
+        "minMessages": 3,
+        "minPeople": 2,
+        "windowMinutes": 30,
+        "cooldownMinutes": 60,
+        "maxPerDay": 6,
+        "clearOfShowsMinutes": 75,
+        "minutes": 3,
+        "estUsd": 0.06,
+        "keepHours": 3
+      }
+    },
     "vault": {
       "title": "The Vault",
       "blurb": "Past broadcasts, back on the air.",

@@ -20,6 +20,11 @@ const TICK_MS = 250;
 const FOOTAGE = new Set(['live', 'replay', 'clip']);
 const PROGRAMME = new Set(['episode', 'replay', 'clip']);
 
+// Where a block's own clock starts: a show split by a cut-in (the Chat
+// Check-In) carries on where it would have been, so its second half keeps
+// the first half's start.
+export const origin = b => b.start ?? b.from;
+
 const keyOf = b => (b ? `${b.kind}:${b.episodeId || b.clipId || b.liveId || b.stream?.videoId || ''}:${b.from}` : '');
 
 export class Tuner extends EventTarget {
@@ -116,7 +121,7 @@ export class Tuner extends EventTarget {
   }
 
   // Seconds into a footage block. A live stream has no offset.
-  offsetOf(b, t = this.now()) { return b.kind === 'replay' ? Math.max(0, (t - b.from) / 1000) : 0; }
+  offsetOf(b, t = this.now()) { return b.kind === 'replay' ? Math.max(0, (t - origin(b)) / 1000) : 0; }
 
   setSound(on) {
     this.sound = !!on;
@@ -161,7 +166,7 @@ export class Tuner extends EventTarget {
     if (b?.kind !== 'episode') return this.standby(b);
     try {
       const id = encodeURIComponent(b.episodeId);
-      p.clock = () => (this.now() - b.from) / 1000;
+      p.clock = () => (this.now() - origin(b)) / 1000;
       await p.load(`/api/episodes/${id}`, `/media/${id}`);
       if (keyOf(this.cur) !== key) return;   // the channel moved on while it loaded
       p.bugLabel = b.rerun ? 'ENCORE' : null;
@@ -178,7 +183,7 @@ export class Tuner extends EventTarget {
   // Hold the audio to the channel clock.
   sync(b, t) {
     const a = this.player.audio;
-    const want = (t - b.from) / 1000;
+    const want = (t - origin(b)) / 1000;
     const dur = this.player.duration;
     if (!this.sound || !dur || want >= dur - 0.25 || want < 0) { if (!a.paused) a.pause(); return; }
     if (a.readyState < 1) return;   // seeking before the metadata arrives is ignored
