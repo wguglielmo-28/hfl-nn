@@ -127,6 +127,16 @@ page), broken records first. Each becomes a wire story when the feed arrives: `r
 a chase is news when it starts, when it gets close and when the record falls. The two record books are never merged:
 every headline names which one ("the HFL Hub all-time single-season Rushing Yards record").
 
+## The sportsbook: `sportsbook`
+
+Optional; `null` while the Hub's play-money sportsbook is switched off. `{ week, lines: [{ away, home, favorite, spread,
+total, favoriteWinPct }], lastWeek, upsets: [{ winner, loser, winnerScore, loserScore, spread }], bigWins: [{ team,
+profit, kind, legs }], leaders: [{ team, profit, won, lost }] }`. Members appear by team only. HFL-NN makes one story of
+each kind a week: `odds` (the week's biggest favorite, with every line in its facts; the Still to Play segment quotes
+it), `upset` (an underdog that won outright by the closing line), `bettor` (the week's biggest winning ticket) and
+`book_leader` (the season's top profit), credited by HFL coach name or "a bettor". Everything is HFL Bucks, play money;
+the anchors never give betting advice.
+
 ## The channel chat: Chat Check, Chat Check-Ins and "Read on HFL-NN"
 
 HFL-NN reads the Hub's channel chat every minute from `GET <hub>/api/hfl-nn/chat-digest?since=` (messages at least
