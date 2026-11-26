@@ -118,6 +118,15 @@ On air, members (for questions and takes alike) are credited only by their team'
 (a Hub handle) is never read out. The same file fills in `owners[].coach` when the Hub leaves it blank.
 
 
+## Record chases: `recordChases`
+
+Optional. Up to 12 `{ player, position, team, label, scope: 'season'|'game', level: 'broken'|'close'|'watch', value,
+pace, mark: { book: 'HFL Hub'|'NeonSportz', value, holder, when } }`: the Hub's record-chase board (the one on its home
+page), broken records first. Each becomes a wire story when the feed arrives: `record` for a record broken, and
+`record_chase` for a season total close to a mark (within 10%) or on pace past it. Each level is its own story, once, so
+a chase is news when it starts, when it gets close and when the record falls. The two record books are never merged:
+every headline names which one ("the HFL Hub all-time single-season Rushing Yards record").
+
 ## The channel chat: Chat Check, Chat Check-Ins and "Read on HFL-NN"
 
 HFL-NN reads the Hub's channel chat every minute from `GET <hub>/api/hfl-nn/chat-digest?since=` (messages at least
