@@ -365,6 +365,14 @@ window.addEventListener('popstate', () => {
     if (!episodes.length) $('power').hidden = true;
   }
 
+  // A segment replay (/replays): /watch/<id>?at=95 starts the episode there.
+  const at = Number(params.get('at'));
+  if (watch && player.manifest && Number.isFinite(at) && at > 0) {
+    player.seek(at);
+    const seg = [...(player.manifest.segments || [])].reverse().find(s => s.t0 <= at + 0.05);
+    if (seg) { $('upnext').textContent = seg.title || '—'; renderSources(seg); $('power-sub').textContent = `Starts at ${seg.title}`; }
+  }
+
   // Still frames for tools/snap.js: /watch/<id>?t=42 renders that instant.
   if (params.has('t') && player.manifest) {
     $('power').hidden = true;

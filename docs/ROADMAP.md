@@ -49,9 +49,9 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | Release | Pillar | Status | Cost added |
 |---|---|---|---|
 | N0 Roadmap | — | done | $0 |
-| B1 Today on HFL-NN | Sources & replays | next | $0 |
-| B2 Segment replays | Sources & replays | planned | $0 |
-| A1 Ask the desk (Hub) | Ask the desk | planned | $0 |
+| B1 Today on HFL-NN | Sources & replays | done (PR #41, 2026-11-26) | $0 |
+| B2 Segment replays | Sources & replays | built (claude/replays) | $0 |
+| A1 Ask the desk (Hub) | Ask the desk | next | $0 |
 | A2 Ask the desk (on air) | Ask the desk | planned | within the $2/day cap |
 | C1 Player stats | More sources in | planned | $0 |
 | C2 Sportsbook | More sources in | planned | $0 |

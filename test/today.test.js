@@ -6,7 +6,7 @@ const http = require('http');
 const { createApp } = require('../server');
 const { createTTS } = require('../lib/tts');
 const { createStore } = require('../lib/store');
-const { todayReport, sourceKind } = require('../lib/today');
+const { todayReport, replaysReport, sourceKind } = require('../lib/today');
 const { fixturePayloads, tmpDir } = require('./helpers');
 
 const quiet = { log() {}, warn() {}, error() {} };
@@ -50,6 +50,29 @@ test('the report holds the episodes first aired on the day, in league time, with
   assert.equal(far.day, '2026-11-26', 'a day outside the last week falls back to today');
 });
 
+test('replays: every segment from the last week, newest episode first, each opening at its start', () => {
+  const now = Date.parse('2026-11-26T15:00:00Z');
+  const eps = [
+    { id: 'old', title: 'Too old', publishedAt: '2026-11-19T15:00:00Z' },
+    { id: 'a', title: 'A', channelShow: 'blitz', publishedAt: '2026-11-24T15:00:00Z' },
+    { id: 'b', title: 'B', publishedAt: '2026-11-26T12:00:00Z' },
+  ];
+  const manifests = {
+    old: { title: 'Too old', duration: 60, segments: [{ title: 'X', t0: 0 }] },
+    a: { title: 'A', duration: 200, segments: [{ title: 'Open', t0: 0, sources: [{ label: 'Madden export: Bears win' }] }, { title: 'Debate', t0: 80.7 }] },
+    b: { title: 'B', duration: 50, segments: [{ title: 'Only', t0: 0 }] },
+  };
+  const r = replaysReport({ episodes: eps, manifest: id => manifests[id] || null, now, timeZone: TZ, showTitles: { blitz: 'Morning Blitz' } });
+  assert.deepEqual(r.items.map(i => `${i.episodeId}:${i.title}`), ['b:Only', 'a:Open', 'a:Debate'], 'older than a week drops off');
+  const debate = r.items.find(i => i.title === 'Debate');
+  assert.equal(debate.t0, 80.7);
+  assert.equal(debate.seconds, 119, 'runs to the end of the episode');
+  assert.equal(r.items.find(i => i.title === 'Open').seconds, 81);
+  assert.equal(debate.url, '/watch/a?at=80.7');
+  assert.equal(debate.showTitle, 'Morning Blitz');
+  assert.deepEqual(r.items.find(i => i.title === 'Open').sources, ['Madden export: Bears win']);
+});
+
 test('/today and /api/today serve what was published, and nothing from drafts', async () => {
   const dataDir = tmpDir();
   createStore(dataDir).writeJSON('settings.json', { weeklyShow: 'hflnn', approveWeekly: false });
@@ -77,6 +100,13 @@ test('/today and /api/today serve what was published, and nothing from drafts', 
     assert.ok(got, 'the published episode is listed');
     assert.ok(got.segments.length > 0);
     assert.ok(got.segments.some(s => s.sources.some(x => x.kind === 'export')), 'export stories are credited');
+
+    const rp = await (await fetch(`${base}/api/replays`)).json();
+    const first = rp.items.find(i => i.episodeId === ep.id);
+    assert.ok(first, 'the published episode has replays');
+    assert.ok(first.url.startsWith(`/watch/${ep.id}?at=`) && /\?at=\d+(\.\d)?$/.test(first.url), first.url);
+    assert.equal((await fetch(`${base}/replays`)).status, 200);
+    assert.equal((await fetch(`${base}/js/replays.js`)).status, 200);
 
     const page = await fetch(`${base}/today`);
     assert.equal(page.status, 200);
