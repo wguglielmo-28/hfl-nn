@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFL-NN Standings Center</title>
+  <meta name="description" content="The HFL playoff race: seeds, clinches, the teams chasing and who is out.">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body class="today standings">
+  <header class="masthead">
+    <a class="logo" href="/" aria-label="HFL-NN home"><span class="spiral" aria-hidden="true"></span>HFL-NN</a>
+    <p class="tagline">The Standings Center: the playoff race, live from the latest export</p>
+  </header>
+
+  <main class="today-main">
+    <p class="muted" id="summary" aria-live="polite">Loading…</p>
+    <p class="std-note" id="note" hidden></p>
+    <div class="std-confs" id="confs"></div>
+    <h2 class="group-h">Divisions</h2>
+    <div class="std-divs" id="divs"></div>
+    <p class="muted std-key">x clinched a playoff spot · y clinched the division · z clinched the No. 1 seed. "Out" means mathematically eliminated: even winning out, at least seven conference teams and the division leader already have a better record. Tiebreakers are not counted, so a team listed as chasing may already be out on them.</p>
+  </main>
+
+  <footer>
+    <p><a href="/shows">Shows</a> · <a href="/anchors">Anchors</a> · <a href="/standings">Standings</a> · <a href="/today">Today on HFL-NN</a> · <a href="/replays">Segment replays</a> · <a href="/">Back to the channel</a></p>
+  </footer>
+
+  <script type="module" src="/js/standings.js"></script>
+</body>
+</html>

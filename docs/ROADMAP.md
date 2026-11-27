@@ -43,6 +43,7 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | Reacts to everything within minutes | Scheduled shows + breaking bulletins | Parked (**D**) |
 | Many data feeds | Exports, Hub feed, Chronicle, chat, streams | **C1–C5** |
 | Shows and cast pages | Yes: `/shows`, `/anchors` | **E1** |
+| Weather Center | Standings Center: `/standings` | **E2** |
 | Fire TV, socials, 3D world | — | Backlog |
 
 ## Status
@@ -59,7 +60,8 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | C3 Drafts | More sources in | done (PR #46 + Hub, 2026-11-26) | $0 (special: within cap) |
 | C4 Hub polls | More sources in | done (PR #47 + Hub, 2026-11-26) | $0 |
 | C5 Discord | More sources in | not for now (decided 2026-11-26) | $0 |
-| E1 Shows + anchors pages | Browse the channel | done (2026-11-26) | $0 |
+| E1 Shows + anchors pages | Browse the channel | done (PR #48, 2026-11-26) | $0 |
+| E2 Standings Center | Browse the channel | built (2026-11-26) | $0 |
 | D Live wire | — | parked | needs a bigger budget |
 
 ## Pillar B: Sources & replays
@@ -151,6 +153,26 @@ From the backlog review of 2026-11-26.
   `/api/anchors`. The channel's lineup names link to the anchor pages.
 - Tests: `test/cast.test.js`. Cost: $0.
 
+### E2. Standings Center (`/standings`)
+PNN's Weather Center, for the playoff race. From HFL-NN's own league state
+(the Madden standings and schedule exports); no Hub change.
+- Each conference: the seven seeds (record, streak, games left), the teams in
+  the hunt (games behind the 7th seed), and the teams that are out. Clinches
+  are EA's playoff status (x / y / z).
+- "Out" is only shown when it is certain without tiebreakers: even winning
+  out, seven conference teams and the division leader already have a better
+  record (seven teams ahead hold at most four division titles, so three wild
+  cards are gone too). Once no games are left, everyone outside the seeds is out.
+- Every division table: record, games behind, division record, point
+  differential, next opponent when the schedule has it. Coaches by HFL name.
+- Live, not the channel's spoiler-safe view: it shows the latest export, like
+  the Hub. A note warns when the standings export is behind the scores, and
+  in the preseason that seeds are a projection.
+- Files: `lib/standings.js`, `server.js` (`/api/standings`, `/standings`),
+  `public/standings.html`, `public/js/standings.js`. Tests:
+  `test/standings.test.js`. Cost: $0. Not done: an on-air race-update segment
+  (it would sit inside the $2/day cap).
+
 ## Backlog
 
 Ideas waiting for a review. Format: `- idea — why`.
@@ -158,4 +180,3 @@ Ideas waiting for a review. Format: `- idea — why`.
 - Fire TV / TV app — watch on the couch.
 - Clips to socials (TikTok, YouTube Shorts) — growth outside the league.
 - Letters to the desk — PNN takes long letters as well as questions; A1 shipped questions only (280 characters).
-- Weather-style "Standings Center" live map — PNN's Weather Center equivalent for the playoff race.
