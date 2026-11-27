@@ -37,12 +37,19 @@ h2 { font-size: 1rem; color: var(--gold); margin: 0 0 0.5rem; text-transform: up
   image-rendering: pixelated; }
 .tagline { margin: 0; color: var(--muted); font-family: var(--pixel); font-size: 0.8rem; }
 
-main { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 300px; }
-.tv-wrap { grid-column: 1; grid-row: 1 / span 4; }
-.sources, .listings, .guide, .desk { grid-column: 2; }
+main { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+.col-main, .col-side { display: grid; gap: 16px; min-width: 0; align-content: start; }
+/* Watch On Demand and the TV Guide scroll inside their panels instead of stretching the page. */
+.guide .episodes, .listings .listings-list { max-height: min(460px, 60vh); overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+/* The Desk sits under the player and chat, two or three anchors across. */
+.desk .lineup { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); column-gap: 16px; }
+.desk .lineup li, .desk .lineup li:first-child { border-top: 0; border-bottom: 1px solid rgba(106, 79, 196, 0.3); }
+.desk-more { margin: 8px 0 0; font-size: 0.85rem; }
 @media (max-width: 860px) {
   main { grid-template-columns: minmax(0, 1fr); }
-  .tv-wrap, .sources, .listings, .guide, .desk { grid-column: 1; grid-row: auto; }
+  /* One column: the player and chat first, the side panels, then the desk. */
+  .col-main, .col-side { display: contents; }
+  .tv-wrap { order: 1; } .sources { order: 2; } .listings { order: 3; } .guide { order: 4; } .desk { order: 5; }
 }
 
 /* ── The TV ── */
