@@ -272,3 +272,24 @@ footer { max-width: 1040px; margin: 0 auto; padding: 8px 16px 32px; color: var(-
   .anchor-card { grid-template-columns: 1fr; }
   .anchor-card canvas { width: 88px; height: 128px; }
 }
+
+/* ── Standings Center (/standings) ── */
+.std-note { background: rgba(255, 201, 60, 0.12); border: 1px solid var(--gold); border-radius: 8px; padding: 8px 12px; }
+.std-confs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 8px; }
+.std-divs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 10px; }
+.std-conf h2, .std-div h3 { margin: 0 0 6px; color: var(--gold); font-family: var(--pixel); }
+.std-conf table, .std-div table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.9rem; }
+.std-conf caption { text-align: left; font-size: 0.8rem; padding: 4px 0; }
+.std-conf th, .std-div th { color: var(--muted); font-weight: 400; font-size: 0.75rem; text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--violet); }
+.std-conf td, .std-div td { padding: 4px; border-bottom: 1px solid rgba(59, 38, 120, 0.5); vertical-align: top; }
+.std-conf .num, .std-div .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.std-conf .chip, .std-div .chip { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.std-conf .abbr, .std-div .abbr { font-family: var(--pixel); font-size: 0.75rem; }
+.std-conf .mark, .std-div .mark { font-family: var(--pixel); font-size: 0.65rem; color: var(--teal); }
+.std-conf .coach, .std-div .coach { display: block; font-size: 0.72rem; color: var(--muted); margin-left: 14px; }
+.std-conf .tname, .std-div .tname { color: var(--white); }
+tr.st-clinched .abbr { color: var(--teal); }
+tr.st-out td { opacity: 0.55; }
+.std-out { margin: 8px 0 0; font-size: 0.85rem; }
+.std-key { margin-top: 14px; font-size: 0.8rem; }
+@media (max-width: 560px) { .std-div .tname { display: none; } }

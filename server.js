@@ -37,6 +37,7 @@ const { guideDay } = require('./lib/channel/guide');
 const { dayKey, nextDay } = require('./lib/channel/clock');
 const { todayReport, replaysReport } = require('./lib/today');
 const { showsReport, castReport } = require('./lib/cast');
+const { standingsReport } = require('./lib/standings');
 const { createAuth } = require('./lib/auth');
 const { createSettings } = require('./lib/settings');
 const { postWebhook } = require('./lib/discord');
@@ -260,6 +261,9 @@ function createApp(opts = {}) {
       network: settings.personas(), talk: settings.talkPersonas(), memory: M.loadMemory(store, settings.networkPersonas()), shows: showsNow().shows,
     }));
   });
+
+  // The Standings Center (lib/standings.js): the playoff race as of the latest export.
+  app.get('/api/standings', (req, res) => res.set('Cache-Control', 'public, max-age=60').json(standingsReport(league)));
 
   // The 24/7 channel: what is on now and next (lib/channel). ?at=<epoch ms>
   // looks at another instant, for checking the schedule.
@@ -544,6 +548,7 @@ function createApp(opts = {}) {
   app.get('/replays', (req, res) => res.sendFile(path.join(PUBLIC, 'replays.html')));
   app.get('/shows', (req, res) => res.sendFile(path.join(PUBLIC, 'shows.html')));
   app.get('/anchors', (req, res) => res.sendFile(path.join(PUBLIC, 'anchors.html')));
+  app.get('/standings', (req, res) => res.sendFile(path.join(PUBLIC, 'standings.html')));
   app.get('/control', (req, res) => res.sendFile(path.join(PUBLIC, 'control.html')));
   // Scripts and styles import each other by plain path, so a browser holding
   // an hour-old copy of one beside a new copy of another breaks the page
