@@ -42,6 +42,7 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | Ask the desk (questions read on air) | Fan takes via the Week Desk only | **A1–A2** |
 | Reacts to everything within minutes | Scheduled shows + breaking bulletins | Parked (**D**) |
 | Many data feeds | Exports, Hub feed, Chronicle, chat, streams | **C1–C5** |
+| Shows and cast pages | Yes: `/shows`, `/anchors` | **E1** |
 | Fire TV, socials, 3D world | — | Backlog |
 
 ## Status
@@ -56,8 +57,9 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | C1 Records and pace | More sources in | done (PR #44 + Hub 58c9c69, 2026-11-26) | $0 |
 | C2 Sportsbook | More sources in | done (PR #45 + Hub, 2026-11-26) | $0 |
 | C3 Drafts | More sources in | done (PR #46 + Hub, 2026-11-26) | $0 (special: within cap) |
-| C4 Hub polls | More sources in | built (claude/polls + Hub) | $0 |
-| C5 Discord | More sources in | decree first | $0 |
+| C4 Hub polls | More sources in | done (PR #47 + Hub, 2026-11-26) | $0 |
+| C5 Discord | More sources in | not for now (decided 2026-11-26) | $0 |
+| E1 Shows + anchors pages | Browse the channel | done (2026-11-26) | $0 |
 | D Live wire | — | parked | needs a bigger budget |
 
 ## Pillar B: Sources & replays
@@ -131,13 +133,29 @@ New story types in `lib/stories.js`, each with tests.
   only in scheduled shows. Needs more than $2/day of writing; revisit with a
   budget decree.
 
+## Pillar E: Browse the channel
+
+From the backlog review of 2026-11-26.
+
+### E1. Program guide (`/shows`) and anchor pages (`/anchors`)
+- `/shows`: the day's grid in Eastern time, then every show with its blurb, kind
+  (new episodes, talk, replays, clips, cut-in, reruns), when it airs, when a new
+  edition comes, its length, its segments and who is on the desk (linked).
+- `/anchors`: both casts (HFL-NN and The Fifth Quarter) with the pixel portrait,
+  role, bio, catchphrases or sample lines, the shows they are on, and from the
+  show memory: mood, receipts (arguments won/lost, predictions right/wrong),
+  relationships with the rest of the desk, and their last three aired takes.
+  Writer directions (`style`) stay private.
+- Data: `lib/cast.js` from `config/channel.json`, `show.json`, the personas
+  (with control-room overrides) and `memory.json`. APIs `/api/shows`,
+  `/api/anchors`. The channel's lineup names link to the anchor pages.
+- Tests: `test/cast.test.js`. Cost: $0.
+
 ## Backlog
 
 Ideas waiting for a review. Format: `- idea — why`.
 
-- Program guide page with every show's description — PNN's Shows page makes the channel easy to browse.
 - Fire TV / TV app — watch on the couch.
 - Clips to socials (TikTok, YouTube Shorts) — growth outside the league.
-- Anchor bio pages — the cast is the brand.
 - Letters to the desk — PNN takes long letters as well as questions; A1 shipped questions only (280 characters).
 - Weather-style "Standings Center" live map — PNN's Weather Center equivalent for the playoff race.

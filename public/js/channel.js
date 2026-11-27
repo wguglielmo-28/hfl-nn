@@ -199,7 +199,7 @@ function renderLineup(lineup) {
     drawAnchor(g, a.look, 0, 4, 1, { emotion: 'happy' });
     li.appendChild(c);
     const d = document.createElement('div');
-    d.innerHTML = `<div class="name">${esc(a.name)}</div><div class="role">${esc(a.role)}</div><p class="bio">${esc(a.bio)}</p>`;
+    d.innerHTML = `<div class="name">${a.id ? `<a href="/anchors#${esc(a.id)}">${esc(a.name)}</a>` : esc(a.name)}</div><div class="role">${esc(a.role)}</div><p class="bio">${esc(a.bio)}</p>`;
     li.appendChild(d);
     ul.appendChild(li);
   }
