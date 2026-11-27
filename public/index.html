@@ -19,6 +19,7 @@
   </header>
 
   <main>
+    <div class="col-main">
     <section class="tv-wrap" aria-label="HFL-NN broadcast">
       <div class="tv">
         <canvas id="screen" width="480" height="270" aria-label="The HFL-NN studio"></canvas>
@@ -53,6 +54,15 @@
       <p class="error" id="error" hidden></p>
     </section>
 
+    <section class="panel desk" aria-labelledby="desk-h">
+      <h2 id="desk-h">The Desk</h2>
+      <ul id="lineup" class="lineup"></ul>
+      <p class="muted desk-more"><a href="/anchors">Meet the anchors →</a></p>
+    </section>
+    </div>
+
+    <div class="col-side">
+
     <section class="panel sources" aria-labelledby="sources-h">
       <h2 id="sources-h">Sources</h2>
       <p class="muted">What the segment on air is built on. The jokes are made up; the facts come from the league.</p>
@@ -74,11 +84,7 @@
       <h2 id="guide-h">Watch On Demand</h2>
       <ul id="episodes" class="episodes"><li class="muted">Loading…</li></ul>
     </section>
-
-    <section class="panel desk" aria-labelledby="desk-h">
-      <h2 id="desk-h">The Desk</h2>
-      <ul id="lineup" class="lineup"></ul>
-    </section>
+    </div>
   </main>
 
   <footer>

@@ -61,7 +61,7 @@ plan is a charter decree the owner decides, never a side effect of a release.
 | C4 Hub polls | More sources in | done (PR #47 + Hub, 2026-11-26) | $0 |
 | C5 Discord | More sources in | not for now (decided 2026-11-26) | $0 |
 | E1 Shows + anchors pages | Browse the channel | done (PR #48, 2026-11-26) | $0 |
-| E2 Standings Center | Browse the channel | built (2026-11-26) | $0 |
+| E2 Standings Center | Browse the channel | done (PR #49, 2026-11-26) | $0 |
 | D Live wire | — | parked | needs a bigger budget |
 
 ## Pillar B: Sources & replays
