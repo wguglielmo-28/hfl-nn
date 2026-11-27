@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFL-NN Shows</title>
+  <meta name="description" content="Every show on HFL-NN: what it is, when it airs and who is on it.">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body class="today shows">
+  <header class="masthead">
+    <a class="logo" href="/" aria-label="HFL-NN home"><span class="spiral" aria-hidden="true"></span>HFL-NN</a>
+    <p class="tagline">The shows: what is on HFL-NN, when, and who is at the desk</p>
+  </header>
+
+  <main class="today-main">
+    <section class="panel">
+      <h2>The day on HFL-NN</h2>
+      <p class="muted" id="tz">Loading…</p>
+      <ol class="grid-day" id="grid"></ol>
+    </section>
+    <div class="show-list" id="shows"></div>
+  </main>
+
+  <footer>
+    <p><a href="/shows">Shows</a> · <a href="/anchors">Anchors</a> · <a href="/today">Today on HFL-NN</a> · <a href="/replays">Segment replays</a> · <a href="/">Back to the channel</a></p>
+  </footer>
+
+  <script type="module" src="/js/shows.js"></script>
+</body>
+</html>
