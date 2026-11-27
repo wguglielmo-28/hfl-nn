@@ -564,6 +564,7 @@ function createApp(opts = {}) {
   let pollTimer = null;
   let streamTimer = null;
   let dailyTimer = null;
+  let sweepTimer = null;
   function startPolling() {
     const tick = async () => {
       if (settings.get().chronicleFeedUrl) await chronicle.refresh().catch(() => {});
@@ -585,6 +586,16 @@ function createApp(opts = {}) {
     // The daily shows are checked every minute; each is made at most once a day.
     dailyTimer = setInterval(() => { try { scheduler.tick(); } catch (e) { logger.warn(`[channel] scheduler: ${e.message}`); } }, 60 * 1000);
     dailyTimer.unref?.();
+    // The voice cache: clips unused for 3 days (ElevenLabs: 30) are deleted
+    // once a day, so the volume does not fill up (lib/tts sweepCache).
+    const sweep = () => {
+      try {
+        const r = tts.sweepCache?.();
+        if (r?.files) logger.log(`[tts] cache sweep: deleted ${r.files} clips, ${(r.bytes / 1e6).toFixed(0)} MB`);
+      } catch (e) { logger.warn(`[tts] cache sweep: ${e.message}`); }
+    };
+    sweepTimer = setTimeout(function again() { sweep(); sweepTimer = setTimeout(again, 24 * 3600e3); sweepTimer.unref?.(); }, 60 * 1000);
+    sweepTimer.unref?.();
   }
 
   // Remove the league and everything made from it — the sample league, or
@@ -628,7 +639,7 @@ function createApp(opts = {}) {
     ingestKey, startPolling, loadSampleLeague, startOver,
     getLeague: () => league,
     streams, scheduler, chatDigest,
-    close: async () => { clearTimeout(pollTimer); clearTimeout(streamTimer); clearInterval(dailyTimer); clearTimeout(saveTimer); await tts.close?.(); },
+    close: async () => { clearTimeout(pollTimer); clearTimeout(streamTimer); clearInterval(dailyTimer); clearTimeout(sweepTimer); clearTimeout(saveTimer); await tts.close?.(); },
   };
 }
 
